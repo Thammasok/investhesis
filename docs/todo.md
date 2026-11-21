@@ -7,7 +7,7 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
 | Stock Lists | v1.0 | [dev-plan.md](features/stock-lists/v1.0/dev-plan.md) | todo | Phase 4 — dev plan approved | 2026-11-21 |
-| User Auth | v1.0 | [dev-plan.md](features/user-auth/v1.0/dev-plan.md) | built | All 9 tasks approved; awaiting release tag | 2026-11-21 |
+| User Auth | v1.0 | [dev-plan.md](features/user-auth/v1.0/dev-plan.md) | done | Released as v0.1.0 | 2026-11-21 |
 
 ## Carried work
 
