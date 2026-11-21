@@ -271,3 +271,25 @@ describe('TC-C-051 the spinner honours reduced motion', () => {
     expect(offenders).toEqual([])
   })
 })
+
+describe('TC-E-001 regression: the app root creates one router', () => {
+  it('TC-E-001: a confirmation link is verified once under StrictMode', async () => {
+    // Arrange
+    const { StrictMode } = await import('react')
+    const { App } = await import('@/app')
+    const auth = FakeAuthClient.signedOut()
+    auth.validLinks = { hash1: 'email' }
+    window.history.pushState({}, '', '/auth/confirm?token_hash=hash1&type=email')
+
+    // Act
+    render(
+      <StrictMode>
+        <App authClient={auth} />
+      </StrictMode>,
+    )
+    await h1('Stocks')
+
+    // Assert
+    expect(auth.calls.verify).toBe(1)
+  })
+})
