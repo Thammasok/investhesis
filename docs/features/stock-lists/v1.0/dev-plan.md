@@ -16,6 +16,14 @@ Pacta's; until the owner approves the replacement proposed in
 `pnpm db:start && pnpm db:reset` (from T-001 on), `pnpm lint`, `pnpm typecheck`, `pnpm test`,
 `pnpm build`.
 
+**Ordering with User Auth.** Both plans create `supabase/` (this T-001 / its T-001), a migration
+needing schema `app` (this T-001 / its T-009), `apps/web/src/lib/api-client.ts` (this T-007 / its
+T-003) and Playwright (this T-013 / its T-008). Whichever task runs second extends the existing
+files instead of recreating them, and says so in its review note. Once User Auth T-003 lands,
+web tests here render routes with its signed-in `FakeAuthClient`, and loaders need no auth checks
+of their own (its `app` route middleware runs before them). See
+[User Auth's dev plan](../../user-auth/v1.0/dev-plan.md).
+
 ## Summary
 
 - **Total tasks** — 13 (11 engineering, 1 test design, 1 test automation)
@@ -116,7 +124,7 @@ unit:
       expected: "no differences"
 ```
 
-**Notes** — Use the session-mode or direct connection (`127.0.0.1:54322` locally). `updated_at` is maintained by repositories, not triggers. If `supabase` npm install is unsuitable for pnpm 12, use the Homebrew CLI and document it.
+**Notes** — Start the migration with `create schema if not exists app` so it runs before or after User Auth's allowlist migration. If User Auth T-001 is already in, `pnpm db:start` also generates the local signing key; nothing else changes here. Use the session-mode or direct connection (`127.0.0.1:54322` locally). `updated_at` is maintained by repositories, not triggers. If `supabase` npm install is unsuitable for pnpm 12, use the Homebrew CLI and document it.
 
 ### T-002 — Shared domain package
 
@@ -654,6 +662,7 @@ unit:
 - [ ] Every component named in ux-design.md's install list exists under `src/components/ui/` and imports `cn` from `@/lib/utils`
 - [ ] The new routes render and appear correctly in the breadcrumb; existing router tests still pass
 - [ ] `api-client` has unit tests for success, 204, problem responses, network failure and multipart
+- [ ] If User Auth T-003 is already in, the existing bearer header and 401 → refresh → retry behaviour still pass their tests, and multipart bodies are `FormData` so the retry can resend them
 - [ ] `pnpm build` produces separate chunks for the new views
 
 #### Test cases (TDD contract)
@@ -1069,7 +1078,8 @@ unit:
   Using the software-tester-automation skill, convert the TC-xxx cases from T-012 into
   runnable scripts at the appropriate levels (Unit, API, Frontend Component, E2E).
   Run the full suite against the implementation. Adds Playwright to apps/web (or an e2e
-  workspace) for the end-to-end flows against the real API and local Supabase: add stock,
+  workspace), or extends User Auth T-008's setup, for the end-to-end flows against the real API
+  and local Supabase, signed in as a seeded `@example.test` account (User Auth T-009): add stock,
   manage lists, import CSV and XLSX, phone width 360 px, keyboard-only import, axe contrast
   checks in light and dark themes. New suites join the test gate.
 - agent: software-tester-automation

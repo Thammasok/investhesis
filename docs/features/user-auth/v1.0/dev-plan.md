@@ -16,14 +16,17 @@ Pacta's; until the owner approves a replacement, the gate for this plan is, from
 `pnpm typecheck`, `pnpm test`, `pnpm build`, and from [T-008](#t-008--automate-tests--user-auth)
 on the auth end-to-end suite.
 
-**Ordering with Stock Lists.** Both plans create `supabase/` (its T-001 / this T-001) and
-`apps/web/src/lib/api-client.ts` (its T-007 / this T-003). Whichever task runs second extends the
-existing files instead of recreating them, and says so in its review note.
+**Ordering with Stock Lists.** Both plans create `supabase/` (its T-001 / this T-001), a migration
+needing schema `app` (its T-001 / this [T-009](#t-009--sign-up-allowlist)),
+`apps/web/src/lib/api-client.ts` (its T-007 / this T-003) and Playwright (its T-013 / this T-008).
+Whichever task runs second extends the existing files instead of recreating them, and says so in
+its review note. Once this T-003 lands, Stock Lists' web tests render routes with a signed-in
+`FakeAuthClient`.
 
 ## Summary
 
-- **Total tasks** — 8 (6 engineering, 1 test design, 1 test automation)
-- **Estimated effort** — about 6 days of agent work (S ≈ 0.5 day, M ≈ 0.75 day, L ≈ 1.5 days);
+- **Total tasks** — 9 (7 engineering, 1 test design, 1 test automation)
+- **Estimated effort** — about 6.5 days of agent work (S ≈ 0.5 day, M ≈ 0.75 day, L ≈ 1.5 days);
   about 3.5 days elapsed with the API and web lanes in parallel
 - **Critical path** — [T-003](#t-003--web-auth-foundation) →
   [T-004](#t-004--sign-in-and-sign-up-screens) →
@@ -31,7 +34,8 @@ existing files instead of recreating them, and says so in its review note.
   [T-008](#t-008--automate-tests--user-auth)
 - **Parallel lanes** — [T-001](#t-001--supabase-auth-local-setup) and
   [T-002](#t-002--api-token-verification) (backend) run alongside T-003 (web); T-002 tests sign
-  their own tokens, so it does not wait for T-001. [T-006](#t-006--account-page-and-account-menu)
+  their own tokens, so it does not wait for T-001. [T-009](#t-009--sign-up-allowlist) follows
+  T-001. [T-006](#t-006--account-page-and-account-menu)
   runs alongside T-005. [T-007](#t-007--design-test-cases--user-auth) starts at once.
 
 ## Tasks
@@ -44,8 +48,8 @@ existing files instead of recreating them, and says so in its review note.
   If `supabase/` does not exist yet, run `supabase init` at the repo root, add `supabase` as a
   root dev dependency (pinned version) and root scripts `db:start`, `db:stop`, `db:reset`
   (Stock Lists ADR-001). Add `db:keys` → `supabase gen signing-key --algorithm ES256` writing
-  `supabase/signing_keys.json` (git-ignored; `db:start` fails with a clear message if it is
-  missing). Set the auth settings in `supabase/config.toml` exactly as design.md §Supabase
+  `supabase/signing_keys.json` (git-ignored); `db:start` runs `db:keys` first when the file is
+  missing, so Stock Lists' gate keeps working from a clean clone. Set the auth settings in `supabase/config.toml` exactly as design.md §Supabase
   project, and add `supabase/templates/confirmation.html` and `recovery.html` whose links are
   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email|recovery&next={{ .RedirectTo }}`
   with Supabase's default wording and the app name (ADR-002). Confirm on the pinned CLI the exact
@@ -61,7 +65,7 @@ existing files instead of recreating them, and says so in its review note.
 
 #### Acceptance criteria
 
-- [ ] `pnpm db:keys && pnpm db:start` from a clean clone starts local Supabase with no errors; `supabase/signing_keys.json` is git-ignored
+- [ ] `pnpm db:start` from a clean clone generates the signing key and starts local Supabase with no errors; a second run keeps the same key; `supabase/signing_keys.json` is git-ignored
 - [ ] `GET http://127.0.0.1:54321/auth/v1/.well-known/jwks.json` returns one ES256 public key (`kty: EC`, `crv: P-256`)
 - [ ] An access token from local `signInWithPassword` has header `alg: ES256` and claims `iss: http://127.0.0.1:54321/auth/v1`, `aud: authenticated`, `role: authenticated`, `exp - iat = 3600`
 - [ ] Sign-up with a 7-character password is rejected by local Auth (`weak_password`); 8 characters is accepted
@@ -116,7 +120,7 @@ unit:
       expected: [error, ok]
 ```
 
-**Notes** — These checks talk to the real local stack, so they live in a separate suite (e.g. `scripts/supabase-auth.test.ts`, run by `pnpm test:supabase`) that needs Docker; propose adding it to the gate in the review note. Local Auth has no hourly email limit, so tests can sign up freely; use random emails per test.
+**Notes** — These checks talk to the real local stack, so they live in a separate suite (e.g. `scripts/supabase-auth.test.ts`, run by `pnpm test:supabase`) that needs Docker; propose adding it to the gate in the review note. Local Auth has no hourly email limit, so tests can sign up freely; use random `@example.test` emails per test (the domain T-009 allowlists).
 
 ### T-002 — API token verification
 
@@ -233,9 +237,11 @@ unit:
   VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY), the `AuthClient` port, the supabase-js
   adapter (only importer of `@supabase/supabase-js`, enforced with oxlint `no-restricted-imports`),
   the mock adapter, a `FakeAuthClient` for tests under `src/test/`, `auth-errors.ts` mapping per
-  design.md §Error mapping, `safe-next.ts`, `guards.ts` (`requireSession` on the `app` route
-  loader, `redirectIfSignedIn`), and `lib/api-client.ts` with the bearer header and the 401 →
-  refresh once → retry → sign out + redirect flow. Subscribe to `onChange` at the app root so a
+  design.md §Error mapping, `safe-next.ts`, `guards.ts` (`requireSession` as route middleware on
+  the `app` route — not its loader, because matched loaders run in parallel — and
+  `redirectIfSignedIn`), and `lib/api-client.ts` with the bearer header, no request without a
+  session, and the 401 → refresh once → retry (re-sendable bodies, incl. FormData) → sign out +
+  redirect flow. Subscribe to `onChange` at the app root so a
   SIGNED_OUT from another tab sends the user to sign-in with state.reason 'session_ended'. Add
   `apps/web/.env.example`. The existing sign-in page keeps working through the mock adapter until
   T-004 replaces it.
@@ -248,6 +254,7 @@ unit:
 #### Acceptance criteria
 
 - [ ] Opening `/lists` with no session redirects to `/auth/sign-in?next=%2Flists`; with a session it renders
+- [ ] With no session, no child route loader runs and no API request is made (a spy loader on a child route is never called)
 - [ ] `safeNext` passes every case in TC-U-016 below
 - [ ] `api-client` sends `Authorization: Bearer <token>` when a session exists and none in mock mode
 - [ ] A 401 triggers exactly one `refresh()` and one retry; a second 401 calls `signOut()` and navigates to sign-in with `next` = current path and the session-ended notice
@@ -268,6 +275,14 @@ unit:
     test_data:
       input: "/stocks/abc?tab=lenses"
       expected: "/auth/sign-in?next=%2Fstocks%2Fabc%3Ftab%3Dlenses"
+  - id: TC-U-014b
+    scenario: guard runs before child loaders
+    given: FakeAuthClient with no session; a child route under app with a spy loader; fetch spy
+    when: navigate to that child route
+    then: spy loader not called, fetch not called, location is sign-in
+    test_data:
+      input: { session: null, route: "/stocks" }
+      expected: { childLoaderCalls: 0, fetchCalls: 0 }
   - id: TC-U-015
     scenario: guest page sends a signed-in user to stocks
     given: FakeAuthClient signed in
@@ -318,7 +333,7 @@ unit:
       expected: { location: "/auth/sign-in" }
 ```
 
-**Notes** — The `app` route loader awaits `getSession()`, which reads storage and refreshes an expired token first, so pages never render with a stale session. Keep supabase-js's `detectSessionInUrl: false`: `/auth/confirm` verifies links itself (ADR-002).
+**Notes** — The `app` middleware awaits `getSession()`, which reads storage and refreshes an expired token first, so pages never render with a stale session. Confirm route middleware is enabled by default on the installed React Router v8 (otherwise turn on its middleware flag in `createBrowserRouter`); a parent loader is not an acceptable fallback. Keep supabase-js's `detectSessionInUrl: false`: `/auth/confirm` verifies links itself (ADR-002).
 
 ### T-004 — Sign-in and sign-up screens
 
@@ -330,7 +345,8 @@ unit:
   and the shared password-rule validator (8–72, confirm must match). Rework `SignInForm` to call
   `authClient.signIn` and navigate to `safeNext(next)`; remove the "not connected yet" text; add
   the Forgot password and Sign up links (carrying `next`); show the session-ended notice from
-  router state; handle `email_not_confirmed` with resend. Add `/auth/sign-up` (SignUpForm) and
+  router state; handle `email_not_confirmed` with resend. Add `/auth/sign-up` (SignUpForm, with
+  the invite-only alert for `signup_not_allowed`, FR-018) and
   `/auth/check-email` (email from router state, field fallback, resend with 60 s cooldown). Treat
   `user_already_exists` as success (FR-003).
 - agent: react-vite-developer
@@ -344,7 +360,8 @@ unit:
 - [ ] Correct credentials land on `safeNext(next)` with `replace`; wrong ones show "Email or password is incorrect.", clear the password and focus it
 - [ ] An unconfirmed account sees the confirm-first alert with Resend; resend leads to Check your email
 - [ ] Sign-up client checks show the four password messages from ux-design.md on the right field, and no call is made
-- [ ] A registered and an unregistered email produce the same Check your email screen
+- [ ] A registered and an unregistered allowlisted email produce the same Check your email screen
+- [ ] A non-allowlisted email shows the invite-only alert and stays on Sign up
 - [ ] Resend is disabled for 60 s after each send and shows the countdown
 - [ ] No email or password ever appears in the URL (asserted after every flow)
 - [ ] Rate-limit and network errors show the destructive alert with the mapped copy
@@ -394,6 +411,14 @@ unit:
     test_data:
       input: ["taken@x.io", "new@x.io"]
       expected: ["Check your email", "Check your email"]
+  - id: TC-U-025b
+    scenario: sign-up outside the allowlist
+    given: fake signUp returns signup_not_allowed
+    when: sign up with stranger@gmail.com / Abc12345
+    then: alert "Sign-up is invite-only. Ask the owner to add this email.", location /auth/sign-up, focus on Email
+    test_data:
+      input: { email: "stranger@gmail.com" }
+      expected: { alert: "Sign-up is invite-only. Ask the owner to add this email.", location: "/auth/sign-up" }
   - id: TC-U-026
     scenario: resend cooldown
     given: check-email with state.email, fake timers
@@ -585,7 +610,7 @@ unit:
   component, and E2E flows. Run Steps 0–4 (SUT definition → business flow → field specs
   → scenarios → test data). Output must be in TC-xxx format for software-tester-automation.
   Inputs: requirements.md, design.md, ux-design.md of this slice. Must cover every FR and NFR,
-  the enumeration-resistance cases (FR-003, FR-005, FR-011), open-redirect inputs for `next`,
+  the allowlist rules (FR-018), the enumeration-resistance cases (FR-003, FR-005, FR-011), open-redirect inputs for `next`,
   token-tampering cases for the API, the end-to-end flows against local Supabase with Mailpit
   (sign up → confirm → /me; reset → sign in with the new password; change password; sign out;
   expired session recovery), keyboard-only sign-in, and the 360 px layout. Save as
@@ -601,7 +626,7 @@ unit:
 - [ ] SUT definition documented
 - [ ] TC-xxx cases cover happy path, boundaries, error paths, and business rules
 - [ ] Each TC includes Level, Input, Expected Output, Preconditions, and Mock needed
-- [ ] A traceability table maps every FR-001–FR-017 and NFR-001–NFR-008 to at least one TC
+- [ ] A traceability table maps every FR-001–FR-018 and NFR-001–NFR-008 to at least one TC
 
 **Notes** — Runs in parallel with engineering tasks; depends only on requirements/design, not on code.
 
@@ -618,7 +643,7 @@ unit:
   setup. Includes an axe check of every auth screen in light and dark themes. New suites join
   the test gate with one root command.
 - agent: software-tester-automation
-- depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007]
+- depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-009]
 - status: backlog
 - size: L
 ```
@@ -627,11 +652,80 @@ unit:
 
 - [ ] All TC-* from T-007 automated and passing
 - [ ] Coverage >= 90% lines for `apps/api/src/auth/` and `apps/web/src/features/auth/`
+- [ ] E2E sign-up with a non-allowlisted email fails with the invite-only alert and no Mailpit message
 - [ ] Test report produced with pass/fail per TC-id
 - [ ] E2E sign up → confirm → `GET /api/me` passes against local Supabase in a clean run
 - [ ] The E2E suite runs with one root command documented in CLAUDE.md
 
 **Notes** — Report "T-008 done" with the full test report when all TCs pass. Rate limiting is not tested end to end (local Auth limits differ from hosted); its UI is covered by component tests.
+
+### T-009 — Sign-up allowlist
+
+```yaml
+- title: Invite-only sign-up through the Before User Created hook
+- description: >
+  Implement design.md §Data Model and ADR-009: migration
+  `supabase/migrations/<timestamp>_signup_allowlist.sql` (starts with `create schema if not exists
+  app` and Stock Lists' revokes, so either slice's migration can run first) creating
+  `app.signup_allowlist` and `app.hook_before_user_created(jsonb)` with the grants and revokes
+  shown; enable the hook in `supabase/config.toml`; add `@example.test` to `supabase/seed.sql`
+  (create or extend). Document in `supabase/README.md` how the owner adds or removes an entry
+  with SQL, and add the hosted steps (push the migration, enable the hook in the dashboard,
+  insert the owner's address) to the hosted checklist. Tests run against the local stack in the
+  same suite as T-001.
+- agent: software-engineer-backend
+- depends_on: [T-001]
+- status: backlog
+- size: S
+```
+
+#### Acceptance criteria
+
+- [ ] `pnpm db:start && pnpm db:reset` applies the migration and the seed with no errors, before or after Stock Lists' migration
+- [ ] Local sign-up with `new@example.test` succeeds; with `stranger@gmail.com` fails with HTTP 403 `signup_not_allowed`, creates no `auth.users` row and sends no Mailpit message
+- [ ] `anon` and `authenticated` cannot select `app.signup_allowlist` or execute the hook function
+- [ ] The `pattern` check rejects upper-case values and values without `@`
+- [ ] `supabase/README.md` explains adding an address and a domain, and lists the hosted steps
+
+#### Test cases (TDD contract)
+
+```yaml
+unit:
+  - id: TC-U-039
+    scenario: hook decisions
+    given: allowlist rows 'owner@mail.com' and '@example.test'
+    when: select app.hook_before_user_created(event) for each email
+    then: '{}' when allowed, the 403 error object otherwise
+    test_data:
+      input: ["owner@mail.com", "OWNER@Mail.com", "a@example.test", "a@sub.example.test", "other@mail.com", "a@example.test.evil.io"]
+      expected: [allow, allow, allow, deny, deny, deny]
+  - id: TC-U-040
+    scenario: sign-up refused end to end
+    given: local stack with the seed
+    when: signUp("stranger@gmail.com", "Abc12345")
+    then: error status 403, message signup_not_allowed; select count(*) from auth.users where email = 'stranger@gmail.com' is 0
+    test_data:
+      input: { email: "stranger@gmail.com" }
+      expected: { status: 403, message: signup_not_allowed, users: 0 }
+  - id: TC-U-041
+    scenario: allowlist is not reachable through the Data API roles
+    given: local stack
+    when: as role anon and as role authenticated, select from app.signup_allowlist and call the hook
+    then: permission denied in all four cases
+    test_data:
+      input: [anon select, anon execute, authenticated select, authenticated execute]
+      expected: "SQLSTATE 42501 for all"
+  - id: TC-U-042
+    scenario: pattern check
+    given: migrated database
+    when: insert patterns 'Owner@Mail.com', 'mail.com', '@mail.com'
+    then: first two fail the check, third succeeds
+    test_data:
+      input: ["Owner@Mail.com", "mail.com", "@mail.com"]
+      expected: ["23514", "23514", "1 row"]
+```
+
+**Notes** — Sub-domains do not match a `@domain` entry by design; add them as their own rows. The hook also runs for users created through the Supabase admin API, so add the address first even when creating an account by hand.
 
 ## Status Legend
 

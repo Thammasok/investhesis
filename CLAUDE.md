@@ -16,7 +16,7 @@ The repo holds:
 - **Backend:** Fastify + TypeScript (`apps/api`), modelled on Pacta's `apps/api` (`~/Workspaces/Github/pacta/apps/api`): same config, plugin, error and lifecycle patterns. Copy from there rather than inventing new conventions.
 - **Database:** Supabase (Postgres) for v1, reached only by the API through Drizzle on `pg` with `DATABASE_URL`. Use the direct or session-pooler connection, not the transaction pooler.
 - **Auth in v1:** a mock user from env (`AUTH_MODE=mock`, `MOCK_USER_ID`, optional `MOCK_USER_EMAIL`, `MOCK_USER_NAME`). Every request runs as that user; config refuses `mock` when `NODE_ENV=production`.
-- Still open: how schema migrations run on Supabase (Supabase CLI migrations vs Liquibase as in Pacta), and which real auth replaces the mock.
+- Decided in planning (2026-11-21): schema migrations run with the Supabase CLI (`supabase/migrations/`, Stock Lists ADR-001), and real auth is Supabase Auth with email + password and invite-only sign-up through an allowlist (`docs/features/user-auth/v1.0/`). The API verifies Supabase access tokens via JWKS behind `IdentityResolver`; the mock user stays for development and tests.
 
 ### Commands
 

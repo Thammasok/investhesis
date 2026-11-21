@@ -21,6 +21,9 @@ These were agreed with the owner on 2026-11-21 and shape the requirements below.
   through the existing `IdentityResolver` seam. Investhesis stores no password hashes.
 - **Flows in scope:** sign-up, email verification, sign-in, sign-out, forgot/reset password and
   change password.
+- **Sign-up is invite-only through an email allowlist** (agreed 2026-11-21, after cross-checking
+  with Stock Lists, which was planned for a single user). Only emails or domains on the allowlist
+  can create an account; the owner manages the list in the database.
 - **Stay signed in:** a session survives browser restarts and is renewed automatically until the
   user signs out or the session can no longer be refreshed.
 - **Mock auth stays for development and tests** (`AUTH_MODE=mock`), still refused in production.
@@ -80,7 +83,14 @@ The system SHALL let a visitor create an account with an email address and a pas
 twice, and SHALL reject the form when the two passwords differ or the password breaks the policy
 in [NFR-002](#nfr-002), before calling Supabase.
 
-#### FR-002
+#### FR-018
+
+The system SHALL create an account only when the sign-up email matches an allowlist entry (the
+exact address, or `@domain` for a whole domain, compared case-insensitively), and SHALL otherwise
+refuse the sign-up and show "Sign-up is invite-only. Ask the owner to add this email." Refusal
+happens before any account or email is created.
+
+### FR-002
 
 The system SHALL send a confirmation email after sign-up and SHALL NOT let an unconfirmed account
 sign in; signing in with an unconfirmed account SHALL show a message offering to resend the
@@ -88,8 +98,10 @@ confirmation email.
 
 #### FR-003
 
-The system SHALL show the same "check your email" result for a sign-up whether or not the email is
-already registered, so the form does not reveal which emails have accounts.
+The system SHALL show the same "check your email" result for an allowlisted sign-up whether or not
+the email is already registered, so the form does not reveal which emails have accounts. (The
+invite-only message of [FR-018](#fr-018) reveals only allowlist membership, never whether an
+account exists.)
 
 #### FR-004
 
@@ -243,7 +255,8 @@ NFR-010).
 - Changing the account email, deleting the account, and profile fields such as display name.
 - "Sign out everywhere" and listing active sessions.
 - Idle-session timeouts and leaked-password checks (Supabase paid-plan features).
-- Admin user management, roles, invitations, teams.
+- Admin user management, roles, invitations, teams. The allowlist has no UI: the owner adds rows
+  with SQL (documented in `supabase/README.md`).
 - Custom-designed or Thai-language email templates (Supabase defaults with the app name).
 
 ## Open Questions

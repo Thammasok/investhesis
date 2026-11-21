@@ -24,7 +24,7 @@ flowchart LR
     D["packages/domain<br/>vocabulary, Zod schemas,<br/>cycle defaults, row canonicaliser"]
   end
   subgraph API["apps/api (Fastify)"]
-    A["authenticate<br/>(mock identity)"]
+    A["authenticate<br/>(Supabase JWT or mock identity)"]
     S["modules/stocks"]
     L["modules/lists"]
     I["modules/imports<br/>csv-parse / exceljs"]
@@ -241,7 +241,9 @@ Notes:
 
 ## API Contracts
 
-All routes need an identity (mock user), answer JSON, and use the existing problem format for
+All routes need an identity (a verified Supabase access token per
+[User Auth](../../user-auth/v1.0/design.md#api-contracts), or the mock user in development and
+tests; `401 unauthenticated` otherwise), answer JSON, and use the existing problem format for
 errors: `{ type, title, status, code, detail?, errors?: [{ path, message }] }`. A stock or list
 id that belongs to another user, or doesn't exist, is `404 not_found`
 ([FR-025](requirements.md#fr-025)).

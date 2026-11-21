@@ -51,7 +51,7 @@ These apply to every auth screen and are not repeated per screen.
 - **Field errors** — `Field data-invalid`, control `aria-invalid` and `aria-describedby` →
   `FieldError`. After a failed submit, focus moves to the first invalid field.
 - **Form-level messages** — `Alert` at the top of the form (`role="alert"`): `variant="destructive"`
-  for errors (`invalid_credentials`, `rate_limited`, `unavailable`, `unknown`), default variant
+  for errors (`invalid_credentials`, `signup_not_allowed`, `rate_limited`, `unavailable`, `unknown`), default variant
   with `InfoIcon` for notices (e.g. "Your session has ended. Sign in again."). Copy per code is in
   [design.md › Error mapping](design.md#error-mapping).
 - **Submitting** — the submit button shows `Loader2Icon animate-spin` before its label, gets
@@ -127,6 +127,8 @@ unchanged and omitted below.
 
 - **User flow** — submit → client checks → `signUp` → navigate to Check your email (state:
   email). `user_already_exists` goes the same way ([FR-003](requirements.md#fr-003)).
+  `signup_not_allowed` → destructive alert "Sign-up is invite-only. Ask the owner to add this
+  email.", focus to Email, passwords kept ([FR-018](requirements.md#fr-018)).
   `weak_password` → FieldError on Password. `rate_limited` / `unavailable` → destructive alert.
 - **Annotations** — passwords are kept on a failed server call (so the user needn't retype) but
   cleared after navigation.

@@ -13,7 +13,8 @@ the SDK directly. Every call to the Investhesis API carries the Supabase access 
 token. The API checks that token itself against Supabase's published keys (JWKS) and turns it into
 an `Identity` through a new `supabaseIdentityResolver`, plugged into the existing
 `IdentityResolver` seam in `apps/api/src/plugins/authenticate.ts`. Routes, services and
-repositories do not change. No new application tables are added.
+repositories do not change. The only new table is the sign-up allowlist read by a Supabase Auth
+hook ([ADR-009](#key-decisions)).
 
 ## Architecture Overview
 
@@ -21,7 +22,7 @@ repositories do not change. No new application tables are added.
 flowchart LR
   subgraph Browser
     V["views/auth/*<br/>sign-in, sign-up, confirm,<br/>forgot, reset, account"]
-    G["router guards<br/>(app loader, guest loader)"]
+    G["router guards<br/>(app middleware, guest loader)"]
     AC["features/auth<br/>AuthClient port"]
     SA["supabase adapter<br/>@supabase/supabase-js<br/>(session in localStorage)"]
     API_C["lib/api-client.ts<br/>Authorization: Bearer"]
@@ -58,7 +59,7 @@ sequenceDiagram
   participant SB as Supabase Auth
   participant API as API
   U->>W: open /lists (no session)
-  W->>W: app loader: getSession() → null
+  W->>W: app middleware: getSession() → null (before any loader runs)
   W-->>U: redirect /auth/sign-in?next=%2Flists
   U->>W: email + password
   W->>SB: signInWithPassword
@@ -120,24 +121,24 @@ sequenceDiagram
 | `src/features/auth/mock-auth-client.ts` | For `VITE_AUTH_MODE=mock` (API in mock mode): always signed in, no token, auth pages redirect to `/stocks`. Also the base of the test fake. |
 | `src/features/auth/auth-errors.ts` | `AuthErrorCode` → user copy (see [Error mapping](#error-mapping)). |
 | `src/features/auth/safe-next.ts` | `safeNext(raw)`: accept only a path that starts with `/`, not `//` or `/\`, has no scheme, and is not under `/auth`; anything else → `/stocks` ([FR-008](requirements.md#fr-008)). |
-| `src/features/auth/guards.ts` | `requireSession({ request })` for the `app` route loader: no session → `redirect('/auth/sign-in?next=' + encoded path+search)`. `redirectIfSignedIn()` for guest pages ([FR-009](requirements.md#fr-009)). |
+| `src/features/auth/guards.ts` | `requireSession` as **route middleware** on the `app` route: no session → `throw redirect('/auth/sign-in?next=' + encoded path+search)`. It must be middleware, not the `app` loader: React Router runs matched loaders in parallel, so a parent loader cannot stop child loaders (e.g. Stock Lists' `/stocks` loader) from calling the API first ([FR-008](requirements.md#fr-008)). `redirectIfSignedIn()` for guest pages ([FR-009](requirements.md#fr-009)). |
 | `src/features/auth/components/` | `SignInForm` (existing, now real), `SignUpForm`, `ForgotPasswordForm`, `NewPasswordForm` (reset and change share the new-password + confirm fields and the [NFR-002](requirements.md#nfr-002) checks), `ChangePasswordForm`, `ResendConfirmation`. |
-| `src/lib/api-client.ts` | Adds `Authorization: Bearer` from `authClient.getAccessToken()` when present. On `401`: `refresh()` once and retry; if still `401`, `signOut()` and redirect to `/auth/sign-in?next=<current>` ([FR-010](requirements.md#fr-010)). Created here if Stock Lists T-007 has not created it yet; the later task extends it. |
+| `src/lib/api-client.ts` | Adds `Authorization: Bearer` from `authClient.getAccessToken()` when present; in `supabase` mode with no session it makes no request and throws the same sign-in redirect as the guard. Request bodies must be re-sendable (JSON string or `FormData`, never a stream) so the retry below works for Stock Lists' multipart import. On `401`: `refresh()` once and retry; if still `401`, `signOut()` and redirect to `/auth/sign-in?next=<current>` ([FR-010](requirements.md#fr-010)). Created here if Stock Lists T-007 has not created it yet; the later task extends it. |
 | `src/components/layout/sidebar/nav-user.tsx` | Shows the email from `GET /me` (loaded in the `app` loader); Account links to `/account`; Sign out is a button calling `signOut()` then navigating to sign-in ([FR-007](requirements.md#fr-007)). |
 | `src/main.tsx` / app root | Subscribes to `authClient.onChange`: a `SIGNED_OUT` from another tab or a failed refresh sends the user to sign-in; `TOKEN_REFRESHED` needs no action. |
 
 ### Routes
 
-| Path | Area | Loader | Purpose |
+| Path | Area | Guard | Purpose |
 |------|------|--------|---------|
 | `/auth/sign-in` | guest | `redirectIfSignedIn` | Sign in; reads `?next=` ([UC-003](requirements.md#uc-003)) |
-| `/auth/sign-up` | guest | `redirectIfSignedIn` | Create account ([UC-001](requirements.md#uc-001)) |
+| `/auth/sign-up` | guest | `redirectIfSignedIn` | Create account ([UC-001](requirements.md#uc-001), [FR-018](requirements.md#fr-018)) |
 | `/auth/check-email` | guest | — | "Check your email" with resend; the email comes from router state, never the URL |
 | `/auth/confirm` | public | verifies `token_hash` + `type` (`email` \| `recovery`) | Email-link handler ([FR-004](requirements.md#fr-004), [FR-012](requirements.md#fr-012)) |
 | `/auth/link-expired` | public | — | Expired/invalid link, with resend or new-reset actions |
 | `/auth/forgot-password` | guest | `redirectIfSignedIn` | Request reset ([FR-011](requirements.md#fr-011)) |
 | `/auth/reset-password` | recovery session | requires a session, else `link-expired` | Set new password after a recovery link |
-| `/account` | app | `requireSession` | Change password ([FR-013](requirements.md#fr-013)); crumb "Account" |
+| `/account` | app | `requireSession` (inherited `app` middleware) | Change password ([FR-013](requirements.md#fr-013)); crumb "Account" |
 
 `/auth/confirm` calls `verifyOtp` in its loader, then `redirect`s, so the `token_hash` URL is
 replaced in history and never rendered or logged ([NFR-004](requirements.md#nfr-004)). After a
@@ -148,7 +149,8 @@ replaced in history and never rendered or logged ([NFR-004](requirements.md#nfr-
 
 The Supabase CLI project is shared with Stock Lists ([ADR-001 there](../../stock-lists/v1.0/design.md#key-decisions)).
 Whichever slice runs first creates it with `supabase init` and the root `db:*` scripts; this slice
-adds the auth settings:
+adds the auth settings. `db:start` runs `db:keys` first when `supabase/signing_keys.json` is
+missing, so Stock Lists' `pnpm db:start && pnpm db:reset` keeps working from a clean clone:
 
 | Setting (`supabase/config.toml`) | Value | Why |
 |---|---|---|
@@ -164,16 +166,49 @@ adds the auth settings:
 | `auth.email.max_frequency` | `60s` | One confirmation/reset email per address per minute |
 | `auth.email.otp_expiry` | `3600` | Confirmation and reset links expire after 1 hour (one setting for both) |
 | `auth.email.template.confirmation`, `.recovery` | `supabase/templates/{confirmation,recovery}.html` | Link to `/auth/confirm?token_hash=…` ([ADR-002](#key-decisions)); copy stays Supabase's default wording with the app name |
+| `auth.hook.before_user_created` | `enabled = true`, `uri = "pg-functions://postgres/app/hook_before_user_created"` | Invite-only sign-up ([FR-018](requirements.md#fr-018), [ADR-009](#key-decisions)) |
 | `auth.rate_limit.*` | defaults (`sign_in_sign_ups = 30` per 5 min per IP, `email_sent` per hour) | [NFR-003](requirements.md#nfr-003) |
 
-The hosted project gets the same settings and templates by hand (dashboard), listed as a checklist
-in `supabase/README.md`, plus the production SMTP from [OQ-1](requirements.md#oq-1) and an ES256
+The hosted project gets the same settings, templates and hook by hand (dashboard; the hook's
+migration arrives with `supabase db push`), listed as a checklist in `supabase/README.md`, plus the
+owner's allowlist row, plus the production SMTP from [OQ-1](requirements.md#oq-1) and an ES256
 signing key made current. `supabase config push` can replace the checklist later.
 
 ## Data Model
 
-No new tables or columns. The user id everywhere in the `app` schema is Supabase's
-`auth.users.id` (the token's `sub`) ([ADR-004](#key-decisions)):
+One new table and one function, in migration `supabase/migrations/<timestamp>_signup_allowlist.sql`
+([ADR-009](#key-decisions)). The migration starts with `create schema if not exists app` and the
+same revokes as Stock Lists, so the two slices' migrations work in either order.
+
+```sql
+create table app.signup_allowlist (
+  pattern    text primary key check (pattern = lower(pattern) and pattern ~ '^([^@\s]+)?@[^@\s]+$'),
+  note       text,
+  created_at timestamptz not null default now()
+);  -- 'owner@example.com' (one address) or '@example.com' (whole domain)
+alter table app.signup_allowlist enable row level security;  -- no policies
+
+create function app.hook_before_user_created(event jsonb) returns jsonb
+language sql stable as $$
+  select case when exists (
+    select 1 from app.signup_allowlist a
+    where a.pattern = lower(event->'user'->>'email')
+       or a.pattern = '@' || split_part(lower(event->'user'->>'email'), '@', 2)
+  ) then '{}'::jsonb
+  else '{"error":{"http_code":403,"message":"signup_not_allowed"}}'::jsonb end
+$$;
+
+grant usage on schema app to supabase_auth_admin;
+grant select on app.signup_allowlist to supabase_auth_admin;
+grant execute on function app.hook_before_user_created(jsonb) to supabase_auth_admin;
+revoke execute on function app.hook_before_user_created(jsonb) from public, anon, authenticated;
+```
+
+Local data comes from `supabase/seed.sql`: `@example.test`, the domain every test and E2E email
+uses. The hosted project starts empty; the owner inserts their own address (README checklist).
+
+Otherwise the user id everywhere in the `app` schema is Supabase's `auth.users.id` (the token's
+`sub`), with no users table ([ADR-004](#key-decisions)):
 
 ```
 auth.users (owned by Supabase Auth; never read or written by the API)
@@ -239,6 +274,7 @@ expects there is nothing to move.
 |---|---|---|
 | `invalid_credentials` | `invalid_credentials` | "Email or password is incorrect." ([FR-005](requirements.md#fr-005)) |
 | `email_not_confirmed` | `email_not_confirmed` | "Confirm your email first." + Resend ([FR-002](requirements.md#fr-002)) |
+| HTTP 403 with message `signup_not_allowed` (from the hook) | `signup_not_allowed` | "Sign-up is invite-only. Ask the owner to add this email." ([FR-018](requirements.md#fr-018)) |
 | `user_already_exists`, `email_exists` | *(treated as success)* | Same "check your email" screen ([FR-003](requirements.md#fr-003)) |
 | `weak_password` | `weak_password` | Password policy text on the field |
 | `same_password` | `same_password` | "Choose a password you haven't used here." |
@@ -261,6 +297,9 @@ Forgot-password always shows the "if an account exists" message unless the resul
 - **Web (Testing Library):** pages and guards run against a `FakeAuthClient` (in-memory accounts,
   scripted errors). `safeNext` gets a table of hostile inputs. `api-client` 401 → refresh → retry
   → sign-out is tested with a stubbed `fetch`.
+- **Allowlist hook:** SQL-level tests call `app.hook_before_user_created` with crafted events
+  (exact match, domain match, case, no match, sub-domain not matching), plus a local sign-up with
+  a non-allowlisted email that must fail with 403 and create no `auth.users` row.
 - **End-to-end against local Supabase** (`pnpm db:start`): sign up → read the confirmation link
   from Mailpit's API (`http://127.0.0.1:54324/api/v1/messages`) → confirm → `GET /api/me` returns
   the new user; reset password the same way; sign-in rate limiting is not tested end to end.
@@ -280,6 +319,7 @@ Forgot-password always shows the "if an account exists" message unless the resul
 | ADR-006: Checking the current password on change | `signInWithPassword` with the current password, then `updateUser`; `reauthenticate()` nonce by email; `updateUser({ password, current_password })` with the current-password requirement enabled | `updateUser` with `current_password`, enforced by the Auth setting | Checked by Supabase in the same request, so a stolen session alone can't change the password ([FR-013](requirements.md#fr-013)) and no email round-trip is needed. T-001 confirms the exact `config.toml` key on the pinned CLI version; if the installed Auth version lacks it, fall back to the sign-in-then-update option and record that here. |
 | ADR-007: JWKS unreachable | Treat as 401; 503 | `503 auth_unavailable` + `Retry-After` | A 401 would make the web sign the user out during a Supabase blip; a 503 shows a retryable error and keeps the session. |
 | ADR-008: Default `AUTH_MODE` | Keep `mock`; `supabase` | `supabase` when unset; `.env.example` switches to `supabase`; API tests set `mock` or inject a resolver explicitly | Matches "real auth becomes the default"; mock remains opt-in for development and tests and is still refused in production ([FR-017](requirements.md#fr-017)). |
+| ADR-009: Invite-only sign-up | `enable_signup = false` in hosted with accounts made by hand; open sign-up; allowlist through the Before User Created hook (Postgres function); HTTP hook | Postgres-function hook reading `app.signup_allowlist` (exact email or `@domain`) | Owner's decision (2026-11-21). Stock Lists assumes a single trusted user (e.g. its XLSX import memory risk), so strangers must not get accounts. A Postgres hook needs no extra service, runs before the user row and any email exist, and is tested locally like hosted. Plain grants to `supabase_auth_admin`, no `security definer`, per Supabase's guidance. |
 
 ## Dependencies
 
@@ -299,6 +339,7 @@ Forgot-password always shows the "if an account exists" message unless the resul
   test only covers local; a short smoke check after each hosted change is in the checklist.
 - **Tokens in `localStorage`** ([ADR-003](#key-decisions)) make XSS more costly; worth revisiting
   with a CSP once hosting is chosen.
-- **Ordering with Stock Lists:** both slices create `supabase/` and `lib/api-client.ts`. Whichever
+- **Ordering with Stock Lists:** both slices create `supabase/`, a migration that needs schema
+  `app`, and `lib/api-client.ts`. Whichever
   task runs second extends the file rather than recreating it; the dev plan states this in both
   tasks.

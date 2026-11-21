@@ -30,8 +30,10 @@ These were agreed with the owner on 2026-11-21 and shape the requirements below.
 
 ## Actors
 
-- **Investor (owner)** — the signed-in user. In v1, the API's mock user (`AUTH_MODE=mock`). They
-  own every stock, list and import they create, and can see only their own.
+- **Investor (owner)** — the signed-in user: a Supabase Auth account per
+  [User Auth v1.0](../../user-auth/v1.0/requirements.md), or the API's mock user (`AUTH_MODE=mock`)
+  in development and tests. They own every stock, list and import they create, and can see only
+  their own.
 
 ## Use Cases
 
@@ -289,7 +291,8 @@ browser after the data has loaded.
 
 ### NFR-004
 
-**Security** — Every stock, list and import endpoint requires an identity (the mock user in v1).
+**Security** — Every stock, list and import endpoint requires an identity (the signed-in user's
+verified token, or the mock user in development and tests).
 An automated test proves that one user can neither read nor change another user's stocks, lists
 or list memberships.
 
@@ -323,9 +326,11 @@ database to screen.
 
 - The stack is fixed (see `CLAUDE.md`): React + Vite SPA in `apps/web`, Fastify API in
   `apps/api`, Supabase Postgres reached only by the API through Drizzle with `DATABASE_URL`. The
-  web never talks to Supabase directly.
-- Auth is the API's mock user in v1. Routes read the user with `requireIdentity(req)`, so real
-  auth can replace it without changing this feature.
+  web never reads or writes data through Supabase; its only Supabase calls are sign-in and session
+  calls to Supabase Auth ([User Auth](../../user-auth/v1.0/design.md#key-decisions)).
+- Auth comes from the User Auth slice (Supabase Auth, verified by the API); the mock user remains
+  for development and tests. Routes read the user with `requireIdentity(req)`, so this feature
+  does not depend on which one is active.
 - Schema migrations run with the Supabase CLI (`supabase/migrations/`), decided by the owner on
   2026-11-21 ([OQ-1](#oq-1)).
 - UI copy is English only for now. Thai and English labels (brief NFR-007) come with the i18n
@@ -346,7 +351,8 @@ database to screen.
 - Legacy `.xls`, `.ods`, other worksheets than the first, and Excel formulas (the cached value is
   read; a cell with no value counts as empty).
 - Column mapping in the UI (headers must match the template names).
-- Thai UI labels, real sign-in, sharing lists with other users.
+- Thai UI labels and sharing lists with other users. Sign-in is the
+  [User Auth](../../user-auth/v1.0/requirements.md) slice.
 
 ## Open Questions
 
