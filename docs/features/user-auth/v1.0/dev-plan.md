@@ -59,7 +59,7 @@ its review note. Once this T-003 lands, Stock Lists' web tests render routes wit
   and a smoke check. Add a script-level test that proves the settings against the running stack.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -140,7 +140,7 @@ unit:
   Tests sign their own tokens with a jose-generated ES256 key and createLocalJWKSet.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -247,7 +247,7 @@ unit:
   T-004 replaces it.
 - agent: react-vite-developer
 - depends_on: []
-- status: review
+- status: done
 - size: M
 ```
 
@@ -617,7 +617,7 @@ unit:
   docs/features/user-auth/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: review
+- status: done
 - size: S
 ```
 
