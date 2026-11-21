@@ -44,4 +44,51 @@ describe('loadConfig', () => {
   it('rejects a non-postgres DATABASE_URL', () => {
     expect(paths({ ...baseEnv, DATABASE_URL: 'mysql://x@localhost/db' })).toContain('DATABASE_URL')
   })
+
+  describe('supabase mode', () => {
+    const sb = { ...baseEnv, AUTH_MODE: 'supabase', SUPABASE_URL: 'http://127.0.0.1:54321' }
+
+    it('TC-U-011 requires SUPABASE_URL', () => {
+      expect(paths({ ...sb, SUPABASE_URL: '' })).toContain('SUPABASE_URL')
+    })
+
+    it('derives issuer, JWKS URL and audience', () => {
+      const config = loadConfig(sb)
+      expect(config.authMode).toBe('supabase')
+      expect(config.mockUser).toBeUndefined()
+      expect(config.supabaseAuth).toEqual({
+        issuer: 'http://127.0.0.1:54321/auth/v1',
+        jwksUrl: 'http://127.0.0.1:54321/auth/v1/.well-known/jwks.json',
+        audience: 'authenticated',
+      })
+    })
+
+    it('does not need MOCK_USER_ID', () => {
+      expect(paths({ ...sb, MOCK_USER_ID: '' })).toEqual([])
+    })
+
+    it('TC-U-011 defaults to supabase when AUTH_MODE is unset', () => {
+      const { AUTH_MODE: _a, ...unset } = sb
+      expect(loadConfig(unset).authMode).toBe('supabase')
+      expect(paths({ ...baseEnv, AUTH_MODE: '' })).toContain('SUPABASE_URL')
+    })
+
+    it('TC-A-002 mock is allowed in development and test, refused in production', () => {
+      expect(paths({ ...baseEnv, NODE_ENV: 'development' })).toEqual([])
+      expect(paths({ ...baseEnv, NODE_ENV: 'test' })).toEqual([])
+      expect(paths({ ...baseEnv, NODE_ENV: 'production' })).toContain('AUTH_MODE')
+      expect(paths({ ...sb, NODE_ENV: 'production' })).toEqual([])
+    })
+
+    it('TC-A-003 rejects a malformed URL and strips a trailing slash', () => {
+      expect(paths({ ...sb, SUPABASE_URL: 'not a url' })).toContain('SUPABASE_URL')
+      expect(loadConfig({ ...sb, SUPABASE_URL: 'http://127.0.0.1:54321/' }).supabaseAuth?.issuer).toBe(
+        'http://127.0.0.1:54321/auth/v1',
+      )
+    })
+
+    it('rejects an unknown AUTH_MODE', () => {
+      expect(paths({ ...sb, AUTH_MODE: 'basic' })).toContain('AUTH_MODE')
+    })
+  })
 })

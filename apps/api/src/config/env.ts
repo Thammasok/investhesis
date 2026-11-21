@@ -39,7 +39,8 @@ const schema = z
     DB_POOL_MAX: int(10, 1, 200),
     PUBLIC_WEB_ORIGIN: origin,
     CORS_ORIGINS: z.string().optional(),
-    AUTH_MODE: z.enum(['mock']).default('mock'),
+    AUTH_MODE: z.preprocess((v) => (v === '' ? undefined : v), z.enum(['mock', 'supabase']).default('supabase')),
+    SUPABASE_URL: optional(z.url({ protocol: /^https?$/ })),
     MOCK_USER_ID: optional(z.uuid({ error: 'must be a UUID' })),
     MOCK_USER_EMAIL: optional(z.email()),
     MOCK_USER_NAME: optional(z.string().min(1)),
@@ -52,10 +53,14 @@ const schema = z
     if (env.AUTH_MODE === 'mock') {
       if (!env.MOCK_USER_ID) need('MOCK_USER_ID', 'is required when AUTH_MODE=mock')
       if (env.NODE_ENV === 'production') need('AUTH_MODE', '"mock" is not allowed in production')
+    } else if (!env.SUPABASE_URL) {
+      need('SUPABASE_URL', 'is required when AUTH_MODE=supabase')
     }
   })
 
 export type MockUser = Readonly<{ id: string; email: string | undefined; displayName: string | undefined }>
+
+export type SupabaseAuthConfig = Readonly<{ issuer: string; jwksUrl: string; audience: string }>
 
 export type Config = Readonly<{
   env: 'development' | 'test' | 'production'
@@ -65,13 +70,20 @@ export type Config = Readonly<{
   dbPoolMax: number
   publicWebOrigin: string
   corsOrigins: readonly string[]
-  authMode: 'mock'
+  authMode: 'mock' | 'supabase'
   /** Set when authMode is `mock`: every request runs as this user. */
   mockUser: MockUser | undefined
+  /** Set when authMode is `supabase`: how access tokens are verified. */
+  supabaseAuth: SupabaseAuthConfig | undefined
   shutdownDrainDelayMs: number
   shutdownTimeoutMs: number
   trustProxy: boolean
 }>
+
+function supabaseAuthConfig(url: string): SupabaseAuthConfig {
+  const issuer = `${url.replace(/\/+$/, '')}/auth/v1`
+  return Object.freeze({ issuer, jwksUrl: `${issuer}/.well-known/jwks.json`, audience: 'authenticated' })
+}
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = schema.safeParse(env)
@@ -98,6 +110,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       e.AUTH_MODE === 'mock' && e.MOCK_USER_ID
         ? Object.freeze({ id: e.MOCK_USER_ID.toLowerCase(), email: e.MOCK_USER_EMAIL, displayName: e.MOCK_USER_NAME })
         : undefined,
+    supabaseAuth: e.AUTH_MODE === 'supabase' && e.SUPABASE_URL ? supabaseAuthConfig(e.SUPABASE_URL) : undefined,
     shutdownDrainDelayMs: e.SHUTDOWN_DRAIN_DELAY_MS,
     shutdownTimeoutMs: e.SHUTDOWN_TIMEOUT_MS,
     trustProxy: e.TRUST_PROXY,

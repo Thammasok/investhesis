@@ -1,13 +1,15 @@
 import type { FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
+import { createRemoteJWKSet } from 'jose'
+import { supabaseIdentityResolver } from '../auth/supabase-identity-resolver.ts'
 import type { Config } from '../config/env.ts'
 import { AppError } from '../lib/app-error.ts'
 
 export type Identity = Readonly<{ userId: string; email: string | undefined; displayName: string | undefined }>
 
 /**
- * Turns a request into the user it acts for. v1 has one implementation, the mock user from env;
- * real auth (e.g. Supabase Auth JWT verification) replaces it without touching routes or services.
+ * Turns a request into the user it acts for: the mock user from env (development and tests), or the
+ * subject of a verified Supabase access token. Routes and services never know which.
  */
 export type IdentityResolver = (req: FastifyRequest) => Promise<Identity>
 
@@ -28,6 +30,10 @@ export function mockIdentityResolver(user: NonNullable<Config['mockUser']>): Ide
 
 export function identityResolverFor(config: Config): IdentityResolver {
   if (config.authMode === 'mock' && config.mockUser) return mockIdentityResolver(config.mockUser)
+  if (config.authMode === 'supabase' && config.supabaseAuth) {
+    const { issuer, audience, jwksUrl } = config.supabaseAuth
+    return supabaseIdentityResolver({ issuer, audience, keys: createRemoteJWKSet(new URL(jwksUrl)) })
+  }
   throw new Error(`no identity resolver for AUTH_MODE=${config.authMode}`)
 }
 

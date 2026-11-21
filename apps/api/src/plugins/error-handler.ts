@@ -16,7 +16,7 @@ function send(reply: FastifyReply, body: Problem) {
   return reply
     .code(body.status)
     .header('content-type', PROBLEM_CONTENT_TYPE)
-    .send(JSON.stringify(body))
+    .send(JSON.stringify({ ...body, requestId: reply.request.id }))
 }
 
 function fieldErrors(error: { validation: readonly unknown[] }): FieldError[] {
