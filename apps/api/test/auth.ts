@@ -1,6 +1,9 @@
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT, type CryptoKey, type JSONWebKeySet, type JWTVerifyGetKey } from 'jose'
 import { baseEnv } from './env.ts'
 
+/** Re-exported so the root `scripts/` suite (no jose of its own) can build a remote key set. */
+export { createRemoteJWKSet } from 'jose'
+
 export const SUPABASE_URL = 'http://127.0.0.1:54321'
 export const ISSUER = `${SUPABASE_URL}/auth/v1`
 export const USER_U = '6f1c2b9e-0d4a-4c8e-9a51-2f6c0b7d3e11'

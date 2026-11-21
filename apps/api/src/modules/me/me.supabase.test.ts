@@ -1,4 +1,4 @@
-import { errors, type JWTVerifyGetKey } from 'jose'
+import { errors, exportSPKI, importJWK, type JWTVerifyGetKey } from 'jose'
 import type { FastifyInstance } from 'fastify'
 import { afterEach, beforeAll, describe, expect, it } from 'vitest'
 import { buildApp } from '../../app.ts'
@@ -126,6 +126,26 @@ describe('rejected tokens (TC-U-007, TC-A-004/005/006/009/012)', () => {
     expect(body.requestId).toBe(res.headers['x-request-id'])
     const text = res.body
     for (const leak of ['eyJ', 'signature', 'issuer', 'audience', 'expired', USER_V, ' at ']) expect(text).not.toContain(leak)
+  })
+
+  it('TC-A-006 an HS256 token signed with the published public key as the secret is rejected', async () => {
+    await start()
+    const jwk = keys.jwks.keys[0]
+    if (!jwk) throw new Error('no test key')
+    const publicKey = await importJWK(jwk, 'ES256')
+    const pem = await exportSPKI(publicKey as Parameters<typeof exportSPKI>[0])
+    const forged = await signHmac(new TextEncoder().encode(pem), {}, keys.kid)
+    const res = await me(bearer(forged))
+    expect(res.statusCode).toBe(401)
+    expect(res.json()).toMatchObject({ code: 'unauthenticated' })
+  })
+
+  it('TC-A-009 tokens with a future nbf, no exp or no sub are all 401', async () => {
+    await start()
+    for (const claims of [{ nbf: nowS() + 600 }, { exp: undefined }, { sub: undefined }]) {
+      const res = await me(bearer(await signTestToken(keys, claims)))
+      expect({ claims, status: res.statusCode }).toEqual({ claims, status: 401 })
+    }
   })
 
   it('all rejections share one body apart from requestId', async () => {

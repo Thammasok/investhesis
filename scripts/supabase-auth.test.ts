@@ -1,77 +1,18 @@
-import { execFileSync, spawnSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
-import { createClient } from '@supabase/supabase-js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-
-const API = 'http://127.0.0.1:54321'
-const MAILPIT = 'http://127.0.0.1:54324'
-const PASSWORD = 'Abc12345'
-
-const b64 = (part: string) => JSON.parse(Buffer.from(part, 'base64url').toString('utf8')) as Record<string, unknown>
-const decodeProtectedHeader = (jwt: string) => b64(jwt.split('.')[0])
-const decodeJwt = (jwt: string) => b64(jwt.split('.')[1])
-
-function anonKey(): string {
-  const out = execFileSync('pnpm', ['exec', 'supabase', 'status', '-o', 'env'], { encoding: 'utf8' })
-  const line = out.split('\n').find((l) => /^(ANON_KEY|PUBLISHABLE_KEY)=/.test(l))
-  if (!line) throw new Error('no anon key in `supabase status`; run pnpm db:start first')
-  return line.slice(line.indexOf('=') + 1).replace(/"/g, '')
-}
-
-const key = anonKey()
-const client = () => createClient(API, key, { auth: { persistSession: false, autoRefreshToken: false } })
-
-const newEmail = () => `t-${randomUUID()}@example.test`
-
-interface MailMessage {
-  ID: string
-  To: { Address: string }[]
-}
-
-async function mailFor(email: string): Promise<{ html: string; text: string }[]> {
-  for (let i = 0; i < 20; i++) {
-    const list = (await (await fetch(`${MAILPIT}/api/v1/messages`)).json()) as { messages: MailMessage[] }
-    const mine = list.messages.filter((m) => m.To.some((t) => t.Address === email))
-    if (mine.length > 0) {
-      return Promise.all(
-        mine.map(async (m) => {
-          const full = (await (await fetch(`${MAILPIT}/api/v1/message/${m.ID}`)).json()) as {
-            HTML: string
-            Text: string
-          }
-          return { html: full.HTML, text: full.Text }
-        }),
-      )
-    }
-    await new Promise((r) => setTimeout(r, 250))
-  }
-  return []
-}
-
-async function confirmedUser(email: string, password = PASSWORD) {
-  const sb = client()
-  const { error } = await sb.auth.signUp({ email, password })
-  expect(error).toBeNull()
-  const [mail] = await mailFor(email)
-  const hash = /token_hash=([^&"\s]+)/.exec(mail.html)![1]
-  const verified = await sb.auth.verifyOtp({ token_hash: hash, type: 'email' })
-  expect(verified.error).toBeNull()
-  return sb
-}
-
-// Auth fetches the email templates from Kong and reloads them about every 10 s; Kong comes up after
-// Auth, so a freshly started stack can send the built-in wording for a few seconds.
-beforeAll(async () => {
-  for (let i = 0; i < 40; i++) {
-    const email = newEmail()
-    await client().auth.signUp({ email, password: PASSWORD })
-    const [mail] = await mailFor(email)
-    if (mail && /\/auth\/confirm\?token_hash=/.test(mail.html)) return
-    await new Promise((r) => setTimeout(r, 1000))
-  }
-  throw new Error('custom email templates not loaded by local Auth after 40 s')
-}, 120_000)
+import {
+  API,
+  client,
+  confirmedUser,
+  decodeJwt,
+  decodeProtectedHeader,
+  mailFor,
+  newEmail,
+  PASSWORD,
+  psql,
+} from './lib/stack.ts'
 
 describe('signing key script', () => {
   it('keeps the existing key on a second run', () => {
@@ -150,17 +91,6 @@ describe('local Supabase Auth settings', () => {
   })
 })
 
-const DB_CONTAINER = 'supabase_db_investhesis'
-
-function psql(sql: string): { out: string; err: string; status: number | null } {
-  const r = spawnSync(
-    'docker',
-    ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'VERBOSITY=verbose'],
-    { input: sql, encoding: 'utf8' },
-  )
-  return { out: r.stdout.trim(), err: r.stderr, status: r.status }
-}
-
 const sqlState = (err: string) => /ERROR:\s+([0-9A-Z]{5}):/.exec(err)?.[1]
 
 describe('sign-up allowlist (T-009)', () => {
@@ -202,7 +132,7 @@ describe('sign-up allowlist (T-009)', () => {
     expect(error?.status).toBe(403)
     expect(error?.message).toContain('signup_not_allowed')
     expect(psql(`select count(*) from auth.users where email = '${email}';`).out).toBe('0')
-    expect(await mailFor(email)).toHaveLength(0)
+    expect(await mailFor(email, { timeoutMs: 2000 })).toHaveLength(0)
   })
 
   it('accepts new@example.test style sign-ups from the seed', async () => {

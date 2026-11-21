@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     root: import.meta.dirname,
     include: ['*.test.ts'],
+    globalSetup: ['./lib/global-setup.ts'],
     testTimeout: 30_000,
   },
 })
