@@ -18,3 +18,14 @@ vi.stubGlobal(
     dispatchEvent: () => false,
   }),
 )
+
+// jsdom has no ResizeObserver; Radix poppers (tooltip, dropdown) use it, and which test renders one
+// under load is timing dependent, so a missing stub made the suite flaky.
+vi.stubGlobal(
+  'ResizeObserver',
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+)
