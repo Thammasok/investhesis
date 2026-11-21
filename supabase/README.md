@@ -48,6 +48,13 @@ Removing a row does not delete an account that already exists. `seed.sql` allowl
 `@example.test` locally, the domain every test uses. After changing the hook in `config.toml`, run
 `pnpm db:stop && pnpm db:start`: `db:reset` alone does not reload Auth's config.
 
+## Production email (OQ-1)
+
+Supabase's built-in mailer is for testing only. For production, point Auth at a custom SMTP
+provider with a free or low-cost tier: Resend (free tier), Brevo (free tier) or Amazon SES
+(low-cost, pay per message). Any of them works with Auth's SMTP settings; the owner picks one
+before deploying (requirements OQ-1).
+
 ## Smoke check
 
 ```
