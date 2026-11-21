@@ -8,16 +8,20 @@
     "dev:api": "pnpm --filter @investhesis/api dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck",
+    "typecheck": "pnpm -r typecheck && pnpm --filter @investhesis/web exec tsc -p ../../e2e/tsconfig.json",
     "test": "pnpm -r test",
     "db:keys": "node scripts/db-keys.mjs",
     "db:start": "node scripts/db-start.mjs",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
-    "test:supabase": "vitest run --config scripts/vitest.config.mts"
+    "test:supabase": "vitest run --config scripts/vitest.config.mts",
+    "test:e2e": "node scripts/db-start.mjs && playwright test --config e2e/playwright.config.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
     "@supabase/supabase-js": "2.119.2",
+    "@types/node": "24.19.2",
     "supabase": "3.2.0",
     "vitest": "5.1.0"
   }

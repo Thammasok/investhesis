@@ -14,7 +14,7 @@ export default defineConfig({
     port: 5173,
     // The API does not exist yet; calls to /api go to it once it does, with no CORS in dev.
     proxy: {
-      '/api': { target: 'http://localhost:3000', changeOrigin: true, rewrite: (url) => url.replace(/^\/api/, '') },
+      '/api': { target: process.env.API_PROXY_TARGET ?? 'http://localhost:3000', changeOrigin: true, rewrite: (url) => url.replace(/^\/api/, '') },
     },
   },
   build: { sourcemap: true },
@@ -22,5 +22,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // `pnpm test:coverage`: the auth feature must stay at or above 90 % of lines (user-auth T-008).
+    coverage: {
+      provider: 'v8',
+      include: ['src/features/auth/**'],
+      exclude: ['src/**/*.test.{ts,tsx}'],
+      reporter: ['text'],
+      thresholds: { lines: 90 },
+    },
   },
 })
