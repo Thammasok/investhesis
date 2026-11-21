@@ -49,6 +49,13 @@ Node 24+ running TypeScript natively (type stripping, no build in dev), Fastify 
 - `modules/<name>/` holds features (`*.routes.ts` → `*.service.ts` → `*.repository.ts`, as in Pacta). `modules/me` serves `GET /me`. Drizzle table typings go in `src/db/schema/`.
 - One test: `pnpm --filter @investhesis/api exec vitest run src/modules/me/me.routes.test.ts`.
 
+### Tests and the Investhesis gate
+
+- `pnpm db:start` starts local Supabase (needs Docker); `pnpm test:supabase` runs `scripts/*.test.ts` against it (Auth settings, allowlist, TC-A integration cases; helpers in `scripts/lib/stack.ts`, Mailpit at http://127.0.0.1:54324).
+- `pnpm test:e2e` is the Playwright auth suite (`e2e/`, Chromium only; first run on a machine: `pnpm exec playwright install chromium`). It runs `db:start`, then Playwright starts web and API in supabase mode through `scripts/e2e-servers.mjs` (keys come from `supabase status -o env`, nothing is written to disk; logs go to `e2e/.output/`) plus a mock-mode pair on :5273/:3100. It uses ports 5173 and 3000, and the email links point at 5173; if another project holds 5173, set `E2E_WEB_PORT` (for example `E2E_WEB_PORT=5174 pnpm test:e2e`). Run one file with `pnpm test:e2e auth-sign-in`. Sign-ups use `@example.test` (the seeded allowlist domain). Reports: `e2e/.output/html`.
+- Coverage: `pnpm --filter @investhesis/api test:coverage` and `pnpm --filter @investhesis/web test:coverage` fail below 90 % lines for the auth code (`src/auth/`, `src/features/auth/`).
+- **Investhesis gate** (run from the repo root, in this order): `pnpm db:start`, `pnpm test:supabase`, `pnpm lint`, `pnpm typecheck` (also type-checks `e2e/`), `pnpm test`, `pnpm build`, `pnpm test:e2e`. Every test title starts with its `TC-` id; results are in `docs/features/user-auth/v1.0/test-report.md`.
+
 ## Product (from the brief)
 
 *Investhesis* is a personal, account-backed web app: one investor saves US and Thai (SET/mai) stocks, classifies each on the same **10 lenses**, and sees portfolio concentration (groups at ≥40% are flagged). It replaces a browser-only prototype of 35 US stocks, which is reference material and not code to extend. The brief's CSV import must accept that prototype's data with the same lens names and values.
