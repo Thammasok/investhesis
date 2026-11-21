@@ -59,7 +59,7 @@ its review note. Once this T-003 lands, Stock Lists' web tests render routes wit
   and a smoke check. Add a script-level test that proves the settings against the running stack.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: M
 ```
 
@@ -140,7 +140,7 @@ unit:
   Tests sign their own tokens with a jose-generated ES256 key and createLocalJWKSet.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: M
 ```
 
@@ -351,7 +351,7 @@ unit:
   `user_already_exists` as success (FR-003).
 - agent: react-vite-developer
 - depends_on: [T-003]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -455,7 +455,7 @@ unit:
   link-expired), uses `NewPasswordForm`, handles `same_password`, then goes to /stocks with toast.
 - agent: react-vite-developer
 - depends_on: [T-003, T-004]
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -547,7 +547,7 @@ unit:
   Sign out becomes a menu action: `signOut()` then navigate to /auth/sign-in (replace).
 - agent: react-vite-developer
 - depends_on: [T-003, T-004]
-- status: backlog
+- status: doing
 - size: S
 ```
 
@@ -675,7 +675,7 @@ unit:
   same suite as T-001.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: S
 ```
 
