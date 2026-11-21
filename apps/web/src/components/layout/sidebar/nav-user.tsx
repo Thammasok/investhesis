@@ -1,5 +1,6 @@
 import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react"
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router"
+import { useAuthClient } from "@/features/auth/auth-client-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -19,15 +20,15 @@ import {
 
 export type SidebarUser = { name: string; email: string }
 
+/** v1 has no display name: the email is the name (ux-design.md, Account menu). */
+export function sidebarUserFromEmail(email: string): SidebarUser {
+  return { name: email, email }
+}
+
+/** First two letters of the email's local part, upper-cased. */
 function initials(name: string) {
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join("") || "?"
-  )
+  const letters = name.split("@")[0].replace(/[^\p{L}\p{N}]/gu, "")
+  return letters.slice(0, 2).toUpperCase() || "?"
 }
 
 function UserSummary({ user }: { user: SidebarUser }) {
@@ -38,18 +39,25 @@ function UserSummary({ user }: { user: SidebarUser }) {
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{user.name}</span>
-        <span className="truncate text-xs">{user.email}</span>
+        {user.email !== user.name ? <span className="truncate text-xs">{user.email}</span> : null}
       </div>
     </>
   )
 }
 
 /**
- * Account menu at the foot of the sidebar. Account waits for its page. Sign out only returns to
- * the sign-in page for now: with mock auth there is no session to end.
+ * Account menu at the foot of the sidebar. Sign out ends the session, then replaces the history
+ * entry with the sign-in page, so Back can't return to the app.
  */
 export function NavUser({ user }: { user: SidebarUser }) {
   const { isMobile } = useSidebar()
+  const authClient = useAuthClient()
+  const navigate = useNavigate()
+
+  async function signOut() {
+    await authClient.signOut()
+    void navigate("/auth/sign-in", { replace: true })
+  }
 
   return (
     <SidebarMenu>
@@ -78,17 +86,17 @@ export function NavUser({ user }: { user: SidebarUser }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem disabled>
-                <UserIcon />
-                Account
+              <DropdownMenuItem asChild>
+                <Link to="/account">
+                  <UserIcon />
+                  Account
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link to="/auth/sign-in">
-                <LogOutIcon />
-                Sign out
-              </Link>
+            <DropdownMenuItem onSelect={() => void signOut()}>
+              <LogOutIcon />
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

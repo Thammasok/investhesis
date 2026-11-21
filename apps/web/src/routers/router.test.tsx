@@ -81,15 +81,13 @@ describe('app layout', () => {
     const fake = FakeAuthClient.signedIn()
     const router = renderAt('/stocks', fake)
     await heading('Stocks')
-    // The menu item is a plain link until T-006 wires signOut(); end the session by hand so the
-    // guest-page guard lets the sign-in page render.
-    fake.session = null
 
     await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Sign out' }))
 
     expect(await heading('Sign in to your account')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/auth/sign-in')
+    expect(fake.session).toBeNull()
   })
 })
 

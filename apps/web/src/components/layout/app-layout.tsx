@@ -3,22 +3,25 @@ import { Outlet, useNavigation } from "react-router"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { useCurrentUser } from "@/features/auth/current-user"
 import { cn } from "@/lib/utils"
 import { AppBreadcrumb } from "./app-breadcrumb"
 import { AppSidebar } from "./sidebar/app-sidebar"
-import type { SidebarUser } from "./sidebar/nav-user"
+import { sidebarUserFromEmail, type SidebarUser } from "./sidebar/nav-user"
 
-// Stand-in until sign-in exists; then the user comes from the session.
-const placeholderUser: SidebarUser = { name: "Investor", email: "investor@example.com" }
+// Shown only when neither GET /me nor the session gave an email.
+const unknownUser: SidebarUser = { name: "Account", email: "Account" }
 
 /** Shell of the signed-in area, from shadcn's `sidebar-08` block (inset sidebar). */
 export function AppLayout() {
   const navigation = useNavigation()
+  const current = useCurrentUser()
+  const user = current ? sidebarUserFromEmail(current.email) : unknownUser
 
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <AppSidebar user={placeholderUser} />
+        <AppSidebar user={user} />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">

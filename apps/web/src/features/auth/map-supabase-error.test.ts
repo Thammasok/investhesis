@@ -19,7 +19,9 @@ describe('mapSupabaseError', () => {
     [{ code: 'over_request_rate_limit' }, 'rate_limited'],
     [{ status: 403, message: 'Error running hook URI: signup_not_allowed' }, 'signup_not_allowed'],
     [{ name: 'AuthRetryableFetchError', status: 0 }, 'unavailable'],
-    [{ code: 'current_password_mismatch' }, 'wrong_current_password'],
+    [{ code: 'current_password_invalid' }, 'wrong_current_password'],
+    [{ code: 'current_password_required' }, 'wrong_current_password'],
+    [{ code: 'current_password_invalid', status: 400, message: 'anything' }, 'wrong_current_password'],
     ['TypeError: Failed to fetch', 'unavailable'],
     [null, 'unknown'],
   ])('maps %j to %s', (error, expected) => {

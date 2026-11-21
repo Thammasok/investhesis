@@ -8,7 +8,9 @@ const CODE_MAP: Record<string, AuthErrorCode> = {
   email_not_confirmed: 'email_not_confirmed',
   weak_password: 'weak_password',
   same_password: 'same_password',
-  current_password_mismatch: 'wrong_current_password',
+  // Real codes from Supabase Auth (verified in T-001): wrong and missing current password.
+  current_password_invalid: 'wrong_current_password',
+  current_password_required: 'wrong_current_password',
   otp_expired: 'link_invalid',
   flow_state_expired: 'link_invalid',
   flow_state_not_found: 'link_invalid',

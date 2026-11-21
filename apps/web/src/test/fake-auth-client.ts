@@ -41,6 +41,7 @@ export class FakeAuthClient implements AuthClient {
     reset: [] as string[],
     verify: [] as Array<[string, VerifyLinkType]>,
     setNewPassword: [] as string[],
+    changePassword: [] as Array<[string, string]>,
   }
   private listeners = new Set<AuthListener>()
 
@@ -110,7 +111,10 @@ export class FakeAuthClient implements AuthClient {
     this.args.setNewPassword.push(password)
     return this.result()
   }
-  changePassword = async () => this.result()
+  changePassword = async (current: string, next: string) => {
+    this.args.changePassword.push([current, next])
+    return this.result()
+  }
   signOut = async () => {
     this.calls.signOut += 1
     this.session = null
