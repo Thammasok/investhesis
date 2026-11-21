@@ -30,14 +30,14 @@ const authHeader = (fetchMock: ReturnType<typeof setup>['fetchMock'], call: numb
   ((fetchMock.mock.calls[call][1] ?? {}).headers as Record<string, string>).authorization
 
 describe('api-client', () => {
-  it('sends the bearer token when a session exists', async () => {
+  it('TC-C-008: attaches the bearer header when a session exists', async () => {
     const { client, fetchMock } = setup([json(200, { id: 'u1' })])
     await expect(client.get('/me')).resolves.toEqual({ id: 'u1' })
     expect(fetchMock.mock.calls[0][0]).toBe('/api/me')
     expect(authHeader(fetchMock, 0)).toBe('Bearer T1')
   })
 
-  it('sends no token in mock mode', async () => {
+  it('TC-C-008: sends no Authorization header in mock mode', async () => {
     const fetchMock = vi.fn(async () => json(200, {}))
     const client = createApiClient({
       authClient: createMockAuthClient(),
@@ -49,10 +49,13 @@ describe('api-client', () => {
     expect(headers.authorization).toBeUndefined()
   })
 
-  it('makes no request without a session', async () => {
-    const { client, fetchMock } = setup([json(200)], FakeAuthClient.signedOut())
-    await expect(client.get('/me')).rejects.toMatchObject({ status: 302 })
-    expect(fetchMock).not.toHaveBeenCalled()
+  it('TC-C-007: makes no request without a session and redirects like the guard', async () => {
+    const { client, fetchMock } = setup([json(200)], FakeAuthClient.signedOut(), '/lists')
+    const thrown = await client.get('/lists').catch((e: unknown) => e)
+    expect(thrown).toBeInstanceOf(Response)
+    expect((thrown as Response).status).toBe(302)
+    expect((thrown as Response).headers.get('location')).toBe('/auth/sign-in?next=%2Flists')
+    expect(fetchMock).toHaveBeenCalledTimes(0)
   })
 
   it('TC-U-017: recovers from one expired token', async () => {
@@ -78,33 +81,40 @@ describe('api-client', () => {
     expect(router.state.location.state).toEqual({ reason: 'session_ended' })
   })
 
-  it('ends the session when the refresh itself fails', async () => {
+  it('TC-C-011: ends the session when the refresh itself fails, without a retry', async () => {
     const auth = new FakeAuthClient({ session: fakeSession('T1'), refreshResult: null })
-    const { client, fetchMock, router } = setup([json(401)], auth)
+    const { client, fetchMock, router } = setup([json(401)], auth, '/lists')
 
     await expect(client.get('/lists')).rejects.toBeInstanceOf(ApiError)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(auth.calls.signOut).toBe(1)
-    expect(router.state.location.pathname).toBe('/auth/sign-in')
+    expect(router.state.location.pathname + router.state.location.search).toBe('/auth/sign-in?next=%2Flists')
+    expect(router.state.location.state).toEqual({ reason: 'session_ended' })
   })
 
-  it('re-sends a FormData body on the retry', async () => {
+  it('TC-C-009: re-sends an equal FormData file on the retry and returns 201', async () => {
     const auth = new FakeAuthClient({ session: fakeSession('T1'), refreshResult: fakeSession('T2') })
-    const { client, fetchMock } = setup([json(401), json(200)], auth)
+    const { client, fetchMock } = setup([json(401), json(201, { imported: 1 })], auth)
     const form = new FormData()
     form.append('file', new Blob(['a,b']), 'x.csv')
 
-    await client.post('/import', { body: form })
+    const result = await client.post('/import', { body: form })
 
-    expect(fetchMock.mock.calls[0][1]?.body).toBe(form)
-    expect(fetchMock.mock.calls[1][1]?.body).toBe(form)
+    expect(result).toEqual({ imported: 1 })
+    expect(auth.calls.refresh).toBe(1)
+    const sent = fetchMock.mock.calls.map((c) => ((c[1] as RequestInit).body as FormData).get('file') as File)
+    expect(sent).toHaveLength(2)
+    expect(await sent[1].text()).toBe(await sent[0].text())
+    expect(sent[1].name).toBe(sent[0].name)
+    expect(authHeader(fetchMock, 1)).toBe('Bearer T2')
   })
 
-  it('throws ApiError with the problem body on other failures, without retrying', async () => {
-    const { client, fetchMock, auth } = setup([json(404, { title: 'Not found' })])
-    await expect(client.get('/stocks/x')).rejects.toMatchObject({ status: 404, body: { title: 'Not found' } })
+  it.each([403, 404, 500])('TC-C-010: a %i does not refresh or sign out and rejects with ApiError', async (status) => {
+    const { client, fetchMock, auth } = setup([json(status, { title: 'x' })])
+    await expect(client.get('/stocks/x')).rejects.toMatchObject({ name: 'ApiError', status, body: { title: 'x' } })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(auth.calls.refresh).toBe(0)
+    expect(auth.calls.signOut).toBe(0)
   })
 })
