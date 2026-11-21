@@ -12,6 +12,17 @@
       {
         "allowConstantExport": true
       }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "@supabase/supabase-js",
+            "message": "Import the AuthClient port instead; only features/auth/supabase-auth-client.ts may use supabase-js."
+          }
+        ]
+      }
     ]
   },
   "overrides": [
@@ -21,6 +32,14 @@
       ],
       "rules": {
         "react/only-export-components": "off"
+      }
+    },
+    {
+      "files": [
+        "src/features/auth/supabase-auth-client.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
       }
     }
   ]
