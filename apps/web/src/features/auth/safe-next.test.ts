@@ -19,7 +19,7 @@ describe('safeNext', () => {
     ['/auth?x=1', '/stocks'],
     ['/\t/evil.example', '/stocks'],
     ['/authors', '/authors'],
-  ])('safeNext(%j) is %j', (input, expected) => {
+  ])('TC-U-016: safeNext(%j) is %j', (input, expected) => {
     expect(safeNext(input)).toBe(expected)
   })
 })

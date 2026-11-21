@@ -24,7 +24,7 @@ describe('mapSupabaseError', () => {
     [{ code: 'current_password_invalid', status: 400, message: 'anything' }, 'wrong_current_password'],
     ['TypeError: Failed to fetch', 'unavailable'],
     [null, 'unknown'],
-  ])('maps %j to %s', (error, expected) => {
+  ])('TC-U-019: maps %j to %s', (error, expected) => {
     expect(mapSupabaseError(error)).toBe(expected)
   })
 
