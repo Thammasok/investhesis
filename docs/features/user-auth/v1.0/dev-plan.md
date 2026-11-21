@@ -247,7 +247,7 @@ unit:
   T-004 replaces it.
 - agent: react-vite-developer
 - depends_on: []
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -617,7 +617,7 @@ unit:
   docs/features/user-auth/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: doing
 - size: S
 ```
 
