@@ -25,7 +25,7 @@ export function createGuards(authClient: AuthClient) {
   }
 
   const redirectIfSignedIn: LoaderFunction = async () => {
-    if (authClient.mode === 'mock') return null
+    // Mock mode is always signed in (design.md: auth pages redirect to /stocks), so no early return.
     if (await authClient.getSession()) throw redirect(DEFAULT_NEXT)
     return null
   }
