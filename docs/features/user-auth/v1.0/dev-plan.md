@@ -455,7 +455,7 @@ unit:
   link-expired), uses `NewPasswordForm`, handles `same_password`, then goes to /stocks with toast.
 - agent: react-vite-developer
 - depends_on: [T-003, T-004]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -547,7 +547,7 @@ unit:
   Sign out becomes a menu action: `signOut()` then navigate to /auth/sign-in (replace).
 - agent: react-vite-developer
 - depends_on: [T-003, T-004]
-- status: review
+- status: done
 - size: S
 ```
 
@@ -644,7 +644,7 @@ unit:
   the test gate with one root command.
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-009]
-- status: backlog
+- status: doing
 - size: L
 ```
 
@@ -675,7 +675,7 @@ unit:
   same suite as T-001.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: review
+- status: done
 - size: S
 ```
 
