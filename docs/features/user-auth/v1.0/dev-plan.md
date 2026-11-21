@@ -140,7 +140,7 @@ unit:
   Tests sign their own tokens with a jose-generated ES256 key and createLocalJWKSet.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
@@ -351,7 +351,7 @@ unit:
   `user_already_exists` as success (FR-003).
 - agent: react-vite-developer
 - depends_on: [T-003]
-- status: backlog
+- status: doing
 - size: M
 ```
 
