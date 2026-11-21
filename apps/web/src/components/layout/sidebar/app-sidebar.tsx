@@ -11,7 +11,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NavMain } from "./nav-main"
-import { NavUser, type SidebarUser } from "./nav-user"
+import { NavUser } from "./nav-user"
+import type { SidebarUser } from "./sidebar-user"
 
 type AppSidebarProps = ComponentProps<typeof Sidebar> & { user: SidebarUser }
 

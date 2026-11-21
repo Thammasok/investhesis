@@ -7,7 +7,7 @@ import { useCurrentUser } from "@/features/auth/current-user"
 import { cn } from "@/lib/utils"
 import { AppBreadcrumb } from "./app-breadcrumb"
 import { AppSidebar } from "./sidebar/app-sidebar"
-import { sidebarUserFromEmail, type SidebarUser } from "./sidebar/nav-user"
+import { sidebarUserFromEmail, type SidebarUser } from "./sidebar/sidebar-user"
 
 // Shown only when neither GET /me nor the session gave an email.
 const unknownUser: SidebarUser = { name: "Account", email: "Account" }

@@ -18,12 +18,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export type SidebarUser = { name: string; email: string }
-
-/** v1 has no display name: the email is the name (ux-design.md, Account menu). */
-export function sidebarUserFromEmail(email: string): SidebarUser {
-  return { name: email, email }
-}
+import type { SidebarUser } from "./sidebar-user"
 
 /** First two letters of the email's local part, upper-cased. */
 function initials(name: string) {

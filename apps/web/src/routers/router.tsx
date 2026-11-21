@@ -12,8 +12,6 @@ import { RouteError } from '@/views/route-error'
 import type { RouteHandle } from './route-handle'
 import { APP_ROUTE_ID } from './route-ids'
 
-export { APP_ROUTE_ID }
-
 /**
  * The route table. Each page lives in `src/views/` and exports `Component`, so `lazy` makes
  * every page its own chunk. `handle.crumb` labels a route in the header breadcrumb.
