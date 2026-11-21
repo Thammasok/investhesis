@@ -351,7 +351,7 @@ unit:
   `user_already_exists` as success (FR-003).
 - agent: react-vite-developer
 - depends_on: [T-003]
-- status: doing
+- status: review
 - size: M
 ```
 
