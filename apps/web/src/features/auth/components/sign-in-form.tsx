@@ -28,6 +28,8 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
   const [error, setError] = useState<AuthErrorCode | null>(null)
   const [unconfirmedEmail, setUnconfirmedEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  // Typed so far, handed to Forgot password through router state (never the URL).
+  const [typedEmail, setTypedEmail] = useState('')
   const busy = useRef(false)
   const passwordRef = useRef<HTMLInputElement>(null)
   const alertRef = useRef<HTMLDivElement>(null)
@@ -112,6 +114,7 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
             placeholder="you@example.com"
             required
             className="bg-background"
+            onChange={(event) => setTypedEmail(event.target.value)}
           />
         </Field>
         <Field>
@@ -119,6 +122,7 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
             <FieldLabel htmlFor="password">Password</FieldLabel>
             <Link
               to={withNext('/auth/forgot-password', next)}
+              state={typedEmail ? { email: typedEmail } : undefined}
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
               Forgot password?

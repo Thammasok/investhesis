@@ -4,6 +4,8 @@ import { AuthLayout } from '@/components/layout/auth-layout'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { createGuards } from '@/features/auth/guards'
+import { createAuthLoaders } from '@/features/auth/loaders'
+import { ConfirmFailed, ConfirmingScreen } from '@/features/auth/components/confirming'
 import { RouteError } from '@/views/route-error'
 import type { RouteHandle } from './route-handle'
 
@@ -16,6 +18,7 @@ export const APP_ROUTE_ID = 'app'
  */
 export function createRoutes(authClient: AuthClient): RouteObject[] {
   const { requireSession, redirectIfSignedIn } = createGuards(authClient)
+  const authLoaders = createAuthLoaders(authClient)
   // The pages under /auth read the client from context; the layout route supplies it.
   const AuthShell = () => (
     <AuthClientProvider client={authClient}>
@@ -33,6 +36,16 @@ export function createRoutes(authClient: AuthClient): RouteObject[] {
         { path: 'sign-in', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-in') },
         { path: 'sign-up', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-up') },
         { path: 'check-email', lazy: () => import('@/views/check-email') },
+        // Email-link pages are not guest pages: a recovery link makes a signed-in session.
+        {
+          path: 'confirm',
+          loader: authLoaders.confirm,
+          HydrateFallback: ConfirmingScreen,
+          Component: ConfirmFailed,
+        },
+        { path: 'link-expired', loader: authLoaders.linkExpired, lazy: () => import('@/views/link-expired') },
+        { path: 'forgot-password', loader: redirectIfSignedIn, lazy: () => import('@/views/forgot-password') },
+        { path: 'reset-password', loader: authLoaders.resetPassword, lazy: () => import('@/views/reset-password') },
       ],
     },
     {

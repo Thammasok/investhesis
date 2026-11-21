@@ -1,4 +1,12 @@
-import type { AuthClient, AuthErrorCode, AuthEvent, AuthListener, AuthResult, AuthSession } from '@/features/auth/auth-client'
+import type {
+  AuthClient,
+  AuthErrorCode,
+  AuthEvent,
+  AuthListener,
+  AuthResult,
+  AuthSession,
+  VerifyLinkType,
+} from '@/features/auth/auth-client'
 
 type FakeOptions = { session?: AuthSession | null; refreshResult?: AuthSession | null }
 
@@ -21,12 +29,18 @@ export class FakeAuthClient implements AuthClient {
   errorsByEmail: Record<string, AuthErrorCode> = {}
   /** When set, `signIn` waits for it before answering (double-submit tests). */
   signInGate: Promise<void> | null = null
-  readonly calls = { refresh: 0, signOut: 0, signIn: 0, signUp: 0, resend: 0 }
+  /** Email links the fake accepts, by token hash. Any other hash gives `link_invalid`. */
+  validLinks: Record<string, VerifyLinkType> = {}
+  /** When set, `verifyEmailLink` waits for it before answering (pending-UI tests). */
+  verifyGate: Promise<void> | null = null
+  readonly calls = { refresh: 0, signOut: 0, signIn: 0, signUp: 0, resend: 0, verify: 0, reset: 0 }
   readonly args = {
     signIn: [] as Array<[string, string]>,
     signUp: [] as Array<[string, string]>,
     resend: [] as string[],
     reset: [] as string[],
+    verify: [] as Array<[string, VerifyLinkType]>,
+    setNewPassword: [] as string[],
   }
   private listeners = new Set<AuthListener>()
 
@@ -79,12 +93,23 @@ export class FakeAuthClient implements AuthClient {
     this.args.resend.push(email)
     return this.result()
   }
-  verifyEmailLink = async () => this.result()
-  requestPasswordReset = async (email: string) => {
-    this.args.reset.push(email)
+  verifyEmailLink = async (tokenHash: string, type: VerifyLinkType) => {
+    this.calls.verify += 1
+    this.args.verify.push([tokenHash, type])
+    if (this.verifyGate) await this.verifyGate
+    if (this.validLinks[tokenHash] !== type) return { ok: false, error: 'link_invalid' } as const
+    this.session = fakeSession('T1', 'investor@example.com')
     return this.result()
   }
-  setNewPassword = async () => this.result()
+  requestPasswordReset = async (email: string) => {
+    this.calls.reset += 1
+    this.args.reset.push(email)
+    return this.result(email)
+  }
+  setNewPassword = async (password: string) => {
+    this.args.setNewPassword.push(password)
+    return this.result()
+  }
   changePassword = async () => this.result()
   signOut = async () => {
     this.calls.signOut += 1
