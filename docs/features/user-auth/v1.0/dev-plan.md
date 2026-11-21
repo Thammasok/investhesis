@@ -644,7 +644,7 @@ unit:
   the test gate with one root command.
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-009]
-- status: doing
+- status: review
 - size: L
 ```
 
