@@ -30,6 +30,24 @@ confirmation required, `auth.email.require_current_password = true` (a password 
 60 s between emails per address. The confirmation and recovery templates link to
 `{{ .SiteURL }}/auth/confirm?token_hash=...&type=email|recovery&next=...`.
 
+## Sign-up allowlist
+
+Sign-up is invite-only: the Before User Created hook (`app.hook_before_user_created`, enabled in
+`config.toml`) answers 403 `signup_not_allowed` unless the email matches a row of
+`app.signup_allowlist`. A row is one address or a whole domain, lower case; a `@domain` row does not
+match sub-domains (add them as their own rows). The table is reachable only by `postgres` and
+`supabase_auth_admin`, so edit it with SQL (Studio SQL editor, or `psql` on port 54322):
+
+```sql
+insert into app.signup_allowlist (pattern, note) values ('owner@example.com', 'owner');   -- one address
+insert into app.signup_allowlist (pattern, note) values ('@example.com', 'whole domain');  -- a domain
+delete from app.signup_allowlist where pattern = 'owner@example.com';                      -- remove
+```
+
+Removing a row does not delete an account that already exists. `seed.sql` allowlists
+`@example.test` locally, the domain every test uses. After changing the hook in `config.toml`, run
+`pnpm db:stop && pnpm db:start`: `db:reset` alone does not reload Auth's config.
+
 ## Smoke check
 
 ```
@@ -50,4 +68,6 @@ until then.
 - [ ] JWT signing keys: an ES256 key is the current key (rotate from the legacy secret), so the JWKS endpoint serves it
 - [ ] Custom SMTP set up (requirements OQ-1); the built-in mailer is for testing only
 - [ ] Email rate limits reviewed after SMTP is on
-- [ ] `supabase db push` for migrations; allowlist hook steps are added with the sign-up allowlist task
+- [ ] `supabase db push` for migrations (creates `app.signup_allowlist` and `app.hook_before_user_created`)
+- [ ] Authentication, Hooks: enable Before User Created, type Postgres function, schema `app`, function `hook_before_user_created`
+- [ ] Insert the owner's address before the first sign-up (SQL below); the hosted allowlist starts empty, and the hook also gates users made through the admin API

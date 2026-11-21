@@ -186,7 +186,9 @@ create table app.signup_allowlist (
   note       text,
   created_at timestamptz not null default now()
 );  -- 'owner@example.com' (one address) or '@example.com' (whole domain)
-alter table app.signup_allowlist enable row level security;  -- no policies
+alter table app.signup_allowlist enable row level security;
+create policy auth_admin_read on app.signup_allowlist
+  for select to supabase_auth_admin using (true);  -- the role does not bypass RLS; no policy for anon/authenticated
 
 create function app.hook_before_user_created(event jsonb) returns jsonb
 language sql stable as $$

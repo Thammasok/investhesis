@@ -1,8 +1,8 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 const API = 'http://127.0.0.1:54321'
 const MAILPIT = 'http://127.0.0.1:54324'
@@ -149,3 +149,95 @@ describe('local Supabase Auth settings', () => {
     throw new Error('no recovery mail')
   })
 })
+
+const DB_CONTAINER = 'supabase_db_investhesis'
+
+function psql(sql: string): { out: string; err: string; status: number | null } {
+  const r = spawnSync(
+    'docker',
+    ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'VERBOSITY=verbose'],
+    { input: sql, encoding: 'utf8' },
+  )
+  return { out: r.stdout.trim(), err: r.stderr, status: r.status }
+}
+
+const sqlState = (err: string) => /ERROR:\s+([0-9A-Z]{5}):/.exec(err)?.[1]
+
+describe('sign-up allowlist (T-009)', () => {
+  const tag = randomUUID().slice(0, 8)
+  const rows = [`owner-${tag}@mail.com`, `@dom-${tag}.test`]
+
+  beforeAll(() => {
+    const r = psql(`insert into app.signup_allowlist (pattern) values ('${rows[0]}'), ('${rows[1]}');`)
+    expect(r.err).toBe('')
+  })
+  afterAll(() => {
+    psql(`delete from app.signup_allowlist where pattern in ('${rows[0]}', '${rows[1]}');`)
+  })
+
+  const decision = (email: string) =>
+    psql(
+      `select app.hook_before_user_created(jsonb_build_object('user', jsonb_build_object('email', '${email}')));`,
+    ).out
+
+  it('TC-U-039 decides by exact address or @domain, case-insensitively, sub-domains excluded', () => {
+    const allow = '{}'
+    const deny = '{"error": {"message": "signup_not_allowed", "http_code": 403}}'
+    const cases: [string, string][] = [
+      [rows[0], allow],
+      [rows[0].toUpperCase().replace('@MAIL.COM', '@Mail.com'), allow],
+      [`a@dom-${tag}.test`, allow],
+      [`a@sub.dom-${tag}.test`, deny],
+      [`other-${tag}@mail.com`, deny],
+      [`a@dom-${tag}.test.evil.io`, deny],
+    ]
+    for (const [email, expected] of cases) {
+      expect(JSON.parse(decision(email)), email).toEqual(JSON.parse(expected))
+    }
+  })
+
+  it('TC-U-040 refuses a stranger with 403 signup_not_allowed, no user row and no mail', async () => {
+    const email = `stranger-${tag}@gmail.com`
+    const { error } = await client().auth.signUp({ email, password: PASSWORD })
+    expect(error?.status).toBe(403)
+    expect(error?.message).toContain('signup_not_allowed')
+    expect(psql(`select count(*) from auth.users where email = '${email}';`).out).toBe('0')
+    expect(await mailFor(email)).toHaveLength(0)
+  })
+
+  it('accepts new@example.test style sign-ups from the seed', async () => {
+    const { error } = await client().auth.signUp({ email: newEmail(), password: PASSWORD })
+    expect(error).toBeNull()
+  })
+
+  it('TC-U-041 keeps the allowlist and hook away from anon and authenticated', () => {
+    for (const role of ['anon', 'authenticated']) {
+      const select = psql(`set role ${role}; select * from app.signup_allowlist;`)
+      expect(sqlState(select.err), `${role} select`).toBe('42501')
+      const exec = psql(`set role ${role}; select app.hook_before_user_created('{}'::jsonb);`)
+      expect(sqlState(exec.err), `${role} execute`).toBe('42501')
+    }
+  })
+
+  it('TC-U-042 rejects upper-case and @-less patterns, accepts a domain pattern', () => {
+    expect(sqlState(psql(`insert into app.signup_allowlist (pattern) values ('Owner@Mail.com');`).err)).toBe('23514')
+    expect(sqlState(psql(`insert into app.signup_allowlist (pattern) values ('mail.com');`).err)).toBe('23514')
+    const ok = psql(`insert into app.signup_allowlist (pattern) values ('@mail-${tag}.com') returning pattern;`)
+    expect(ok.err).toBe('')
+    expect(ok.out).toContain(`@mail-${tag}.com`)
+    psql(`delete from app.signup_allowlist where pattern = '@mail-${tag}.com';`)
+  })
+
+  it('re-applying the migration is harmless (order independence with other slices)', () => {
+    const file = readFileSync(new URL('../supabase/migrations/', import.meta.url).pathname + migrationName(), 'utf8')
+    const r = psql(file)
+    expect(r.status).toBe(0)
+    expect(sqlState(r.err)).toBeUndefined()
+  })
+})
+
+function migrationName(): string {
+  const name = readdirSync(new URL('../supabase/migrations/', import.meta.url)).find((f) => f.endsWith('_signup_allowlist.sql'))
+  if (!name) throw new Error('signup_allowlist migration missing')
+  return name
+}
