@@ -4,12 +4,10 @@ import { createMemoryRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it } from 'vitest'
 import type { AuthClient } from '@/features/auth/auth-client'
-import { createMockAuthClient } from '@/features/auth/mock-auth-client'
 import { FakeAuthClient } from '@/test/fake-auth-client'
 import { createRoutes } from './router'
 
-// Signed in by default. The sign-in page and the account menu still run through the mock client
-// (no guard redirects) until T-004 and T-006 make them real.
+// Signed in by default; guest pages (the sign-in tests below) use a signed-out fake.
 function renderAt(path: string, authClient: AuthClient = FakeAuthClient.signedIn()) {
   const router = createMemoryRouter(createRoutes(authClient), { initialEntries: [path] })
   render(<RouterProvider router={router} />)
@@ -80,8 +78,12 @@ describe('app layout', () => {
   })
 
   it('signs out from the account menu to the sign-in page', async () => {
-    const router = renderAt('/stocks', createMockAuthClient())
+    const fake = FakeAuthClient.signedIn()
+    const router = renderAt('/stocks', fake)
     await heading('Stocks')
+    // The menu item is a plain link until T-006 wires signOut(); end the session by hand so the
+    // guest-page guard lets the sign-in page render.
+    fake.session = null
 
     await userEvent.click(screen.getByRole('button', { name: 'Account menu' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Sign out' }))
@@ -93,7 +95,7 @@ describe('app layout', () => {
 
 describe('auth layout', () => {
   it('redirects /auth to the sign-in page, outside the app shell', async () => {
-    const router = renderAt('/auth', createMockAuthClient())
+    const router = renderAt('/auth', FakeAuthClient.signedOut())
     expect(await heading('Sign in to your account')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/auth/sign-in')
     expect(screen.queryByRole('navigation', { name: 'Main' })).not.toBeInTheDocument()
@@ -101,7 +103,7 @@ describe('auth layout', () => {
   })
 
   it('enters the app after signing in, replacing the sign-in entry', async () => {
-    const router = renderAt('/auth/sign-in', createMockAuthClient())
+    const router = renderAt('/auth/sign-in', FakeAuthClient.signedOut())
     await heading('Sign in to your account')
 
     await userEvent.type(screen.getByLabelText('Email'), 'investor@example.com')
@@ -115,7 +117,7 @@ describe('auth layout', () => {
   })
 
   it('does not sign in while a required field is empty', async () => {
-    const router = renderAt('/auth/sign-in', createMockAuthClient())
+    const router = renderAt('/auth/sign-in', FakeAuthClient.signedOut())
     await heading('Sign in to your account')
 
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }))

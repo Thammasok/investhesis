@@ -17,7 +17,17 @@ export class FakeAuthClient implements AuthClient {
   refreshResult: AuthSession | null
   /** The next call that returns a result fails with this code, once. */
   nextError: AuthErrorCode | null = null
-  readonly calls = { refresh: 0, signOut: 0, signIn: 0 }
+  /** Per-email scripted errors, kept across calls (unlike `nextError`). */
+  errorsByEmail: Record<string, AuthErrorCode> = {}
+  /** When set, `signIn` waits for it before answering (double-submit tests). */
+  signInGate: Promise<void> | null = null
+  readonly calls = { refresh: 0, signOut: 0, signIn: 0, signUp: 0, resend: 0 }
+  readonly args = {
+    signIn: [] as Array<[string, string]>,
+    signUp: [] as Array<[string, string]>,
+    resend: [] as string[],
+    reset: [] as string[],
+  }
   private listeners = new Set<AuthListener>()
 
   constructor({ session = null, refreshResult }: FakeOptions = {}) {
@@ -38,8 +48,8 @@ export class FakeAuthClient implements AuthClient {
     for (const listener of this.listeners) listener(event)
   }
 
-  private result(): AuthResult {
-    const error = this.nextError
+  private result(email?: string): AuthResult {
+    const error = this.nextError ?? (email ? (this.errorsByEmail[email] ?? null) : null)
     this.nextError = null
     return error ? { ok: false, error } : { ok: true }
   }
@@ -51,16 +61,29 @@ export class FakeAuthClient implements AuthClient {
     this.session = this.refreshResult
     return this.refreshResult
   }
-  signIn = async (email: string) => {
+  signIn = async (email: string, password: string) => {
     this.calls.signIn += 1
-    const result = this.result()
+    this.args.signIn.push([email, password])
+    if (this.signInGate) await this.signInGate
+    const result = this.result(email)
     if (result.ok) this.session = fakeSession('T1', email)
     return result
   }
-  signUp = async () => this.result()
-  resendConfirmation = async () => this.result()
+  signUp = async (email: string, password: string) => {
+    this.calls.signUp += 1
+    this.args.signUp.push([email, password])
+    return this.result(email)
+  }
+  resendConfirmation = async (email: string) => {
+    this.calls.resend += 1
+    this.args.resend.push(email)
+    return this.result()
+  }
   verifyEmailLink = async () => this.result()
-  requestPasswordReset = async () => this.result()
+  requestPasswordReset = async (email: string) => {
+    this.args.reset.push(email)
+    return this.result()
+  }
   setNewPassword = async () => this.result()
   changePassword = async () => this.result()
   signOut = async () => {

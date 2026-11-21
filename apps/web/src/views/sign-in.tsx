@@ -1,15 +1,9 @@
-import { useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { SignInForm } from '@/features/auth/components/sign-in-form'
+import type { SignInState } from '@/features/auth/guards'
 
 export function Component() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    document.title = 'Sign in · Investhesis'
-  }, [])
-
-  // v1 runs every API request as the mock user (AUTH_MODE=mock), so signing in only enters the
-  // app. Swap this for the real sign-in call once auth exists.
-  return <SignInForm onSignIn={() => navigate('/stocks', { replace: true })} />
+  const [params] = useSearchParams()
+  const state = useLocation().state as SignInState | null
+  return <SignInForm next={params.get('next')} reason={state?.reason} />
 }

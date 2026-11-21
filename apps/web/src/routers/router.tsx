@@ -2,6 +2,7 @@ import { createBrowserRouter, redirect, type RouteObject } from 'react-router'
 import { AppLayout } from '@/components/layout/app-layout'
 import { AuthLayout } from '@/components/layout/auth-layout'
 import type { AuthClient } from '@/features/auth/auth-client'
+import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { createGuards } from '@/features/auth/guards'
 import { RouteError } from '@/views/route-error'
 import type { RouteHandle } from './route-handle'
@@ -15,15 +16,23 @@ export const APP_ROUTE_ID = 'app'
  */
 export function createRoutes(authClient: AuthClient): RouteObject[] {
   const { requireSession, redirectIfSignedIn } = createGuards(authClient)
+  // The pages under /auth read the client from context; the layout route supplies it.
+  const AuthShell = () => (
+    <AuthClientProvider client={authClient}>
+      <AuthLayout />
+    </AuthClientProvider>
+  )
   return [
     {
       // Sign-in pages, outside the signed-in area so its future guard never applies to them.
       path: '/auth',
-      Component: AuthLayout,
+      Component: AuthShell,
       ErrorBoundary: RouteError,
       children: [
         { index: true, loader: () => redirect('/auth/sign-in') },
         { path: 'sign-in', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-in') },
+        { path: 'sign-up', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-up') },
+        { path: 'check-email', lazy: () => import('@/views/check-email') },
       ],
     },
     {
