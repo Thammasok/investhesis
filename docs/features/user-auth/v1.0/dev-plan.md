@@ -59,7 +59,7 @@ its review note. Once this T-003 lands, Stock Lists' web tests render routes wit
   and a smoke check. Add a script-level test that proves the settings against the running stack.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
