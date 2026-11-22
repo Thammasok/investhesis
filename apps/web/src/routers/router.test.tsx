@@ -5,7 +5,7 @@ import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it } from 'vitest'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { FakeAuthClient } from '@/test/fake-auth-client'
-import { makeStock } from '@/test/stock-fixtures'
+import { makeList, makeStock } from '@/test/stock-fixtures'
 import { emptyApi } from '@/test/stub-api'
 import { createRoutes } from './router'
 
@@ -14,6 +14,7 @@ function pagesApi() {
   return emptyApi()
     .on('GET /stocks/AAPL', makeStock({ id: 'AAPL', ticker: 'AAPL' }))
     .on('GET /stocks/PTT', makeStock({ id: 'PTT', ticker: 'PTT' }))
+    .on('GET /lists/L1', makeList('L1', 'Core holdings'))
 }
 
 // Signed in by default; guest pages (the sign-in tests below) use a signed-out fake.
@@ -42,7 +43,7 @@ describe('router', () => {
     ['/stocks/AAPL', /^AAPL/],
     ['/stocks/new', 'Add stock'],
     ['/stocks/AAPL/edit', 'Edit stock'],
-    ['/lists/L1', 'List L1'],
+    ['/lists/L1', 'Core holdings'],
   ])('renders %s', async (path, name) => {
     renderAt(path)
     expect(await heading(name)).toBeInTheDocument()
@@ -81,7 +82,7 @@ describe('app layout', () => {
   it.each([
     ['/stocks/new', ['Stocks', 'New stock']],
     ['/stocks/PTT/edit', ['Stocks', 'PTT', 'Edit']],
-    ['/lists/L1', ['Lists', 'L1']],
+    ['/lists/L1', ['Lists', 'Core holdings']],
   ])('shows the trail for %s in the breadcrumb', async (path, labels) => {
     renderAt(path)
     await screen.findByRole('heading', { level: 1 })

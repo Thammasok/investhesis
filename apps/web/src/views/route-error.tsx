@@ -1,10 +1,12 @@
-import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
+import { isRouteErrorResponse, Link, useLocation, useRouteError } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api-client'
 
 /** Shown when a route fails to load or render, e.g. a lazy chunk that can't be fetched. */
 export function RouteError() {
   const error = useRouteError()
+  // The way back is the section the failed page belongs to.
+  const inLists = /^\/lists(\/|$)/.test(useLocation().pathname)
   const notFound = (isRouteErrorResponse(error) && error.status === 404) || (error instanceof ApiError && error.status === 404)
   const message = notFound
     ? "We couldn't find that page or item. It may have been deleted."
@@ -19,7 +21,7 @@ export function RouteError() {
       <div className="flex gap-2">
         <Button onClick={() => window.location.reload()}>Reload</Button>
         <Button variant="outline" asChild>
-          <Link to="/stocks">Go to stocks</Link>
+          {inLists ? <Link to="/lists">Go to lists</Link> : <Link to="/stocks">Go to stocks</Link>}
         </Button>
       </div>
     </main>

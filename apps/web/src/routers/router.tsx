@@ -7,6 +7,7 @@ import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { loadCurrentUser } from '@/features/auth/current-user'
 import { createGuards, sessionEndedHandler } from '@/features/auth/guards'
 import { createAuthLoaders } from '@/features/auth/loaders'
+import { listsRoutes } from '@/features/lists/lists-routes'
 import { stocksRoutes } from '@/features/stocks/stocks-routes'
 import { createApiClient, type ApiClient } from '@/lib/api-client'
 import { ConfirmFailed, ConfirmingScreen } from '@/features/auth/components/confirming'
@@ -87,19 +88,7 @@ export function createRoutes(
           handle: { crumb: 'Value chains' } satisfies RouteHandle,
           lazy: () => import('@/views/chains'),
         },
-        {
-          path: 'lists',
-          handle: { crumb: 'Lists' } satisfies RouteHandle,
-          children: [
-            { index: true, lazy: () => import('@/views/lists') },
-            {
-              path: ':id',
-              // The list page replaces this with the list name from its loader data.
-              handle: { crumb: (params) => params.id ?? '' } satisfies RouteHandle,
-              lazy: () => import('@/views/list-detail'),
-            },
-          ],
-        },
+        listsRoutes(apiClient),
         {
           path: 'import-export',
           handle: { crumb: 'Import / export' } satisfies RouteHandle,

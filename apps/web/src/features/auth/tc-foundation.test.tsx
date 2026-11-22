@@ -149,7 +149,10 @@ describe('TC-C-005 an expired but refreshable session is renewed before the page
 
   it('TC-C-005: when the refresh succeeds /lists renders with Bearer T2', async () => {
     const auth = new RenewingFake({ session: fakeSession('T1'), refreshResult: fakeSession('T2') })
-    const fetchMock = vi.fn(async (_u: string, _i?: RequestInit) => json(200, { id: 'u', email: 'a@x.io', displayName: null }))
+    // /me for the shell, an empty list of lists for the page.
+    const fetchMock = vi.fn(async (url: string, _i?: RequestInit) =>
+      url.endsWith('/lists') ? json(200, { items: [] }) : json(200, { id: 'u', email: 'a@x.io', displayName: null }),
+    )
 
     const router = open(auth, fetchMock)
 
