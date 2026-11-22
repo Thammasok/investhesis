@@ -22,7 +22,10 @@ import {
   us,
 } from './lib/sl.ts'
 
-const ExcelJS = createRequire(join(__dirname, '../apps/api/package.json'))('exceljs') as typeof import('exceljs')
+// exceljs belongs to the API workspace; load it from there and type only what is used.
+const ExcelJS = createRequire(join(__dirname, '../apps/api/package.json'))('exceljs') as {
+  Workbook: new () => { xlsx: { load(data: Buffer): Promise<unknown> }; worksheets: { getRow(n: number): { values: unknown } }[] }
+}
 const BOM = [0xef, 0xbb, 0xbf]
 
 const row = (fields: Record<string, string>) => HEADERS.map((h) => fields[h] ?? '')
@@ -290,7 +293,7 @@ test.describe('import', () => {
     expect([...csvBytes.subarray(0, 3)]).toEqual(BOM)
     expect(csvBytes.toString('utf8').slice(1).split(/\r?\n/)[0]!.split(',')).toHaveLength(19)
     const book = new ExcelJS.Workbook()
-    await book.xlsx.load(readFileSync((await xlsxDownload.path())!) as never)
+    await book.xlsx.load(readFileSync((await xlsxDownload.path())!))
     expect(book.worksheets[0]!.getRow(1).values).toEqual([undefined, ...HEADERS])
     expect(statuses).toEqual([200, 200])
   })
