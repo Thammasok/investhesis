@@ -231,13 +231,25 @@ Notes:
 
   Called by create, update and import, so all three apply [FR-005](requirements.md#fr-005)
   identically (a cleared cycle with a sector set falls back to the default).
-- `StockInput`, `StockPatch`, `ListName` Zod schemas. The API uses them in route schemas; the web
+- `resolveEconomicCycle({ gicsSector, input?, current? })` as implemented: `input` is the cycle in the
+  request (`undefined` not sent, `null` cleared, which drops a `manual` value too), `current` is
+  `{ economicCycle, source }` as stored. Returns `{ economicCycle, source }` (both `null` for none).
+- `StockInput`, `StockPatch`, `ListName` Zod schemas. Both stock schemas are strict: a key outside
+  the schema (`currency`, `userId`, `lensSources`, ...) fails with the key as the issue path.
+  `StockInput` output carries `currency` derived from the market, lens fields as `null` and list
+  fields as `[]` when unset. `StockPatch` has absent = unchanged and `null` = cleared; the cross-field
+  rules need the stored stock, so the API re-parses the merged stock with `StockInput`. Lengths count
+  code points, as Postgres `char_length` does (test-cases G-9); names and list names are trimmed. The API uses them in route schemas; the web
   uses them for client-side form checks so messages match.
 - `TEMPLATE_COLUMNS` (header, field, kind: `single` / `multi`) and
   `canonicaliseRow(cells: Record<header, string>)` → `{ ok: true, input: StockInput } |
   { ok: false, errors: FieldError[] }`. It applies case-insensitive matching to the canonical
   spelling ([FR-018](requirements.md#fr-018)), splits `;` lists, treats empty cells as unset,
   maps `sector` to `gicsSector` (US) or `setIndustryGroup` (TH), and runs `StockInput`.
+  `FieldError` is `{ path, column, message }`: `path` is the `StockInput` key, `column` the template
+  header to point at (`sector` or `gics_sector` for the sector pair). Cells are read by canonical
+  header; matching file headers to them is the caller's job. A `TEMPLATE_COLUMNS` entry may carry
+  `thField` (the `sector` column fills `gicsSector` for US and `setIndustryGroup` for TH).
 
 ## API Contracts
 
@@ -475,7 +487,7 @@ The error-report CSV ([FR-023](requirements.md#fr-023)) is built in the browser 
 | ADR-002: Where tables live | `public` with RLS policies; private `app` schema | `app` schema, not exposed to the Supabase Data API; usage revoked from `anon`/`authenticated`; RLS enabled with no policies | Only the API reads the database. Keeping tables out of `public` means the Supabase auto-REST API can't reach them even if a key leaks; RLS without policies is a second deny. |
 | ADR-003: Per-user isolation | Postgres RLS with a session user; repository scoping | Every repository function takes `userId` and filters on it; composite `(id, user_id)` foreign keys on `list_stocks` | Matches the existing `requireIdentity` pattern and works with the API's single DB role. The composite keys stop cross-user joins at the DB level. |
 | ADR-004: Lens values in the DB | Postgres enums; lookup tables; `text` + API validation | `text` / `text[]`, validated by `@investhesis/domain`; `CHECK`s only on market, exchange, currency, ticker, name | Lens vocabularies will change (new themes, Thai size rules, new markets); changing an enum or `CHECK` needs a migration each time. One vocabulary in one package keeps web, API and import consistent. |
-| ADR-005: Sharing rules between web and API | Duplicate code; `GET /vocabulary`; workspace package | `packages/domain` exporting TypeScript source (`exports: "./src/index.ts"`), erasable syntax only | Vite compiles it for the web; Node 24 strips its types at runtime because pnpm links resolve to `packages/domain/src`, outside `node_modules`. T-001 proves this with the API's `dev` and `test` commands; the fallback is a `tsc` build to `dist`. The OpenAPI spec remains the HTTP contract. |
+| ADR-005: Sharing rules between web and API | Duplicate code; `GET /vocabulary`; workspace package | `packages/domain` exporting TypeScript source (`exports: "./src/index.ts"`), erasable syntax only | Vite compiles it for the web; Node 24 strips its types at runtime because pnpm links resolve to `packages/domain/src`, outside `node_modules`. T-002 proved it (2026-11-22, Node 26 / Vite 8 / Vitest 5): `node src/main.ts` under `pnpm dev`, `node dist/main.js` after `tsc -p tsconfig.build.json`, API and web Vitest, and `vite build` all load the package from source, so no `dist` build is needed. The API build neither emits nor type-errors on the package (tsc 7 does not apply `rootDir` to it); at runtime Node strips its types. The OpenAPI spec remains the HTTP contract. |
 | ADR-006: Import flow state | Server-side import session table; client-only parsing; stateless preview + confirm | Stateless: preview and confirm each receive the file | No table, no expiry job, and nothing of the file is kept ([NFR-005](requirements.md#nfr-005)). Confirm re-validates against the database at write time, so a stock added between preview and confirm can't cause a duplicate. Cost: the file is uploaded twice (≤ 1 MB). |
 | ADR-007: Where and how to parse files | Parse in the browser; parse in the API | API: `csv-parse` (sync, BOM aware) for CSV, `exceljs` (`workbook.xlsx.load(buffer)`, first worksheet, formula cells read from their cached `result`) for XLSX; `@fastify/multipart` with `fileSize` 1 MB, `files` 1 | One validator for hand entry and import, and the server never trusts client-parsed rows. Both libraries are MIT and current on npm; the npm `xlsx` (SheetJS) package is no longer updated there. Risk: a compressed XLSX can expand a lot in memory; accepted for single-user v1 and noted for real auth. |
 | ADR-008: Web server state | TanStack Query; React Router loaders/actions | React Router data-mode loaders and actions | The router is already in data mode; revalidation after actions covers this slice with no new dependency. TanStack Query can be added when a page needs caching across routes. |
@@ -493,6 +505,6 @@ The error-report CSV ([FR-023](requirements.md#fr-023)) is built in the browser 
 
 ## Risks
 
-- **Type stripping of a workspace package** ([ADR-005](#key-decisions)) is unproven in this repo; T-001 checks it before anything depends on it.
+- **Type stripping of a workspace package** ([ADR-005](#key-decisions)) was proven in T-002 (see ADR-005); a future Node or tsc change that breaks it would show in `pnpm build` and the API tests.
 - **XLSX decompression size** ([ADR-007](#key-decisions)) is bounded only by the 1 MB upload and the 1,000-row limit, which is checked after loading the workbook.
 - **API tests now need Docker and `supabase start`**. The test-gate table in `.claude/rules/test-gate.md` is still Pacta's and should be rewritten with `pnpm db:start && pnpm db:reset` as step 1.

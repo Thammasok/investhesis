@@ -8,7 +8,7 @@ The repo holds:
 
 - `Multi-Market Stock Watchlist Brief.md` — the product brief. It is the only source of truth for what to build.
 - `.claude/` — rules, knowledge notes and skills for a planning → design → dev-plan → TDD workflow.
-- A pnpm workspace (`pnpm-workspace.yaml`: `apps/*`, `packages/*`) with `apps/web` (`@investhesis/web`) and `apps/api` (`@investhesis/api`). The API has no tables or business routes yet.
+- A pnpm workspace (`pnpm-workspace.yaml`: `apps/*`, `packages/*`) with `apps/web` (`@investhesis/web`), `apps/api` (`@investhesis/api`) and `packages/domain` (`@investhesis/domain`). The API has no business routes yet; the stock-lists schema is in `supabase/migrations/`.
 
 ### Stack (decided by the owner, 2026-11-21)
 
@@ -49,6 +49,14 @@ Node 24+ running TypeScript natively (type stripping, no build in dev), Fastify 
 - `modules/<name>/` holds features (`*.routes.ts` → `*.service.ts` → `*.repository.ts`, as in Pacta). `modules/me` serves `GET /me`. Drizzle table typings go in `src/db/schema/`.
 - Data model (stock-lists T-001): migration `supabase/migrations/*_stock_lists.sql` creates `app.stocks`, `app.lists`, `app.list_stocks`; hand-written Drizzle typings in `src/db/schema/stock-lists.ts` are checked against `information_schema` by `src/db/schema.drift.test.ts`. DB-backed tests (`*.constraints.test.ts`, `test/db.test.ts`, and later module tests) need `pnpm db:start`; they read `DATABASE_URL` (default `postgres://postgres:postgres@localhost:54322/postgres`). `test/db.ts` `buildTestApp(userId?)` builds the app on the real database as one user (`appFor(otherId)` for a second user) and `cleanup()` deletes those users' rows. Give every test file its own random user ids.
 - One test: `pnpm --filter @investhesis/api exec vitest run src/modules/me/me.routes.test.ts`.
+
+### `packages/domain`
+
+`@investhesis/domain` is the vocabulary and rules shared by the API and the web (Stock Lists ADR-005): markets, exchanges, currencies, indexes, `LENS_VALUES` (FR-003 spelling), `normaliseTicker`/`TICKER_PATTERN`, `CYCLE_BY_GICS` and `resolveEconomicCycle`, the Zod `StockInput`/`StockPatch`/`ListName`, `TEMPLATE_COLUMNS` and `canonicaliseRow`. Only dependency is Zod; no I/O.
+
+- It exports TypeScript source (`exports: "./src/index.ts"`, no build). Node 24+ strips the types at runtime, Vite and Vitest compile it, so the code must stay erasable (no `enum`, `namespace` or parameter properties) and relative imports end in `.ts`.
+- Validation messages are in `src/messages.ts` (one map, ready for i18n). Lengths count code points. `StockInput` and `StockPatch` reject unknown keys with the key as the issue path.
+- Tests are `src/*.test.ts` (title starts with the TC- id). `pnpm --filter @investhesis/domain test:coverage` fails below 95 % lines.
 
 ### Tests and the Investhesis gate
 
