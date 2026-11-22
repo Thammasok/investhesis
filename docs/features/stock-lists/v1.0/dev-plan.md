@@ -142,7 +142,7 @@ unit:
   design.md ADR-005.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: L
 ```
 
