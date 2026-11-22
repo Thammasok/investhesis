@@ -114,3 +114,36 @@ export async function noHorizontalScroll(page: Page): Promise<boolean> {
 export const codePoints = (s: string) => [...s].map((c) => c.codePointAt(0))
 
 export { expect }
+
+// ---- import wizard -------------------------------------------------------------------------
+
+/** Chooses a file in the import wizard's hidden input. */
+export async function pickFile(page: Page, name: string, body: Buffer | string, mimeType = 'application/octet-stream') {
+  await page.locator('input[type="file"]').setInputFiles({ name, mimeType, buffer: Buffer.isBuffer(body) ? body : Buffer.from(body) })
+}
+
+/** Picks the "Add to list" target in step 2 (an existing list or `New list…`). */
+export async function chooseTarget(page: Page, option: string) {
+  await page.locator('#import-target').click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+}
+
+export const importButton = (page: Page) => page.getByRole('button', { name: /^Import \d/ })
+
+/** The summary line of step 3, e.g. `4 created · 0 skipped · 0 updated · 0 failed`. */
+export const summaryLine = (page: Page) => page.getByRole('status').filter({ hasText: 'created' })
+
+export async function previewCounts(page: Page): Promise<string[]> {
+  await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible()
+  return page.locator('[data-slot="badge"]').filter({ hasText: /^\d+ (new|duplicate|error)$/ }).allTextContents()
+}
+
+/**
+ * An arrow key that lasts long enough for Radix's roving focus: it moves focus on a timer after keydown
+ * and only checks the radio while the key is still down, which `keyboard.press` (instant keyup) misses.
+ */
+export async function arrow(page: Page, key: 'ArrowRight' | 'ArrowLeft' | 'ArrowDown' | 'ArrowUp') {
+  await page.keyboard.down(key)
+  await page.waitForTimeout(60)
+  await page.keyboard.up(key)
+}
