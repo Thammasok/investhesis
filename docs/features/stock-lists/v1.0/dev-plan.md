@@ -262,7 +262,7 @@ unit:
   (findOwnedList, createList, addMemberships). Covers FR-009–FR-013, FR-025.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -352,7 +352,7 @@ unit:
   insertMany with on conflict do nothing, update). Covers FR-001–FR-008, FR-014, FR-025, NFR-001.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002, T-003]
-- status: backlog
+- status: doing
 - size: L
 ```
 
