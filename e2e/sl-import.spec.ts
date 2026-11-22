@@ -332,6 +332,9 @@ test.describe('import', () => {
     await page.keyboard.press('Enter')
     await page.getByRole('option', { name: 'New list…' }).focus()
     await page.keyboard.press('Enter')
+    // The listbox closes and focus returns to the trigger on a later tick; Tab only after that.
+    await expect(page.locator('#import-target')).toHaveText('New list…')
+    await expect(page.locator('#import-target')).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(page.getByLabel('New list name')).toBeFocused()
     await page.keyboard.type('Keys')
