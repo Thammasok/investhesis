@@ -31,6 +31,9 @@ describe('router', () => {
     ['/lists', 'Lists'],
     ['/import-export', 'Import / export'],
     ['/stocks/AAPL', 'Stock AAPL'],
+    ['/stocks/new', 'Add stock'],
+    ['/stocks/AAPL/edit', 'Edit stock'],
+    ['/lists/L1', 'List L1'],
   ])('renders %s', async (path, name) => {
     renderAt(path)
     expect(await heading(name)).toBeInTheDocument()
@@ -64,6 +67,22 @@ describe('app layout', () => {
     const trail = within(breadcrumb())
     expect(trail.getByRole('link', { name: 'Stocks' })).toHaveAttribute('href', '/stocks')
     expect(trail.getByText('PTT')).toHaveAttribute('aria-current', 'page')
+  })
+
+  it.each([
+    ['/stocks/new', ['Stocks', 'New stock']],
+    ['/stocks/PTT/edit', ['Stocks', 'PTT', 'Edit']],
+    ['/lists/L1', ['Lists', 'L1']],
+  ])('shows the trail for %s in the breadcrumb', async (path, labels) => {
+    renderAt(path)
+    await screen.findByRole('heading', { level: 1 })
+    const trail = within(breadcrumb())
+    for (const label of labels) expect(trail.getByText(label)).toBeInTheDocument()
+    expect(trail.getByText(labels.at(-1) as string)).toHaveAttribute('aria-current', 'page')
+    expect(mainNav().getByRole('link', { name: path.startsWith('/lists') ? 'Lists' : 'Stocks' })).toHaveAttribute(
+      'data-active',
+      'true',
+    )
   })
 
   it('collapses and expands the sidebar from the header trigger', async () => {

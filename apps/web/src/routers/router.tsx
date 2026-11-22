@@ -73,9 +73,22 @@ export function createRoutes(
           children: [
             { index: true, lazy: () => import('@/views/stocks') },
             {
+              path: 'new',
+              handle: { crumb: 'New stock' } satisfies RouteHandle,
+              lazy: () => import('@/views/stock-new'),
+            },
+            {
               path: ':id',
+              // Stock pages replace this with the ticker from their loader data.
               handle: { crumb: (params) => params.id ?? '' } satisfies RouteHandle,
-              lazy: () => import('@/views/stock-detail'),
+              children: [
+                { index: true, lazy: () => import('@/views/stock-detail') },
+                {
+                  path: 'edit',
+                  handle: { crumb: 'Edit' } satisfies RouteHandle,
+                  lazy: () => import('@/views/stock-edit'),
+                },
+              ],
             },
           ],
         },
@@ -97,7 +110,15 @@ export function createRoutes(
         {
           path: 'lists',
           handle: { crumb: 'Lists' } satisfies RouteHandle,
-          lazy: () => import('@/views/lists'),
+          children: [
+            { index: true, lazy: () => import('@/views/lists') },
+            {
+              path: ':id',
+              // The list page replaces this with the list name from its loader data.
+              handle: { crumb: (params) => params.id ?? '' } satisfies RouteHandle,
+              lazy: () => import('@/views/list-detail'),
+            },
+          ],
         },
         {
           path: 'import-export',
