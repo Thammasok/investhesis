@@ -461,7 +461,7 @@ unit:
   for the preview half.
 - agent: software-engineer-backend
 - depends_on: [T-002, T-004]
-- status: doing
+- status: review
 - size: L
 ```
 
