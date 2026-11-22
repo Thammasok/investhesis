@@ -1057,7 +1057,7 @@ unit:
   ux-design.md. Save as docs/features/stock-lists/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
