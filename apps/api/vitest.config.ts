@@ -4,12 +4,19 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
-    // `pnpm test:coverage`: the auth code must stay at or above 90 % of lines (user-auth T-008).
+    // `pnpm test:coverage`: the auth code must stay at or above 90 % of lines (user-auth T-008), the
+    // stocks, lists and imports modules at or above 85 % (stock-lists T-013).
     coverage: {
       provider: 'v8',
-      include: ['src/auth/**'],
+      include: ['src/auth/**', 'src/modules/stocks/**', 'src/modules/lists/**', 'src/modules/imports/**'],
+      exclude: ['src/**/*.test.ts'],
       reporter: ['text'],
-      thresholds: { lines: 90 },
+      thresholds: {
+        'src/auth/**': { lines: 90 },
+        'src/modules/stocks/**': { lines: 85 },
+        'src/modules/lists/**': { lines: 85 },
+        'src/modules/imports/**': { lines: 85 },
+      },
     },
   },
 })

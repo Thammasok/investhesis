@@ -22,13 +22,14 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    // `pnpm test:coverage`: the auth feature must stay at or above 90 % of lines (user-auth T-008).
+    // `pnpm test:coverage`: the auth feature must stay at or above 90 % of lines (user-auth T-008) and
+    // the features as a whole at or above 70 % (stock-lists T-013).
     coverage: {
       provider: 'v8',
-      include: ['src/features/auth/**'],
+      include: ['src/features/**'],
       exclude: ['src/**/*.test.{ts,tsx}'],
       reporter: ['text'],
-      thresholds: { lines: 90 },
+      thresholds: { 'src/features/auth/**': { lines: 90 }, 'src/features/**': { lines: 70 } },
     },
   },
 })
