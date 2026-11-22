@@ -653,7 +653,7 @@ unit:
   ticker or list name (design.md §Web, ux-design.md §Shared patterns).
 - agent: react-vite-developer
 - depends_on: [T-002]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -723,7 +723,7 @@ unit:
   (ADR-008). Covers FR-007, FR-008, FR-012 (from the stock side), NFR-003, NFR-007, NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-007]
-- status: backlog
+- status: doing
 - size: L
 ```
 
