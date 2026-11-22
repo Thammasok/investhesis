@@ -1,4 +1,4 @@
-import { ApiError, type ApiClient, type RequestOptions } from '@/lib/api-client'
+import { ApiError, type ApiClient, type DownloadedFile, type RequestOptions } from '@/lib/api-client'
 
 type Request = { method: string; path: string; body: unknown }
 type Handler = (request: Request) => unknown | Promise<unknown>
@@ -39,9 +39,8 @@ export class StubApi {
     const call = <T>(method: string) => (path: string, opts?: RequestOptions) => this.handle(method, path, opts) as Promise<T>
     return {
       request: <T>(method: string, path: string, opts?: RequestOptions) => this.handle(method, path, opts) as Promise<T>,
-      download: async () => {
-        throw new Error('StubApi does not download')
-      },
+      // Scripted like the rest, as `"DOWNLOAD /path"`; unscripted is a 404 (an ApiError).
+      download: (path: string, opts?: RequestOptions) => this.handle('DOWNLOAD', path, opts) as Promise<DownloadedFile>,
       get: call('GET'),
       post: call('POST'),
       put: call('PUT'),

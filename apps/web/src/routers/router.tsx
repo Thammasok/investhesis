@@ -7,6 +7,7 @@ import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { loadCurrentUser } from '@/features/auth/current-user'
 import { createGuards, sessionEndedHandler } from '@/features/auth/guards'
 import { createAuthLoaders } from '@/features/auth/loaders'
+import { importExportRoute } from '@/features/imports/imports-routes'
 import { listsRoutes } from '@/features/lists/lists-routes'
 import { stocksRoutes } from '@/features/stocks/stocks-routes'
 import { createApiClient, type ApiClient } from '@/lib/api-client'
@@ -89,11 +90,7 @@ export function createRoutes(
           lazy: () => import('@/views/chains'),
         },
         listsRoutes(apiClient),
-        {
-          path: 'import-export',
-          handle: { crumb: 'Import / export' } satisfies RouteHandle,
-          lazy: () => import('@/views/import-export'),
-        },
+        importExportRoute(apiClient),
         {
           path: '*',
           handle: { crumb: 'Not found' } satisfies RouteHandle,
