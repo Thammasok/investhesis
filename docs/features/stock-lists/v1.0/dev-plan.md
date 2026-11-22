@@ -55,7 +55,7 @@ of their own (its `app` route middleware runs before them). See
   the existing API skeleton so later tasks reuse its patterns (ADR-001, ADR-002, ADR-003).
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
