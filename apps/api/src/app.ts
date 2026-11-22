@@ -1,11 +1,11 @@
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod'
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { DestinationStream } from 'pino'
-import { MARKETS } from '@investhesis/domain'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
 import { listsRoutes } from './modules/lists/lists.routes.ts'
+import { stocksRoutes } from './modules/stocks/stocks.routes.ts'
 import { meRoutes } from './modules/me/me.routes.ts'
 import { authenticatePlugin, identityResolverFor, type IdentityResolver } from './plugins/authenticate.ts'
 import { errorHandlerPlugin } from './plugins/error-handler.ts'
@@ -19,9 +19,6 @@ declare module 'fastify' {
     shuttingDown: boolean
   }
 }
-
-// Proves ADR-005 (the API loads the domain package from source); routes use it from T-004.
-void MARKETS
 
 export type AppDeps = {
   config: Config
@@ -58,6 +55,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(authenticatePlugin, { resolve: deps.resolveIdentity ?? identityResolverFor(config) })
   await app.register(meRoutes)
   await app.register(listsRoutes, { db: deps.db?.db })
+  await app.register(stocksRoutes, { db: deps.db?.db })
 
   return app
 }
