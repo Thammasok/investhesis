@@ -1,0 +1,37 @@
+export type RowProblem = { path: string; message: string }
+
+export type PreviewStatus = 'new' | 'duplicate' | 'error'
+
+export type PreviewRow = {
+  rowNumber: number
+  ticker: string
+  market: string
+  name: string
+  status: PreviewStatus
+  existingStockId?: string
+  errors: RowProblem[]
+}
+
+/** `POST /imports/preview` (design.md §API Contracts). */
+export type PreviewResponse = {
+  fileName: string
+  format: 'csv' | 'xlsx'
+  counts: Record<PreviewStatus, number>
+  headerWarnings: string[]
+  rows: PreviewRow[]
+}
+
+export type ErrorRow = { rowNumber: number; cells: Record<string, string>; errors: RowProblem[] }
+
+/** `POST /imports`. */
+export type ImportSummary = {
+  targetList: { id: string; name: string }
+  created: number
+  updated: number
+  skipped: number
+  failed: number
+  addedToList: number
+  errorRows: ErrorRow[]
+}
+
+export type DuplicateMode = 'skip' | 'update'
