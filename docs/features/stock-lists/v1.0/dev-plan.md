@@ -567,7 +567,7 @@ unit:
   NFR-006.
 - agent: software-engineer-backend
 - depends_on: [T-005]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -653,7 +653,7 @@ unit:
   ticker or list name (design.md §Web, ux-design.md §Shared patterns).
 - agent: react-vite-developer
 - depends_on: [T-002]
-- status: backlog
+- status: doing
 - size: M
 ```
 
