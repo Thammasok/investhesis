@@ -567,7 +567,7 @@ unit:
   NFR-006.
 - agent: software-engineer-backend
 - depends_on: [T-005]
-- status: doing
+- status: review
 - size: M
 ```
 
