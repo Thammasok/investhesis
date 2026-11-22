@@ -24,7 +24,8 @@ const send = (a: FastifyInstance, parts: Part[]) => a.inject({ method: 'POST', u
 const preview = (file: string | Buffer, name = 'holdings.csv', a = app) => send(a, [filePart(file, name)])
 const count = async (sql: string, args: unknown[] = []) => Number((await t.handle.pool.query(sql, args)).rows[0].n)
 const TABLES = ['stocks', 'lists', 'list_stocks']
-const tableCounts = async () => Promise.all(TABLES.map((n) => count(`select count(*)::int n from app.${n}`)))
+// Scoped to the test user: other test files share this database and run in parallel, so whole-table counts race with them.
+const tableCounts = async () => Promise.all(TABLES.map((n) => count(`select count(*)::int n from app.${n} where user_id = $1`, [t.userId])))
 
 describe('POST /imports/preview headers', () => {
   it('TC-U-050 matches headers ignoring case, spaces and order; unknown headers warn', async () => {
