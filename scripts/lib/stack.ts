@@ -136,12 +136,16 @@ export async function confirmedUser(email: string, password = PASSWORD) {
   return sb
 }
 
+const PSQL_TIMEOUT_MS = 15_000
+
 export function psql(sql: string): { out: string; err: string; status: number | null } {
   const r = spawnSync(
     'docker',
     ['exec', '-i', DB_CONTAINER, 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'VERBOSITY=verbose'],
-    { input: sql, encoding: 'utf8' },
+    // Time-bounded: a hung `docker exec` once stalled TC-E-002 until the test timeout.
+    { input: sql, encoding: 'utf8', timeout: PSQL_TIMEOUT_MS, killSignal: 'SIGKILL' },
   )
+  if (r.error) throw new Error(`psql did not finish within ${PSQL_TIMEOUT_MS} ms: ${r.error.message}`)
   return { out: r.stdout.trim(), err: r.stderr, status: r.status }
 }
 
