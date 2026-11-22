@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supabase (hosted) | Investhesis Guide</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Guide</a>
+    <nav aria-label="Main">
+      <a href="project-setup.html">Setup โปรเจกต์</a>
+      <a href="supabase-local.html">Supabase (local)</a>
+      <a href="supabase-hosted.html" aria-current="page">Supabase (hosted)</a>
+      <a href="troubleshooting.html">แก้ปัญหา</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Supabase แบบ hosted</h1>
+  <p class="lead">เช็กลิสต์ตั้งค่าโปรเจกต์บน Supabase Cloud ให้ทำงานเหมือน local stack หน้านี้ครอบคลุมเฉพาะฝั่ง Supabase และ env ที่ต้องส่งให้ API กับ web ยังไม่ได้เลือกที่ deploy ตัว API และ web</p>
+
+  <div class="note warn">
+    <p><strong>ยังไม่มีการ push config อัตโนมัติ:</strong> จนกว่าจะรัน <code>supabase config push</code> ค่าใน dashboard คือแหล่งความจริงของโปรเจกต์ hosted ดังนั้นต้องตั้งค่าตามเช็กลิสต์ด้านล่างด้วยมือ</p>
+  </div>
+
+  <div class="toc">
+    <strong>ในหน้านี้</strong>
+    <ol>
+      <li><a href="#create">สร้างโปรเจกต์และ link</a></li>
+      <li><a href="#migrate">ส่ง migration</a></li>
+      <li><a href="#auth">ตั้งค่า Auth</a></li>
+      <li><a href="#hook">เปิด hook และใส่ allowlist</a></li>
+      <li><a href="#smtp">อีเมลสำหรับ production</a></li>
+      <li><a href="#env">ค่า env ที่ API และ web ต้องใช้</a></li>
+      <li><a href="#checklist">เช็กลิสต์รวม</a></li>
+    </ol>
+  </div>
+
+  <h2 id="create">1. สร้างโปรเจกต์และ link</h2>
+  <ol class="steps">
+    <li>สร้างโปรเจกต์ใหม่ที่ <a href="https://supabase.com/dashboard">supabase.com/dashboard</a> จดรหัสผ่านฐานข้อมูลและ <em>project ref</em></li>
+    <li>
+      Login และ link CLI กับโปรเจกต์ (ใช้ CLI ที่ติดมากับ repo)
+      <div class="code"><pre><code>pnpm exec supabase login
+pnpm exec supabase link --project-ref &lt;project-ref&gt;</code></pre></div>
+    </li>
+  </ol>
+
+  <h2 id="migrate">2. ส่ง migration</h2>
+  <div class="code"><pre><code>pnpm exec supabase db push</code></pre></div>
+  <p>คำสั่งนี้รันไฟล์ใน <code>supabase/migrations/</code> ทั้งหมดบนฐานข้อมูล hosted ได้แก่ schema <code>app</code>, <code>app.signup_allowlist</code>, <code>app.hook_before_user_created</code> และตารางของ stock lists</p>
+  <div class="note">
+    <p><strong>ไม่มี seed บน hosted:</strong> <code>seed.sql</code> ใช้เฉพาะ local ดังนั้นตาราง allowlist บน hosted <strong>เริ่มต้นว่าง</strong> ต้องเพิ่มอีเมลของเจ้าของเองก่อนสมัครครั้งแรก (<a href="#hook">หัวข้อ 4</a>)</p>
+  </div>
+
+  <h2 id="auth">3. ตั้งค่า Auth</h2>
+  <p>ทำใน dashboard หัวข้อ Authentication ให้ตรงกับ local</p>
+  <table>
+    <thead><tr><th>ที่</th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr><td>URL configuration</td><td>Site URL คือ origin ของ web; Redirect URLs มี <code>&lt;origin&gt;/**</code></td></tr>
+      <tr><td>Sign-in providers → Email</td><td>เปิด confirm email, ปิด secure password change, <strong>เปิด require current password</strong></td></tr>
+      <tr><td>รหัสผ่านและการสมัคร</td><td>ความยาวขั้นต่ำ 8; ปิด anonymous sign-ins; เปิด sign-ups</td></tr>
+      <tr><td>JWT</td><td>expiry 3600 วินาที; เปิด refresh token rotation, reuse interval 10 วินาที</td></tr>
+      <tr><td>JWT signing keys</td><td>ให้ใช้คีย์ <strong>ES256</strong> เป็นคีย์ปัจจุบัน (rotate จาก legacy secret) เพื่อให้ JWKS endpoint เสิร์ฟคีย์นี้ API ตรวจ token ด้วย JWKS</td></tr>
+      <tr><td>Email templates</td><td>วางเนื้อหา <code>supabase/templates/confirmation.html</code> (Confirm signup) และ <code>recovery.html</code> (Reset password)</td></tr>
+    </tbody>
+  </table>
+  <p>ตรวจว่า JWKS เสิร์ฟคีย์ ES256:</p>
+  <div class="code"><pre><code>curl -s https://&lt;project-ref&gt;.supabase.co/auth/v1/.well-known/jwks.json</code></pre></div>
+
+  <h2 id="hook">4. เปิด hook และใส่ allowlist</h2>
+  <ol class="steps">
+    <li>
+      Authentication → Hooks: เปิด <strong>Before User Created</strong>
+      <table>
+        <tbody>
+          <tr><th>Type</th><td>Postgres function</td></tr>
+          <tr><th>Schema</th><td><code>app</code></td></tr>
+          <tr><th>Function</th><td><code>hook_before_user_created</code></td></tr>
+        </tbody>
+      </table>
+    </li>
+    <li>
+      ใส่อีเมลของเจ้าของ <strong>ก่อน</strong> สมัครครั้งแรก (SQL editor ใน dashboard)
+      <div class="code"><pre><code>insert into app.signup_allowlist (pattern, note) values ('owner@example.com', 'owner');</code></pre></div>
+      <p>hook นี้กันผู้ใช้ที่สร้างผ่าน admin API ด้วย ไม่ใช่แค่หน้า sign-up</p>
+    </li>
+  </ol>
+
+  <h2 id="smtp">5. อีเมลสำหรับ production</h2>
+  <p>mailer ที่ติดมากับ Supabase ใช้ทดสอบเท่านั้น สำหรับ production ให้ตั้ง custom SMTP ใน Auth ผู้ให้บริการที่ใช้ได้และมี free tier หรือราคาต่ำ:</p>
+  <ul>
+    <li>Resend (มี free tier)</li>
+    <li>Brevo (มี free tier)</li>
+    <li>Amazon SES (ราคาต่ำ คิดตามจำนวนข้อความ)</li>
+  </ul>
+  <p>ยังไม่ได้เลือกเจ้าไหน (requirements OQ-1 รอเจ้าของตัดสินใจก่อน deploy) หลังตั้ง SMTP แล้วให้ทบทวน email rate limit อีกรอบ</p>
+
+  <h2 id="env">6. ค่า env ที่ API และ web ต้องใช้</h2>
+  <h3>API</h3>
+  <table>
+    <thead><tr><th>ตัวแปร</th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr><td><code>NODE_ENV</code></td><td><code>production</code> (โหมด <code>mock</code> ถูกปฏิเสธเมื่อเป็น production)</td></tr>
+      <tr><td><code>AUTH_MODE</code></td><td><code>supabase</code></td></tr>
+      <tr><td><code>SUPABASE_URL</code></td><td><code>https://&lt;project-ref&gt;.supabase.co</code></td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td>จากหน้า Connection string ใน Project Settings → Database ใช้แบบ <strong>direct หรือ session pooler (พอร์ต 5432)</strong> ห้ามใช้ transaction pooler (6543) เพราะ prepared statement พัง และต่อท้ายด้วย <code>?sslmode=require</code></td></tr>
+      <tr><td><code>PUBLIC_WEB_ORIGIN</code>, <code>CORS_ORIGINS</code></td><td>origin ของ web ที่ deploy จริง</td></tr>
+      <tr><td><code>TRUST_PROXY</code></td><td>ตั้งเป็น <code>true</code> เมื่ออยู่หลัง reverse proxy</td></tr>
+    </tbody>
+  </table>
+  <h3>web (ตอน build)</h3>
+  <table>
+    <thead><tr><th>ตัวแปร</th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr><td><code>VITE_AUTH_MODE</code></td><td><code>supabase</code></td></tr>
+      <tr><td><code>VITE_SUPABASE_URL</code></td><td><code>https://&lt;project-ref&gt;.supabase.co</code></td></tr>
+      <tr><td><code>VITE_SUPABASE_PUBLISHABLE_KEY</code></td><td>publishable key ของโปรเจกต์ (ดูได้ใน dashboard ของโปรเจกต์) เป็นคีย์สาธารณะ ใส่ใน bundle ได้</td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">
+    <p><strong>ห้ามเอาไปใส่ใน web หรือ commit:</strong> secret key, service role key และรหัสผ่านฐานข้อมูล ใช้ได้เฉพาะฝั่งเซิร์ฟเวอร์</p>
+  </div>
+
+  <h2 id="checklist">7. เช็กลิสต์รวม</h2>
+  <ul class="check">
+    <li>URL configuration: Site URL เป็น origin ของ web; Redirect URLs มี <code>&lt;origin&gt;/**</code></li>
+    <li>Email provider: เปิด confirm email, ปิด secure password change, เปิด require current password</li>
+    <li>ความยาวรหัสผ่านขั้นต่ำ 8; ปิด anonymous sign-ins; เปิด sign-ups</li>
+    <li>JWT expiry 3600 วินาที; refresh token rotation เปิด, reuse interval 10 วินาที</li>
+    <li>Email templates: วาง <code>confirmation.html</code> และ <code>recovery.html</code></li>
+    <li>JWT signing keys: คีย์ ES256 เป็นคีย์ปัจจุบัน และ JWKS endpoint เสิร์ฟคีย์นั้น</li>
+    <li>ตั้ง custom SMTP แล้ว (OQ-1) และทบทวน email rate limit</li>
+    <li><code>supabase db push</code> สำเร็จ (มี <code>app.signup_allowlist</code> และ <code>app.hook_before_user_created</code>)</li>
+    <li>เปิด hook Before User Created (Postgres function, schema <code>app</code>)</li>
+    <li>ใส่อีเมลเจ้าของลง allowlist ก่อนสมัครครั้งแรก</li>
+    <li>ตั้ง env ของ API (<code>DATABASE_URL</code> แบบ session/direct + <code>sslmode=require</code>) และของ web ตามหัวข้อ 6</li>
+    <li>ทดสอบ: สมัครด้วยอีเมลใน allowlist, ยืนยันอีเมล, เข้า <code>/stocks</code> ได้ และอีเมลนอก allowlist ถูกปฏิเสธ</li>
+  </ul>
+
+  <footer>ต้นฉบับของเช็กลิสต์นี้คือ <code>supabase/README.md</code> ถ้าแก้ที่นั่น ให้แก้หน้านี้ตามด้วย</footer>
+</main>
+<script src="guide.js"></script>
+</body>
+</html>

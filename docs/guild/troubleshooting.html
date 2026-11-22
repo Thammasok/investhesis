@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แก้ปัญหา | Investhesis Guide</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Guide</a>
+    <nav aria-label="Main">
+      <a href="project-setup.html">Setup โปรเจกต์</a>
+      <a href="supabase-local.html">Supabase (local)</a>
+      <a href="supabase-hosted.html">Supabase (hosted)</a>
+      <a href="troubleshooting.html" aria-current="page">แก้ปัญหา</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>แก้ปัญหาที่เจอบ่อย</h1>
+  <p class="lead">อาการ สาเหตุ และวิธีแก้ เรียงตามที่เจอบ่อยตอน setup</p>
+
+  <details open>
+    <summary>pnpm test ล้มเหลว หรือ API ตอบ 503 db_unavailable</summary>
+    <p><strong>สาเหตุ:</strong> test ของ API แตะฐานข้อมูลจริง ถ้า Supabase local ไม่ได้รันอยู่ จะต่อ DB ไม่ได้</p>
+    <div class="code"><pre><code>docker info          # Docker ต้องเปิดอยู่
+pnpm db:start        # เปิด stack
+pnpm db:reset        # ให้ schema ตรงกับ migration ล่าสุด
+curl -s http://localhost:3000/ready</code></pre></div>
+  </details>
+
+  <details>
+    <summary>pnpm test:e2e ขึ้น "http://localhost:5173/auth/sign-in is already used"</summary>
+    <p><strong>สาเหตุ:</strong> มีโปรแกรมอื่น (เช่น dev server ของโปรเจกต์อื่น) ใช้พอร์ต 5173 อยู่</p>
+    <p><strong>แก้:</strong> อย่าปิดโปรแกรมนั้น ให้ย้าย E2E ไปพอร์ตอื่น</p>
+    <div class="code"><pre><code>E2E_WEB_PORT=5174 pnpm test:e2e</code></pre></div>
+    <p>ดูว่าใครใช้พอร์ต: <code>lsof -nP -iTCP:5173 -sTCP:LISTEN</code></p>
+  </details>
+
+  <details>
+    <summary>E2E ล้มเหลวเพราะไม่มี browser</summary>
+    <div class="code"><pre><code>pnpm exec playwright install chromium</code></pre></div>
+  </details>
+
+  <details>
+    <summary>sign-up ถูกปฏิเสธ: "Sign-up is invite-only. Ask the owner to add this email."</summary>
+    <p><strong>สาเหตุ:</strong> อีเมลไม่ตรงกับแถวใน <code>app.signup_allowlist</code> (error <code>signup_not_allowed</code>)</p>
+    <ul>
+      <li>บนเครื่อง ใช้อีเมลลงท้าย <code>@example.test</code> หรือเพิ่มแถวเอง (ดู <a href="supabase-local.html#allowlist">Allowlist</a>)</li>
+      <li>แถว <code>@example.com</code> ไม่ครอบคลุม <code>@mail.example.com</code> ต้องเพิ่มแยก</li>
+      <li>หลัง <code>pnpm db:reset</code> แถวที่เพิ่มเองหายไป เหลือแค่จาก seed</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>ไม่เห็นอีเมลยืนยัน</summary>
+    <ul>
+      <li>อีเมลทั้งหมดบนเครื่องไปที่ Mailpit: <code>http://127.0.0.1:54324</code> ไม่ส่งออกอินเทอร์เน็ต</li>
+      <li>Auth เว้น 60 วินาทีต่อการส่งอีเมลหนึ่งที่อยู่ ถ้ากดซ้ำเร็วเกินไปจะไม่ส่ง</li>
+      <li>ถ้าลิงก์ในอีเมลเปิดพอร์ตผิด เพราะ <code>site_url</code> คือ <code>http://localhost:5173</code> เปลี่ยนพอร์ตในเบราว์เซอร์ หรือแก้ <code>supabase/config.toml</code> แล้ว <code>pnpm db:stop &amp;&amp; pnpm db:start</code></li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>หน้าเว็บ error ทันทีตอนเปิด: "VITE_SUPABASE_URL is required…"</summary>
+    <p><strong>สาเหตุ:</strong> <code>VITE_AUTH_MODE</code> เป็น <code>supabase</code> (ค่าเริ่มต้นถ้าไม่ตั้ง) แต่ไม่มี URL หรือ publishable key ใน <code>apps/web/.env</code></p>
+    <p><strong>แก้:</strong> ตั้ง <code>VITE_AUTH_MODE=mock</code> เพื่อพัฒนาโดยไม่ต้อง sign-in หรือใส่ค่าให้ครบ (ดู <a href="supabase-local.html#real-auth">ลอง sign-in จริง</a>) แล้ว restart <code>pnpm dev</code> เพราะ Vite อ่าน <code>.env</code> ตอนเริ่ม</p>
+  </details>
+
+  <details>
+    <summary>ทุก request จาก web ได้ 401</summary>
+    <ul>
+      <li>web เป็น <code>mock</code> แต่ API เป็น <code>supabase</code>: web ไม่ส่ง token ให้ตั้งสองฝั่งให้ตรงกัน</li>
+      <li>เปลี่ยน <code>.env</code> ของ API แล้ว ต้องรอ <code>node --watch</code> รีสตาร์ท หรือรัน <code>pnpm dev:api</code> ใหม่</li>
+    </ul>
+  </details>
+
+  <details>
+    <summary>แก้ hook ใน config.toml แล้วไม่มีผล</summary>
+    <p><code>pnpm db:reset</code> ไม่โหลด config ของ Auth ใหม่ ให้ restart ทั้ง stack</p>
+    <div class="code"><pre><code>pnpm db:stop &amp;&amp; pnpm db:start</code></pre></div>
+  </details>
+
+  <details>
+    <summary>พอร์ตของ Supabase ชน (54321–54324, 54329)</summary>
+    <p>หยุด Supabase ตัวอื่นที่รันอยู่ก่อน (<code>supabase stop</code> ในโปรเจกต์นั้น) หรือเปลี่ยนพอร์ตใน <code>supabase/config.toml</code> แล้วอัปเดต <code>DATABASE_URL</code> และ <code>SUPABASE_URL</code> ให้ตรงกัน</p>
+  </details>
+
+  <details>
+    <summary>prepared statement error หรือ query ค้างบน hosted</summary>
+    <p><strong>สาเหตุ:</strong> ใช้ transaction pooler (พอร์ต 6543) กับ <code>DATABASE_URL</code></p>
+    <p><strong>แก้:</strong> ใช้ direct connection หรือ session pooler (พอร์ต 5432) และต่อท้าย <code>?sslmode=require</code></p>
+  </details>
+
+  <details>
+    <summary>Node ฟ้อง type หรือ syntax ที่ไม่รู้จักตอนรัน API</summary>
+    <p>API รัน TypeScript ด้วย Node โดยตรง ต้องใช้ Node 24 ขึ้นไป และเขียนได้เฉพาะ syntax ที่ลบ type ออกแล้วรันได้ (ไม่ใช้ <code>enum</code> หรือ parameter properties) เช็กด้วย <code>node -v</code></p>
+  </details>
+
+  <details>
+    <summary>test ที่นับแถวในฐานข้อมูลล้มเหลวเป็นบางครั้ง</summary>
+    <p>ไฟล์ test หลายไฟล์ใช้ฐานข้อมูลเดียวกันและรันขนานกัน ให้นับเฉพาะแถวของ user ที่ test สร้างเอง (<code>where user_id = ...</code>) อย่านับทั้งตาราง</p>
+  </details>
+
+  <footer><a href="index.html">← กลับหน้าแรก</a></footer>
+</main>
+<script src="guide.js"></script>
+</body>
+</html>

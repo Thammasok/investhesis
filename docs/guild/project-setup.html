@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup โปรเจกต์ | Investhesis Guide</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Guide</a>
+    <nav aria-label="Main">
+      <a href="project-setup.html" aria-current="page">Setup โปรเจกต์</a>
+      <a href="supabase-local.html">Supabase (local)</a>
+      <a href="supabase-hosted.html">Supabase (hosted)</a>
+      <a href="troubleshooting.html">แก้ปัญหา</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Setup โปรเจกต์</h1>
+  <p class="lead">จากเครื่องใหม่ไปจนถึงรัน web และ API ได้ และรัน test ผ่าน</p>
+
+  <div class="toc">
+    <strong>ในหน้านี้</strong>
+    <ol>
+      <li><a href="#prereq">สิ่งที่ต้องมี</a></li>
+      <li><a href="#install">ติดตั้ง dependencies</a></li>
+      <li><a href="#env">ตั้งค่า .env</a></li>
+      <li><a href="#run">รันระบบ</a></li>
+      <li><a href="#modes">โหมด auth: mock กับ supabase</a></li>
+      <li><a href="#commands">คำสั่งที่ใช้บ่อย</a></li>
+      <li><a href="#test">รัน test ทั้งชุด (gate)</a></li>
+    </ol>
+  </div>
+
+  <h2 id="prereq">1. สิ่งที่ต้องมี</h2>
+  <table>
+    <thead><tr><th>เครื่องมือ</th><th>เวอร์ชัน</th><th>ใช้ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td>Node.js</td><td>24 ขึ้นไป</td><td>API รัน TypeScript ด้วย Node โดยตรง (type stripping) ไม่มีขั้น build ตอน dev</td></tr>
+      <tr><td>pnpm</td><td>12.5.1 (ตาม <code>packageManager</code>)</td><td>จัดการ workspace: <code>apps/*</code> และ <code>packages/*</code></td></tr>
+      <tr><td>Docker</td><td>เวอร์ชันล่าสุด และต้องเปิดอยู่</td><td>Supabase local stack รันเป็น container</td></tr>
+      <tr><td>Git</td><td>เวอร์ชันใดก็ได้</td><td>โปรเจกต์ใช้ branch เดียวคือ <code>main</code></td></tr>
+    </tbody>
+  </table>
+  <p>Supabase CLI <strong>ไม่ต้องติดตั้งแยก</strong> เพราะเป็น devDependency ของ root (<code>supabase</code>) สคริปต์เรียกผ่าน <code>pnpm exec supabase</code> ให้เอง</p>
+  <div class="code"><pre><code>node -v          # ต้องขึ้น v24.x ขึ้นไป
+pnpm -v          # 12.5.1
+docker info      # ต้องไม่ error</code></pre></div>
+  <div class="note">
+    <p><strong>เปิด pnpm ด้วย corepack:</strong> ถ้ายังไม่มี pnpm ให้รัน <code>corepack enable</code> แล้ว corepack จะเลือกเวอร์ชันตาม <code>packageManager</code> ใน <code>package.json</code> ให้</p>
+  </div>
+
+  <h2 id="install">2. ติดตั้ง dependencies</h2>
+  <div class="code"><pre><code>git clone &lt;repo-url&gt; investhesis
+cd investhesis
+pnpm install</code></pre></div>
+  <p>คำสั่งเดียวติดตั้งให้ครบทุก package (<code>web</code>, <code>api</code>, <code>domain</code>) ถ้าจะรัน E2E ต้องติดตั้ง browser ของ Playwright ด้วย ทำครั้งเดียวต่อเครื่อง:</p>
+  <div class="code"><pre><code>pnpm exec playwright install chromium</code></pre></div>
+
+  <h2 id="env">3. ตั้งค่า .env</h2>
+  <p>ไฟล์ <code>.env</code> ถูก git ignore ไว้ ให้ copy จาก <code>.env.example</code> ของแต่ละ app</p>
+  <div class="code"><pre><code>cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env</code></pre></div>
+
+  <h3>apps/api/.env</h3>
+  <table>
+    <thead><tr><th>ตัวแปร</th><th>ค่า local</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>
+      <tr><td><code>NODE_ENV</code></td><td><code>development</code></td><td>บังคับต้องมี (development | test | production)</td></tr>
+      <tr><td><code>PORT</code></td><td><code>3000</code></td><td>web dev server proxy <code>/api</code> มาที่พอร์ตนี้</td></tr>
+      <tr><td><code>DATABASE_URL</code></td><td><code>postgres://postgres:postgres@127.0.0.1:54322/postgres</code></td><td>ใช้ direct หรือ session pooler เท่านั้น ห้ามใช้ transaction pooler (พอร์ต 6543)</td></tr>
+      <tr><td><code>AUTH_MODE</code></td><td><code>supabase</code></td><td>หรือ <code>mock</code> สำหรับ dev และ test (ถูกปฏิเสธเมื่อ <code>NODE_ENV=production</code>)</td></tr>
+      <tr><td><code>SUPABASE_URL</code></td><td><code>http://127.0.0.1:54321</code></td><td>ใช้ดึง JWKS มาตรวจ access token</td></tr>
+      <tr><td><code>PUBLIC_WEB_ORIGIN</code>, <code>CORS_ORIGINS</code></td><td><code>http://localhost:5173</code></td><td>CORS_ORIGINS คั่นด้วย comma ได้</td></tr>
+    </tbody>
+  </table>
+
+  <h3>apps/web/.env</h3>
+  <table>
+    <thead><tr><th>ตัวแปร</th><th>ค่า</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>
+      <tr><td><code>VITE_AUTH_MODE</code></td><td><code>mock</code></td><td>ค่าใน <code>.env.example</code> คือ mock (API รันเป็น mock user ไม่ต้อง sign-in)</td></tr>
+      <tr><td><code>VITE_SUPABASE_URL</code></td><td><code>http://127.0.0.1:54321</code></td><td>จำเป็นเมื่อใช้โหมด <code>supabase</code></td></tr>
+      <tr><td><code>VITE_SUPABASE_PUBLISHABLE_KEY</code></td><td>(ว่าง)</td><td>จำเป็นเมื่อใช้โหมด <code>supabase</code> ดูวิธีเอาค่าใน <a href="supabase-local.html#real-auth">Supabase (local)</a></td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">
+    <p><strong>ระวัง:</strong> ถ้า <code>VITE_AUTH_MODE=supabase</code> แล้วไม่ใส่ URL หรือ key แอปจะ throw error บอกชื่อตัวแปรที่ขาดทันทีตอนเริ่ม</p>
+  </div>
+
+  <h2 id="run">4. รันระบบ</h2>
+  <ol class="steps">
+    <li>
+      <strong>เปิด Supabase local</strong> (Docker ต้องเปิดอยู่)
+      <div class="code"><pre><code>pnpm db:start</code></pre></div>
+      <p>ครั้งแรกจะ pull image หลายตัว ใช้เวลาหลายนาที คำสั่งนี้สร้าง <code>supabase/signing_keys.json</code> (git ignore) ให้เองถ้ายังไม่มี</p>
+    </li>
+    <li>
+      <strong>ใส่ schema และ seed</strong>
+      <div class="code"><pre><code>pnpm db:reset</code></pre></div>
+      <p>รัน migration ใน <code>supabase/migrations/</code> ทั้งหมด แล้วรัน <code>seed.sql</code> (ใส่ <code>@example.test</code> ลง allowlist)</p>
+    </li>
+    <li>
+      <strong>รัน web และ API พร้อมกัน</strong>
+      <div class="code"><pre><code>pnpm dev            # ทั้งคู่
+pnpm dev:web        # เฉพาะ web  → http://localhost:5173
+pnpm dev:api        # เฉพาะ API  → http://localhost:3000</code></pre></div>
+    </li>
+    <li>
+      <strong>เช็กว่าขึ้นแล้ว</strong>
+      <div class="code"><pre><code>curl -s http://localhost:3000/health      # {"status":"ok"}
+curl -s http://localhost:3000/ready       # {"status":"ready"} (503 reason "db" ถ้าต่อ DB ไม่ได้)
+open http://localhost:3000/openapi.json   # spec ของ API</code></pre></div>
+    </li>
+  </ol>
+  <div class="note">
+    <p><strong>ไม่มีฐานข้อมูลก็รัน API ได้</strong> แต่ <code>/ready</code> จะตอบ 503 และ route ที่แตะ DB จะตอบ <code>503 db_unavailable</code></p>
+  </div>
+
+  <h2 id="modes">5. โหมด auth: mock กับ supabase</h2>
+  <table>
+    <thead><tr><th></th><th>mock</th><th>supabase</th></tr></thead>
+    <tbody>
+      <tr><td>ตั้งที่</td><td><code>AUTH_MODE=mock</code> (API) และ <code>VITE_AUTH_MODE=mock</code> (web)</td><td><code>AUTH_MODE=supabase</code> และ <code>VITE_AUTH_MODE=supabase</code></td></tr>
+      <tr><td>การ sign-in</td><td>ไม่มี ทุก request เป็น mock user คนเดียว (<code>MOCK_USER_ID</code>)</td><td>sign-up ด้วย email + password ยืนยันทางอีเมล</td></tr>
+      <tr><td>เหมาะกับ</td><td>พัฒนา UI เร็ว ๆ</td><td>ลองระบบจริง และ E2E</td></tr>
+      <tr><td>ต้องมี Supabase</td><td>ต้องมีฐานข้อมูล แต่ไม่ต้องมี Auth</td><td>ต้องรัน local stack</td></tr>
+    </tbody>
+  </table>
+  <p>ให้ตั้งทั้ง API และ web เป็นโหมดเดียวกัน ถ้า web เป็น <code>mock</code> (ไม่ส่ง token) แต่ API เป็น <code>supabase</code> ทุก request จะได้ 401 ส่วน web เป็น <code>supabase</code> กับ API เป็น <code>mock</code> จะทำงานได้ แต่ API ไม่ตรวจ token และใช้ mock user เสมอ</p>
+  <p>ถ้าไม่ตั้ง <code>VITE_AUTH_MODE</code> เลย web จะใช้ <code>supabase</code> เป็นค่าเริ่มต้น</p>
+
+  <h2 id="commands">6. คำสั่งที่ใช้บ่อย</h2>
+  <p>รันจาก root ของ repo (แต่ละคำสั่งวิ่งทั้ง workspace)</p>
+  <table>
+    <thead><tr><th>คำสั่ง</th><th>ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>pnpm dev</code></td><td>web (5173) และ API (3000)</td></tr>
+      <tr><td><code>pnpm lint</code></td><td>oxlint</td></tr>
+      <tr><td><code>pnpm typecheck</code></td><td><code>tsc</code> ทุก package และ <code>e2e/</code></td></tr>
+      <tr><td><code>pnpm test</code></td><td>Vitest ของ domain, api, web (รันครั้งเดียว) <strong>API test ต้องเปิด Supabase local อยู่</strong></td></tr>
+      <tr><td><code>pnpm build</code></td><td>build web (<code>tsc -b && vite build</code>) และ compile API ไปที่ <code>dist/</code> (<code>tsc -p tsconfig.build.json</code>)</td></tr>
+      <tr><td><code>pnpm db:start / db:stop / db:reset</code></td><td>เปิด / ปิด / รีเซ็ต Supabase local</td></tr>
+      <tr><td><code>pnpm test:supabase</code></td><td>ตรวจ setting ของ Auth ที่ระดับ script (ต้องเปิด stack อยู่)</td></tr>
+      <tr><td><code>pnpm test:e2e</code></td><td>Playwright (Chromium) รัน <code>db:start</code> ให้ก่อน</td></tr>
+    </tbody>
+  </table>
+  <p>รัน test เดียว:</p>
+  <div class="code"><pre><code>pnpm --filter @investhesis/api exec vitest run src/modules/me/me.routes.test.ts
+cd apps/web &amp;&amp; pnpm vitest run src/routers/router.test.tsx -t "not found"
+pnpm test:e2e auth-sign-in      # ระบุชื่อไฟล์ spec</code></pre></div>
+
+  <h2 id="test">7. รัน test ทั้งชุด (gate)</h2>
+  <p>ก่อนส่งงาน ให้รันตามลำดับนี้จาก root และหยุดที่ขั้นแรกที่ fail</p>
+  <div class="code"><pre><code>pnpm db:start && pnpm db:reset
+pnpm test:supabase
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm test:e2e</code></pre></div>
+  <div class="note warn">
+    <p><strong>พอร์ต 5173 ถูกใช้อยู่?</strong> E2E ใช้พอร์ต 5173 และ 3000 ถ้าโปรเจกต์อื่นใช้ 5173 อยู่ ให้รัน <code>E2E_WEB_PORT=5174 pnpm test:e2e</code> (ไม่ต้องปิดโปรเจกต์อื่น)</p>
+  </div>
+  <p>ผล E2E อยู่ที่ <code>e2e/.output/html</code> ชื่อ test ทุกตัวขึ้นต้นด้วยรหัส <code>TC-</code> ของ test case</p>
+
+  <footer>ต่อไป: <a href="supabase-local.html">ตั้งค่า Supabase บนเครื่อง →</a></footer>
+</main>
+<script src="guide.js"></script>
+</body>
+</html>

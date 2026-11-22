@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Investhesis: คู่มือ Setup</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Guide</a>
+    <nav aria-label="Main">
+      <a href="project-setup.html">Setup โปรเจกต์</a>
+      <a href="supabase-local.html">Supabase (local)</a>
+      <a href="supabase-hosted.html">Supabase (hosted)</a>
+      <a href="troubleshooting.html">แก้ปัญหา</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>คู่มือ Setup Investhesis</h1>
+  <p class="lead">วิธีติดตั้งโปรเจกต์ ตั้งค่า Supabase และรันระบบบนเครื่องของคุณ ตั้งแต่เครื่องใหม่จนถึงรัน test ผ่าน</p>
+
+  <div class="cards">
+    <a class="card" href="project-setup.html">
+      <h3>1. Setup โปรเจกต์</h3>
+      <p>ติดตั้ง Node, pnpm, Docker, ตั้งค่า <code>.env</code> และรัน web กับ API</p>
+    </a>
+    <a class="card" href="supabase-local.html">
+      <h3>2. Supabase บนเครื่อง</h3>
+      <p>เปิด local stack, migration, allowlist สำหรับ sign-up และอ่าน email ทดสอบ</p>
+    </a>
+    <a class="card" href="supabase-hosted.html">
+      <h3>3. Supabase แบบ hosted</h3>
+      <p>เตรียมโปรเจกต์บน Supabase Cloud: migration, hook, SMTP และ env</p>
+    </a>
+    <a class="card" href="troubleshooting.html">
+      <h3>4. แก้ปัญหา</h3>
+      <p>port ชน, Docker ไม่ขึ้น, sign-up ถูกปฏิเสธ และปัญหาที่เจอบ่อย</p>
+    </a>
+  </div>
+
+  <h2 id="quick">เริ่มเร็วใน 6 คำสั่ง</h2>
+  <p>สำหรับคนที่มี Node 24+, pnpm และ Docker พร้อมอยู่แล้ว</p>
+  <div class="code"><pre><code>pnpm install
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+pnpm db:start        # เปิด Supabase local (Docker)
+pnpm db:reset        # ใส่ schema และ seed
+pnpm dev             # web :5173 และ API :3000</code></pre></div>
+  <p>เปิด <a href="http://localhost:5173">http://localhost:5173</a> ได้เลย ค่าเริ่มต้นของ web คือโหมด <code>mock</code> (ไม่ต้อง sign-in) ถ้าอยากลอง sign-in จริง ดู <a href="supabase-local.html#real-auth">ขั้นตอนใน Supabase (local)</a></p>
+
+  <h2 id="map">แผนที่ของโปรเจกต์</h2>
+  <table>
+    <thead><tr><th>ที่อยู่</th><th>คืออะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>apps/web</code></td><td>React + Vite (SPA), Tailwind v4, shadcn/ui, React Router</td></tr>
+      <tr><td><code>apps/api</code></td><td>Fastify 5 + Zod, Drizzle บน <code>pg</code>, รัน TypeScript ด้วย Node โดยตรง</td></tr>
+      <tr><td><code>packages/domain</code></td><td>คำศัพท์ กฎ และ Zod schema ที่ web กับ API ใช้ร่วมกัน</td></tr>
+      <tr><td><code>supabase/</code></td><td>config, migration, seed, email template ของ Supabase CLI</td></tr>
+      <tr><td><code>e2e/</code></td><td>Playwright (Chromium)</td></tr>
+      <tr><td><code>scripts/</code></td><td>สคริปต์ db, ชุด test ระดับ script, ตัวสร้างรายงาน</td></tr>
+      <tr><td><code>docs/features/</code></td><td>requirements, design, dev-plan และ test report ของแต่ละ feature</td></tr>
+    </tbody>
+  </table>
+
+  <footer>เอกสารนี้เขียนจากไฟล์จริงของ repo (<code>package.json</code>, <code>supabase/README.md</code>, <code>.env.example</code>) ถ้าคำสั่งใน repo เปลี่ยน ให้แก้ที่นี่ด้วย</footer>
+</main>
+<script src="guide.js"></script>
+</body>
+</html>

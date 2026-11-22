@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supabase (local) | Investhesis Guide</title>
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Guide</a>
+    <nav aria-label="Main">
+      <a href="project-setup.html">Setup โปรเจกต์</a>
+      <a href="supabase-local.html" aria-current="page">Supabase (local)</a>
+      <a href="supabase-hosted.html">Supabase (hosted)</a>
+      <a href="troubleshooting.html">แก้ปัญหา</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Supabase บนเครื่อง (local)</h1>
+  <p class="lead">Supabase ของโปรเจกต์นี้ใช้สองอย่าง: <strong>Postgres</strong> ที่ API เข้าถึงผ่าน <code>DATABASE_URL</code> และ <strong>Auth</strong> (email + password) ที่ API ตรวจ token ผ่าน JWKS เบราว์เซอร์ไม่เรียก Postgres โดยตรง</p>
+
+  <div class="toc">
+    <strong>ในหน้านี้</strong>
+    <ol>
+      <li><a href="#start">เปิดและปิด stack</a></li>
+      <li><a href="#urls">บริการและพอร์ต</a></li>
+      <li><a href="#migrations">Migration และ seed</a></li>
+      <li><a href="#real-auth">ลอง sign-in จริงบนเครื่อง</a></li>
+      <li><a href="#allowlist">Allowlist สำหรับ sign-up</a></li>
+      <li><a href="#config">เปลี่ยน config ของ Auth</a></li>
+      <li><a href="#verify">ตรวจว่าตั้งค่าถูก</a></li>
+    </ol>
+  </div>
+
+  <h2 id="start">1. เปิดและปิด stack</h2>
+  <div class="code"><pre><code>pnpm db:start        # สร้าง signing key ถ้ายังไม่มี แล้ว supabase start
+pnpm db:reset        # ล้างฐานข้อมูล แล้วรัน migration + seed.sql ใหม่
+pnpm db:stop         # ปิด container</code></pre></div>
+  <ul>
+    <li><code>pnpm db:start</code> เรียก <code>pnpm db:keys</code> ก่อน ซึ่งสร้าง <code>supabase/signing_keys.json</code> (คีย์ ES256 สำหรับเซ็น JWT) ถ้ามีแล้วจะไม่เขียนทับ ไฟล์นี้อยู่ใน <code>.gitignore</code> ห้าม commit</li>
+    <li>ต้องเปิด Docker ก่อน ครั้งแรกจะ pull image หลายตัว</li>
+    <li><code>db:reset</code> <strong>ลบข้อมูลทั้งหมด</strong> ในฐานข้อมูล local รวมถึงผู้ใช้ที่สมัครไว้</li>
+  </ul>
+  <div class="note">
+    <p><strong>ช่วงแรกหลัง start:</strong> Auth โหลด email template ใหม่ทุก ~10 วินาที และ Kong ขึ้นหลัง Auth ดังนั้นไม่กี่วินาทีแรก อีเมลอาจยังเป็นข้อความเดิมของ Supabase ชุด <code>pnpm test:supabase</code> จะรอ template ที่กำหนดเองก่อนทดสอบ</p>
+  </div>
+
+  <h2 id="urls">2. บริการและพอร์ต</h2>
+  <table>
+    <thead><tr><th>บริการ</th><th>URL</th><th>ใช้ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td>API gateway</td><td><code>http://127.0.0.1:54321</code></td><td>Auth อยู่ที่ <code>/auth/v1</code> (ค่า <code>SUPABASE_URL</code>)</td></tr>
+      <tr><td>Postgres</td><td><code>postgresql://postgres:postgres@127.0.0.1:54322/postgres</code></td><td>ค่า <code>DATABASE_URL</code> ของ API</td></tr>
+      <tr><td>Studio</td><td><code>http://127.0.0.1:54323</code></td><td>หน้า dashboard และ SQL editor</td></tr>
+      <tr><td>Mailpit</td><td><code>http://127.0.0.1:54324</code></td><td>อีเมลทุกฉบับที่ Auth ส่งจะมาลงที่นี่ ไม่ออกไปข้างนอก</td></tr>
+    </tbody>
+  </table>
+  <p>พอร์ตอื่นที่ config ใช้: <code>54320</code> (shadow DB ของ CLI) และ <code>54329</code> (pooler) ถ้าพอร์ตชนกับโปรแกรมอื่น ดู <a href="troubleshooting.html">แก้ปัญหา</a></p>
+  <p>ดูค่าทั้งหมดของ stack ที่รันอยู่:</p>
+  <div class="code"><pre><code>pnpm exec supabase status -o env</code></pre></div>
+
+  <h2 id="migrations">3. Migration และ seed</h2>
+  <p>Schema ทั้งหมดเป็น SQL ใน <code>supabase/migrations/</code> เท่านั้น (ไม่ใช้ drizzle-kit) ส่วน Drizzle ใน <code>apps/api/src/db/schema/</code> เขียนมือไว้สำหรับ query และมี drift test เทียบกับฐานข้อมูลจริง</p>
+  <table>
+    <thead><tr><th>ไฟล์</th><th>ทำอะไร</th></tr></thead>
+    <tbody>
+      <tr><td><code>20261121000000_signup_allowlist.sql</code></td><td>schema <code>app</code>, ตาราง <code>app.signup_allowlist</code> และฟังก์ชัน <code>app.hook_before_user_created</code></td></tr>
+      <tr><td><code>20261121000100_stock_lists.sql</code></td><td>ตาราง <code>app.stocks</code>, <code>app.lists</code>, <code>app.list_stocks</code> (เปิด RLS ไม่มี policy, ถอนสิทธิ์ของ <code>anon</code> และ <code>authenticated</code>)</td></tr>
+      <tr><td><code>seed.sql</code></td><td>ใส่ <code>@example.test</code> ลง allowlist (ทุก test ใช้โดเมนนี้)</td></tr>
+    </tbody>
+  </table>
+  <h3>เพิ่ม migration ใหม่</h3>
+  <div class="code"><pre><code>pnpm exec supabase migration new add_something
+# แก้ไฟล์ SQL ที่เพิ่งสร้างใน supabase/migrations/
+pnpm db:reset            # ลองรันทั้งชุดตั้งแต่ศูนย์
+pnpm test                # drift test จะฟ้องถ้า Drizzle ไม่ตรงกับ DB</code></pre></div>
+  <div class="note">
+    <p><strong>กฎของโปรเจกต์:</strong> ตารางทุกตัวอยู่ใน schema <code>app</code> และไม่เขียน business logic ใน trigger ถ้าเพิ่มหรือเปลี่ยนคอลัมน์ ต้องแก้ Drizzle typings ให้ตรงด้วย</p>
+  </div>
+
+  <h2 id="real-auth">4. ลอง sign-in จริงบนเครื่อง</h2>
+  <p>ค่าเริ่มต้นของ web คือ <code>mock</code> ถ้าอยากลอง sign-up และ sign-in ผ่าน Supabase Auth จริง ทำตามนี้</p>
+  <ol class="steps">
+    <li>
+      <strong>เปิด stack และใส่ schema</strong>
+      <div class="code"><pre><code>pnpm db:start &amp;&amp; pnpm db:reset</code></pre></div>
+    </li>
+    <li>
+      <strong>เอา publishable key</strong>
+      <div class="code"><pre><code>pnpm exec supabase status -o env | grep -E 'PUBLISHABLE_KEY|ANON_KEY'</code></pre></div>
+      <p>คีย์นี้เป็นคีย์สาธารณะ ใส่ใน bundle ของ web ได้ ส่วน <code>SECRET_KEY</code> และ <code>SERVICE_ROLE_KEY</code> ห้ามเอาไปใส่ใน web</p>
+    </li>
+    <li>
+      <strong>ตั้ง <code>apps/web/.env</code></strong>
+      <div class="code"><pre><code>VITE_AUTH_MODE=supabase
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_PUBLISHABLE_KEY=&lt;ค่า PUBLISHABLE_KEY จากขั้นก่อน&gt;</code></pre></div>
+    </li>
+    <li>
+      <strong>ตั้ง <code>apps/api/.env</code></strong> ให้เป็นโหมด supabase
+      <div class="code"><pre><code>AUTH_MODE=supabase
+SUPABASE_URL=http://127.0.0.1:54321</code></pre></div>
+    </li>
+    <li>
+      <strong>รัน <code>pnpm dev</code> แล้วสมัครสมาชิก</strong> ที่ <code>http://localhost:5173/auth/sign-up</code> ด้วยอีเมลลงท้าย <code>@example.test</code> (เช่น <code>me@example.test</code>) เพราะ allowlist ในเครื่องมีแค่โดเมนนี้ ดูวิธีเพิ่มอีเมลอื่นใน <a href="#allowlist">หัวข้อ 5</a>
+    </li>
+    <li>
+      <strong>เปิด Mailpit</strong> ที่ <code>http://127.0.0.1:54324</code> หาอีเมลยืนยัน แล้วคลิกลิงก์ ลิงก์ชี้ไปที่ <code>http://localhost:5173/auth/confirm?...</code> เมื่อยืนยันแล้วจะเข้าระบบและไปหน้า <code>/stocks</code>
+    </li>
+  </ol>
+  <div class="note warn">
+    <p><strong>พอร์ต 5173 ถูกใช้อยู่?</strong> ลิงก์ในอีเมลชี้ไป <code>site_url = http://localhost:5173</code> ถ้า web ของคุณรันพอร์ตอื่น ให้แก้ลิงก์ในเบราว์เซอร์เป็นพอร์ตที่ใช้จริง หรือเปลี่ยน <code>site_url</code> ใน <code>supabase/config.toml</code> (ต้อง <code>db:stop</code> แล้ว <code>db:start</code>)</p>
+  </div>
+  <p>หลังจากนั้นทุก request จาก web จะแนบ <code>Authorization: Bearer &lt;access token&gt;</code> API ตรวจ token (ES256, issuer, audience, <code>exp</code>, <code>sub</code>) และใช้ <code>sub</code> เป็น user id ที่กรองทุก query</p>
+
+  <h2 id="allowlist">5. Allowlist สำหรับ sign-up</h2>
+  <p>ระบบเปิดสมัครแบบ invite-only: hook <code>Before User Created</code> ตอบ 403 <code>signup_not_allowed</code> ถ้าอีเมลไม่ตรงกับแถวใน <code>app.signup_allowlist</code></p>
+  <ul>
+    <li>หนึ่งแถวคืออีเมลหนึ่งอัน หรือทั้งโดเมน (ตัวพิมพ์เล็ก)</li>
+    <li>แถว <code>@domain</code> <strong>ไม่ครอบคลุม sub-domain</strong> ต้องเพิ่ม sub-domain เป็นแถวแยก</li>
+    <li>ตารางเข้าถึงได้เฉพาะ <code>postgres</code> และ <code>supabase_auth_admin</code> จึงต้องแก้ด้วย SQL</li>
+    <li>การลบแถวไม่ได้ลบบัญชีที่สมัครไปแล้ว</li>
+  </ul>
+  <p>เปิด SQL editor ใน Studio (<code>http://127.0.0.1:54323</code>) หรือใช้ <code>psql</code> ที่พอร์ต 54322 แล้วรัน:</p>
+  <div class="code"><pre><code>-- อนุญาตอีเมลเดียว
+insert into app.signup_allowlist (pattern, note) values ('owner@example.com', 'owner');
+
+-- อนุญาตทั้งโดเมน
+insert into app.signup_allowlist (pattern, note) values ('@example.com', 'whole domain');
+
+-- ลบออก
+delete from app.signup_allowlist where pattern = 'owner@example.com';</code></pre></div>
+  <div class="code"><pre><code>psql postgresql://postgres:postgres@127.0.0.1:54322/postgres</code></pre></div>
+  <p><code>pnpm db:reset</code> จะล้างแถวที่คุณเพิ่มเอง เหลือแค่ <code>@example.test</code> จาก seed ถ้าอยากเก็บถาวรในเครื่อง ให้เพิ่มลง <code>supabase/seed.sql</code></p>
+
+  <h2 id="config">6. เปลี่ยน config ของ Auth</h2>
+  <p>ค่าทั้งหมดอยู่ใน <code>supabase/config.toml</code></p>
+  <table>
+    <thead><tr><th>หัวข้อ</th><th>ค่า</th></tr></thead>
+    <tbody>
+      <tr><td>Site URL</td><td><code>http://localhost:5173</code></td></tr>
+      <tr><td>คีย์เซ็น JWT</td><td>ES256 จาก <code>signing_keys.json</code></td></tr>
+      <tr><td>อายุ access token</td><td>1 ชั่วโมง, มี refresh token rotation</td></tr>
+      <tr><td>รหัสผ่าน</td><td>ยาวอย่างน้อย 8 ตัวอักษร</td></tr>
+      <tr><td>ยืนยันอีเมล</td><td>บังคับ</td></tr>
+      <tr><td>เปลี่ยนรหัสผ่าน</td><td>ต้องส่ง <code>current_password</code> (<code>auth.email.require_current_password = true</code>)</td></tr>
+      <tr><td>ส่งอีเมลซ้ำ</td><td>เว้น 60 วินาทีต่อที่อยู่</td></tr>
+      <tr><td>Email template</td><td><code>supabase/templates/confirmation.html</code> และ <code>recovery.html</code> ลิงก์ไปที่ <code>{{ .SiteURL }}/auth/confirm?token_hash=...&amp;type=email|recovery&amp;next=...</code></td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">
+    <p><strong>แก้ hook ใน config.toml แล้วต้อง restart:</strong> <code>pnpm db:stop &amp;&amp; pnpm db:start</code> เพราะ <code>pnpm db:reset</code> อย่างเดียวไม่โหลด config ของ Auth ใหม่</p>
+  </div>
+
+  <h2 id="verify">7. ตรวจว่าตั้งค่าถูก</h2>
+  <div class="code"><pre><code># JWKS ต้องมี 1 คีย์: kty EC, crv P-256, alg ES256
+curl -s http://127.0.0.1:54321/auth/v1/.well-known/jwks.json
+
+# ตรวจ setting ของ Auth, allowlist และ flow ของ sign-up ที่ระดับ script
+pnpm test:supabase
+
+# ตรวจว่า API ต่อ DB ได้
+curl -s http://localhost:3000/ready</code></pre></div>
+
+  <footer>ต่อไป: <a href="supabase-hosted.html">เตรียม Supabase แบบ hosted →</a></footer>
+</main>
+<script src="guide.js"></script>
+</body>
+</html>
