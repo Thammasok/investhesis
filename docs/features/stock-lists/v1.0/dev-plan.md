@@ -262,7 +262,7 @@ unit:
   (findOwnedList, createList, addMemberships). Covers FR-009–FR-013, FR-025.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: doing
+- status: review
 - size: M
 ```
 
