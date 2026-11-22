@@ -2,6 +2,7 @@ import type { MultipartFile } from '@fastify/multipart'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
+import { ListName } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
@@ -40,8 +41,30 @@ const PreviewOut = z.object({
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const attachment = (name: string) => `attachment; filename="investhesis-stocks-template.${name}"`
 
+const fieldValue = (f: unknown): unknown => (f && typeof f === 'object' && 'value' in f ? (f as { value: unknown }).value : undefined)
+
+// Postgres text cannot hold NUL; refuse it here so it is a 400, not a 500.
+const NewListName = ListName.refine((s) => !s.includes('\u0000'), { error: 'must not contain a NUL character' })
+const ConfirmOptions = z
+  .object({ duplicateMode: z.enum(['skip', 'update']), targetListId: z.uuid().optional(), newListName: NewListName.optional() })
+  .superRefine((v, ctx) => {
+    if ((v.targetListId === undefined) === (v.newListName === undefined)) {
+      ctx.addIssue({ code: 'custom', path: ['targetListId'], message: 'send exactly one of targetListId or newListName' })
+    }
+  })
+
+const ConfirmOut = z.object({
+  targetList: z.object({ id: z.uuid(), name: z.string() }),
+  created: z.number().int(),
+  updated: z.number().int(),
+  skipped: z.number().int(),
+  failed: z.number().int(),
+  addedToList: z.number().int(),
+  errorRows: z.array(z.object({ rowNumber: z.number().int(), cells: z.record(z.string(), z.string()), errors: z.array(RowError) })),
+})
+
 /** The one `file` part as bytes, or the problem that explains why not. */
-async function readUpload(req: FastifyRequest): Promise<{ fileName: string; bytes: Buffer }> {
+async function readUpload(req: FastifyRequest): Promise<{ fileName: string; bytes: Buffer; fields: Record<string, unknown> }> {
   if (!req.isMultipart()) throw new AppError({ status: 400, code: 'file_missing', detail: 'Send the file as a multipart "file" part' })
   let part: MultipartFile | undefined
   try {
@@ -53,7 +76,12 @@ async function readUpload(req: FastifyRequest): Promise<{ fileName: string; byte
         throw new AppError({ status: 413, code: 'payload_too_large', detail: 'A form field is too large' })
       }
     }
-    return { fileName: part.filename, bytes }
+    const fields: Record<string, unknown> = {}
+    for (const [name, field] of Object.entries(part.fields)) {
+      if (name === 'file' || !field) continue
+      fields[name] = Array.isArray(field) ? field.map(fieldValue) : fieldValue(field)
+    }
+    return { fileName: part.filename, bytes, fields }
   } catch (e) {
     if (e instanceof AppError) throw e
     const code = (e as { code?: string }).code
@@ -63,7 +91,7 @@ async function readUpload(req: FastifyRequest): Promise<{ fileName: string; byte
   }
 }
 
-export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined }> = async (app, { db }) => {
+export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined; repo?: Partial<service.ImportRepo> | undefined }> = async (app, { db, repo }) => {
   const r = app.withTypeProvider<ZodTypeProvider>()
   const need = (): Db => {
     if (!db) throw new AppError({ status: 503, code: 'db_unavailable' })
@@ -101,6 +129,32 @@ export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined }> = async (
       const { userId } = requireIdentity(req)
       const { fileName, bytes } = await readUpload(req)
       return service.previewImport(need(), userId, fileName, bytes)
+    },
+  )
+
+  r.post(
+    '/imports',
+    {
+      schema: {
+        tags: ['imports'],
+        consumes: ['multipart/form-data'],
+        response: { 200: ConfirmOut, 400: ProblemOut, 401: ProblemOut, 404: ProblemOut, 409: ProblemOut, 413: ProblemOut, 415: ProblemOut, 422: ProblemOut },
+      },
+    },
+    async (req) => {
+      const { userId } = requireIdentity(req)
+      const { fileName, bytes, fields } = await readUpload(req)
+      const parsed = ConfirmOptions.safeParse(fields)
+      if (!parsed.success) {
+        throw new AppError({
+          status: 400,
+          code: 'validation_failed',
+          errors: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+        })
+      }
+      const { duplicateMode, targetListId, newListName } = parsed.data
+      const options: service.ImportOptions = targetListId ? { duplicateMode, listId: targetListId } : { duplicateMode, newListName: newListName ?? '' }
+      return service.confirmImport(need(), userId, fileName, bytes, options, { ...service.importRepo, ...repo })
     },
   )
 }

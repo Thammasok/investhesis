@@ -34,9 +34,10 @@ const rows: [string, string][] = [
   ['GET', '/imports/template.csv'],
   ['GET', '/imports/template.xlsx'],
   ['POST', '/imports/preview'],
+  ['POST', '/imports'],
 ]
 
-describe('TC-A-101 (imports part) every import route needs an identity', () => {
+describe('TC-A-101 (imports part, preview and confirm) every import route needs an identity', () => {
   it.each(rows)('%s %s answers 401 without a token and with a bad one, before reading the body', async (method, url) => {
     const body = method === 'POST' ? multipart([filePart(F.noBom(), 'a.csv')]) : undefined
     for (const auth of [{}, bearer('not.a.jwt'), bearer(await signTestToken(keys, { aud: 'anon' }))]) {

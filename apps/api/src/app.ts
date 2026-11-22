@@ -5,6 +5,7 @@ import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
 import { importsRoutes } from './modules/imports/imports.routes.ts'
+import type { ImportRepo } from './modules/imports/imports.service.ts'
 import { listsRoutes } from './modules/lists/lists.routes.ts'
 import { stocksRoutes } from './modules/stocks/stocks.routes.ts'
 import { meRoutes } from './modules/me/me.routes.ts'
@@ -24,6 +25,8 @@ declare module 'fastify' {
 
 export type AppDeps = {
   config: Config
+  /** Test seam: replaces repository calls of the import confirm to inject failures. */
+  importRepo?: Partial<ImportRepo>
   db?: DbHealth & { close?(): Promise<void>; db?: Db }
   /** Defaults to the resolver for config.authMode; tests pass their own. */
   resolveIdentity?: IdentityResolver
@@ -59,7 +62,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(meRoutes)
   await app.register(listsRoutes, { db: deps.db?.db })
   await app.register(stocksRoutes, { db: deps.db?.db })
-  await app.register(importsRoutes, { db: deps.db?.db })
+  await app.register(importsRoutes, { db: deps.db?.db, repo: deps.importRepo })
 
   return app
 }
