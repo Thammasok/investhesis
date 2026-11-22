@@ -1,0 +1,116 @@
+import { expect, type Locator, type Page } from '@playwright/test'
+import { adminCreateUser, newEmail, openSignedIn, PASSWORD, signedIn } from './kit.ts'
+
+export * from './kit.ts'
+
+/** The API of the supabase-mode pair (what the web proxies `/api` to). */
+export const API_ORIGIN = 'http://localhost:3000'
+/** The API of the mock-mode pair. */
+export const MOCK_API_ORIGIN = 'http://localhost:3100'
+
+export type Seed = Record<string, unknown>
+export type SavedStock = { id: string; ticker: string; name: string; market: 'US' | 'TH'; listIds: string[] } & Seed
+export type SavedList = { id: string; name: string; stockCount: number }
+
+export type TestUser = { id: string; email: string; password: string }
+
+/** A confirmed `@example.test` user (admin API, no email) with its own prefix. */
+export const newUser = (prefix = 'e2e-sl'): Promise<TestUser> => adminCreateUser(newEmail(prefix))
+
+/** Calls the real API as `user` (a fresh token per client), for seeding and for reading back what the UI saved. */
+export async function apiAs(user: { email: string; password?: string }, origin = API_ORIGIN) {
+  const { session } = await signedIn(user.email, user.password ?? PASSWORD)
+  const call = async <T>(method: string, path: string, body?: unknown): Promise<{ status: number; body: T }> => {
+    const res = await fetch(`${origin}${path}`, {
+      method,
+      headers: { authorization: `Bearer ${session.access_token}`, ...(body !== undefined && { 'content-type': 'application/json' }) },
+      ...(body !== undefined && { body: JSON.stringify(body) }),
+    })
+    const text = await res.text()
+    return { status: res.status, body: (text ? JSON.parse(text) : undefined) as T }
+  }
+  const must = async <T>(method: string, path: string, body?: unknown): Promise<T> => {
+    const res = await call<T>(method, path, body)
+    if (res.status >= 300) throw new Error(`${method} ${path} -> ${res.status} ${JSON.stringify(res.body)}`)
+    return res.body
+  }
+  return {
+    token: session.access_token,
+    call,
+    stock: (body: Seed) => must<SavedStock>('POST', '/stocks', body),
+    stocks: async () => (await must<{ items: SavedStock[] }>('GET', '/stocks')).items,
+    list: (name: string) => must<SavedList>('POST', '/lists', { name }),
+    lists: async () => (await must<{ items: SavedList[] }>('GET', '/lists')).items,
+    addToList: (listId: string, stockId: string) => must('POST', `/lists/${listId}/stocks`, { stockId }),
+  }
+}
+export type Api = Awaited<ReturnType<typeof apiAs>>
+
+export const us = (ticker: string, extra: Seed = {}): Seed => ({ ticker, market: 'US', exchange: 'NASDAQ', name: `${ticker} Inc.`, ...extra })
+export const th = (ticker: string, extra: Seed = {}): Seed => ({ ticker, market: 'TH', exchange: 'SET', name: `บริษัท ${ticker}`, ...extra })
+
+/** A new user, signed in on `path`, with an API client for seeding. */
+export async function signedInUser(page: Page, path = '/stocks', prefix = 'e2e-sl') {
+  const user = await newUser(prefix)
+  const api = await apiAs(user)
+  if (path) {
+    await openSignedIn(page, user, path)
+    await page.waitForLoadState('networkidle')
+  }
+  return { user, api }
+}
+
+/** Waits until the page has settled (no request in flight), so a late reload cannot wipe typed input. */
+export const settled = (page: Page) => page.waitForLoadState('networkidle')
+
+export const h1 = (page: Page) => page.getByRole('heading', { level: 1 })
+
+export const toast = (page: Page, text: string | RegExp) => page.locator('[data-sonner-toast]').filter({ hasText: text })
+
+/** Opens a stock-form select by its field id and picks an option. */
+export async function choose(page: Page, field: string, option: string) {
+  await page.locator(`#stock-${field}`).click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+}
+
+export type FormSpec = {
+  market: 'US' | 'TH'
+  ticker: string
+  exchange: string
+  name: string
+  indexes?: string[]
+  selects?: Record<string, string>
+  themes?: string[]
+  lists?: string[]
+}
+
+/** Fills the Add stock form (does not submit). */
+export async function fillStockForm(page: Page, spec: FormSpec) {
+  await page.getByRole('radio', { name: spec.market, exact: true }).click()
+  await page.locator('#stock-ticker').fill(spec.ticker)
+  await choose(page, 'exchange', spec.exchange)
+  await page.locator('#stock-name').fill(spec.name)
+  for (const index of spec.indexes ?? []) await page.getByRole('checkbox', { name: index, exact: true }).check()
+  for (const [field, option] of Object.entries(spec.selects ?? {})) await choose(page, field, option)
+  for (const theme of spec.themes ?? []) {
+    await page.getByRole('textbox', { name: 'Add theme' }).fill(theme)
+    await page.getByRole('textbox', { name: 'Add theme' }).press('Enter')
+  }
+  for (const list of spec.lists ?? []) await page.getByRole('checkbox', { name: list, exact: true }).check()
+}
+
+export const saveStock = (page: Page) => page.getByRole('button', { name: 'Save stock' })
+
+/** The Classification card's value for a lens label, e.g. `lens(page, 'Style')`. */
+export const lens = (page: Page, label: string): Locator =>
+  page.locator('dt', { hasText: new RegExp(`^${label}$`) }).locator('xpath=following-sibling::dd[1]')
+
+/** True when the page has no page-level horizontal scroll. */
+export async function noHorizontalScroll(page: Page): Promise<boolean> {
+  return page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)
+}
+
+/** The code points of a string, to compare Thai text without normalisation. */
+export const codePoints = (s: string) => [...s].map((c) => c.codePointAt(0))
+
+export { expect }

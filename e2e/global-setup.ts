@@ -1,3 +1,5 @@
+import { chromium } from '@playwright/test'
+
 const AUTH_HEALTH = 'http://127.0.0.1:54321/auth/v1/health'
 
 async function up(url: string): Promise<boolean> {
@@ -21,5 +23,32 @@ export default async function globalSetup() {
       if (!ok) await new Promise((r) => setTimeout(r, 1000))
     }
     if (!ok) throw new Error(`${name} did not answer`)
+  }
+  await warmUpVite()
+}
+
+/**
+ * Vite optimises a dependency the first time a lazy route imports it and then reloads the page, which
+ * wipes a form a test has just filled. Visiting every route once through the mock-mode pair (no sign-in
+ * needed) pays that cost before the first test.
+ */
+async function warmUpVite() {
+  const origin = `http://localhost:${process.env.E2E_MOCK_WEB_PORT ?? '5273'}`
+  const browser = await chromium.launch()
+  try {
+    const page = await browser.newPage()
+    const unknown = '00000000-0000-7000-8000-000000000000'
+    for (const path of ['/stocks', '/stocks/new', `/stocks/${unknown}`, `/stocks/${unknown}/edit`, '/lists', `/lists/${unknown}`, '/import-export', '/concentration', '/chains', '/account']) {
+      await page.goto(`${origin}${path}`)
+      await page.waitForLoadState('networkidle')
+    }
+    await page.goto(`${origin}/stocks/new`)
+    await page.locator('#stock-exchange').waitFor()
+    await page.getByRole('radio', { name: 'US', exact: true }).click()
+    await page.locator('#stock-exchange').click()
+    await page.keyboard.press('Escape')
+    await page.waitForLoadState('networkidle')
+  } finally {
+    await browser.close()
   }
 }
