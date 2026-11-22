@@ -352,7 +352,7 @@ unit:
   insertMany with on conflict do nothing, update). Covers FR-001–FR-008, FR-014, FR-025, NFR-001.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002, T-003]
-- status: review
+- status: done
 - size: L
 ```
 
@@ -461,7 +461,7 @@ unit:
   for the preview half.
 - agent: software-engineer-backend
 - depends_on: [T-002, T-004]
-- status: backlog
+- status: doing
 - size: L
 ```
 
