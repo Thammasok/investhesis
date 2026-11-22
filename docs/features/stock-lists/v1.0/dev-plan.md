@@ -811,7 +811,7 @@ unit:
   Covers FR-001–FR-006, FR-014, NFR-007, NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-007]
-- status: backlog
+- status: doing
 - size: L
 ```
 
@@ -897,7 +897,7 @@ unit:
   NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-007, T-008]
-- status: review
+- status: done
 - size: M
 ```
 
