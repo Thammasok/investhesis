@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { SOLID_DESTRUCTIVE_LIGHT } from '@/lib/solid-destructive'
 import { countLabel } from '../format'
 import type { DetailActionResult } from '../stocks-data'
 import type { Stock } from '../types'
@@ -65,9 +66,7 @@ export function DeleteStockDialog({ stock, open, onOpenChange, returnFocusTo }: 
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            // The tinted destructive button measures 4.3:1 in light mode (AA needs 4.5:1), so the light
-            // theme gets the solid one (white on the destructive colour, 5.2:1); dark mode keeps the tint (4.6:1).
-            className="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/20 dark:text-destructive dark:hover:bg-destructive/30"
+            className={SOLID_DESTRUCTIVE_LIGHT}
             disabled={pending}
             onClick={confirm}
           >

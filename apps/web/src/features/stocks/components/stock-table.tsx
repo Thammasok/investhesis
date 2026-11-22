@@ -1,5 +1,5 @@
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,8 +12,13 @@ const COLUMN_LABEL: Record<SortColumn, string> = { ticker: 'Ticker', name: 'Name
 
 type StockTableProps = {
   stocks: readonly Stock[]
-  /** Every list of the user, to turn a stock's `listIds` into names. */
-  lists: readonly Pick<ListSummary, 'id' | 'name'>[]
+  /** Every list of the user, to turn a stock's `listIds` into names. Needed with `showLists`. */
+  lists?: readonly Pick<ListSummary, 'id' | 'name'>[]
+  /** The Lists column; the list detail page leaves it out. Default true. */
+  showLists?: boolean
+  /** A trailing column with this control for each row (e.g. a remove button); a click in it never opens the stock. */
+  renderRowAction?: (stock: Stock) => ReactNode
+  caption?: string
 }
 
 /** The Lists cell: up to two list badges, then `+N`; a dash with a screen-reader label when none. */
@@ -75,7 +80,7 @@ function SortHead({
  * Sortable table of stocks, shared by the Stocks page and the list detail page. Sorting is
  * client-side and kept here; a row opens the stock (the ticker link is the keyboard path).
  */
-export function StockTable({ stocks, lists }: StockTableProps) {
+export function StockTable({ stocks, lists = [], showLists = true, renderRowAction, caption }: StockTableProps) {
   const navigate = useNavigate()
   const [sort, setSort] = useState<{ column: SortColumn; direction: SortDirection }>({
     column: 'ticker',
@@ -93,7 +98,7 @@ export function StockTable({ stocks, lists }: StockTableProps) {
     <div className="rounded-lg border">
       <Table className="text-sm">
         <TableCaption className="sr-only">
-          Saved stocks, sorted by {COLUMN_LABEL[sort.column]} {sort.direction === 'asc' ? 'ascending' : 'descending'}
+          {caption ?? 'Saved stocks'}, sorted by {COLUMN_LABEL[sort.column]} {sort.direction === 'asc' ? 'ascending' : 'descending'}
         </TableCaption>
         <TableHeader>
           <TableRow>
@@ -104,7 +109,12 @@ export function StockTable({ stocks, lists }: StockTableProps) {
             <SortHead column="sector" sort={sort} onSort={onSort} />
             <TableHead className="bg-background">Size</TableHead>
             <TableHead className="bg-background">Style</TableHead>
-            <TableHead className="bg-background">Lists</TableHead>
+            {showLists ? <TableHead className="bg-background">Lists</TableHead> : null}
+            {renderRowAction ? (
+              <TableHead className="bg-background">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            ) : null}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -138,9 +148,16 @@ export function StockTable({ stocks, lists }: StockTableProps) {
               </TableCell>
               <TableCell>{stock.size ?? '—'}</TableCell>
               <TableCell>{stock.style ?? '—'}</TableCell>
-              <TableCell>
-                <ListBadges names={stock.listIds.flatMap((id) => listNames.get(id) ?? [])} />
-              </TableCell>
+              {showLists ? (
+                <TableCell>
+                  <ListBadges names={stock.listIds.flatMap((id) => listNames.get(id) ?? [])} />
+                </TableCell>
+              ) : null}
+              {renderRowAction ? (
+                <TableCell className="text-right" onClick={(event) => event.stopPropagation()}>
+                  {renderRowAction(stock)}
+                </TableCell>
+              ) : null}
             </TableRow>
           ))}
         </TableBody>
