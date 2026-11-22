@@ -95,6 +95,21 @@ describe('app layout', () => {
     )
   })
 
+  it.each([
+    ['/stocks/new', 'Stocks'],
+    ['/stocks/PTT/edit', 'Stocks'],
+    ['/lists/L1', 'Lists'],
+    ['/import-export', 'Import / export'],
+  ])('TC-C-103: %s marks only %s as active in the main navigation', async (path, active) => {
+    renderAt(path)
+    await screen.findByRole('heading', { level: 1 })
+
+    const links = mainNav().getAllByRole('link')
+
+    const current = links.filter((l) => l.getAttribute('data-active') === 'true').map((l) => l.textContent)
+    expect(current).toEqual([active])
+  })
+
   it('collapses and expands the sidebar from the header trigger', async () => {
     renderAt('/stocks')
     await heading('Stocks')

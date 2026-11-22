@@ -84,3 +84,42 @@ describe('buildErrorCsv', () => {
     expect(csv).toContain('2,บมจ. ปตท.,=1+1,')
   })
 })
+
+describe('TC-U-132: error-rows CSV builder', () => {
+  const rows = [
+    {
+      rowNumber: 4,
+      cells: { ticker: 'XYZ', market: 'JP', name: '' },
+      errors: [
+        { path: 'market', message: 'must be US or TH' },
+        { path: 'name', message: 'required' },
+      ],
+    },
+    {
+      rowNumber: 9,
+      cells: { ticker: 'ก', market: 'US', name: 'Berkshire "B", Inc.\nline2' },
+      errors: [{ path: 'ticker', message: 'invalid' }],
+    },
+  ]
+
+  it('TC-U-132: BOM bytes, CRLF line ends, one data line per error row and the original columns plus errors', () => {
+    const bytes = Buffer.from(buildErrorCsv(rows))
+
+    expect([...bytes.subarray(0, 3)]).toEqual([0xef, 0xbb, 0xbf])
+    const text = bytes.toString('utf8').slice(1)
+    expect(text.split('\r\n')[0]).toBe('row,ticker,market,name,errors')
+    expect(text.endsWith('\r\n')).toBe(true)
+    expect(text).toContain('4,XYZ,JP,,market: must be US or TH; name: required\r\n')
+  })
+
+  it('TC-U-132: fields with comma, quote or newline are quoted with doubled quotes and Thai bytes are unchanged', () => {
+    const text = buildErrorCsv(rows)
+
+    expect(text).toContain('9,ก,US,"Berkshire ""B"", Inc.\nline2",ticker: invalid')
+    expect(Buffer.from(text).includes(Buffer.from('ก'))).toBe(true)
+  })
+
+  it('TC-U-132: an empty list gives a header only (the button is hidden by TC-C-172)', () => {
+    expect(buildErrorCsv([]).slice(1)).toBe('row,errors\r\n')
+  })
+})

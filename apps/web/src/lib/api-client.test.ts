@@ -110,6 +110,50 @@ describe('api-client', () => {
     expect(authHeader(fetchMock, 1)).toBe('Bearer T2')
   })
 
+  it('TC-C-102: a multipart post goes to /api/imports with the bearer token, no manual content-type, and the retry re-sends the same file under the new token', async () => {
+    // Arrange
+    const auth = new FakeAuthClient({ session: fakeSession('T1'), refreshResult: fakeSession('T2') })
+    const { client, fetchMock } = setup([json(401), json(200, { created: 1 })], auth, '/import-export')
+    const form = new FormData()
+    form.append('duplicateMode', 'skip')
+    form.append('file', new File(['ticker,market\nNVDA,US'], 'stocks.csv', { type: 'text/csv' }))
+
+    // Act
+    await client.post('/imports', { body: form })
+
+    // Assert
+    const calls = fetchMock.mock.calls as unknown as [string, RequestInit][]
+    expect(calls.map((c) => c[0])).toEqual(['/api/imports', '/api/imports'])
+    for (const [, init] of calls) expect((init.headers as Record<string, string>)['content-type']).toBeUndefined()
+    expect(authHeader(fetchMock, 0)).toBe('Bearer T1')
+    expect(authHeader(fetchMock, 1)).toBe('Bearer T2')
+    const [first, second] = calls.map(([, init]) => (init.body as FormData).get('file') as File)
+    expect(await second.text()).toBe(await first.text())
+    expect(second.name).toBe('stocks.csv')
+  })
+
+  it('TC-C-102: a second 401 runs the sign-out path, a 409 becomes an ApiError with its code and is not retried', async () => {
+    // Arrange
+    const twice = setup([json(401), json(401)], new FakeAuthClient({ session: fakeSession('T1'), refreshResult: fakeSession('T2') }), '/import-export')
+    const conflict = setup([json(409, { code: 'list_name_taken', title: 'x' })])
+    const form = () => {
+      const f = new FormData()
+      f.append('file', new File(['a'], 'a.csv'))
+      return f
+    }
+
+    // Act
+    await twice.client.post('/imports', { body: form() }).catch(() => undefined)
+    const rejected = conflict.client.post('/imports', { body: form() })
+
+    // Assert
+    expect(twice.auth.calls.signOut).toBe(1)
+    expect(twice.router.state.location.pathname).toBe('/auth/sign-in')
+    await expect(rejected).rejects.toMatchObject({ name: 'ApiError', status: 409, code: 'list_name_taken' })
+    expect(conflict.fetchMock).toHaveBeenCalledTimes(1)
+    expect(conflict.auth.calls.refresh).toBe(0)
+  })
+
   it.each([403, 404, 500])('TC-C-010: a %i does not refresh or sign out and rejects with ApiError', async (status) => {
     const { client, fetchMock, auth } = setup([json(status, { title: 'x' })])
     await expect(client.get('/stocks/x')).rejects.toMatchObject({ name: 'ApiError', status, body: { title: 'x' } })
