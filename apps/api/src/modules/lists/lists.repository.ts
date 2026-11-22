@@ -47,7 +47,7 @@ export function listLists(db: Db, userId: string): Promise<ListRow[]> {
     .orderBy(sql`lower(${lists.name})`, lists.name)
 }
 
-export async function createList(db: Db, userId: string, id: string, name: string): Promise<void> {
+export async function createList(db: DbOrTx, userId: string, id: string, name: string): Promise<void> {
   await db.insert(lists).values({ id, userId, name })
 }
 

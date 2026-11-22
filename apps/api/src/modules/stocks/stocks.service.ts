@@ -77,15 +77,20 @@ export async function getStock(db: Db, userId: string, id: string): Promise<Stoc
   return view(await owned(db, userId, id))
 }
 
-export async function createStock(db: Db, userId: string, input: Parsed, listIds: readonly string[]): Promise<StockView> {
-  const id = uuidv7()
+/** A new stock row from validated input: default cycle resolved, every set lens `manual`. */
+export function toNewStock(input: Parsed): repo.NewStock {
   const cycle = resolveEconomicCycle({ gicsSector: input.gicsSector, input: input.economicCycle })
-  const row: repo.NewStock = {
+  return {
     ...input,
-    id,
+    id: uuidv7(),
     economicCycle: cycle.economicCycle,
     lensSources: sourcesFor({ ...input, economicCycle: cycle.economicCycle }, cycle.source),
   }
+}
+
+export async function createStock(db: Db, userId: string, input: Parsed, listIds: readonly string[]): Promise<StockView> {
+  const row = toNewStock(input)
+  const id = row.id
   const wanted = [...new Set(listIds)]
   try {
     await db.transaction(async (tx) => {

@@ -57,10 +57,12 @@ export async function findByMarketTickers(
   db: DbOrTx,
   userId: string,
   pairs: readonly { market: string; ticker: string }[],
+  opts: { lock?: boolean } = {},
 ): Promise<StockRow[]> {
   if (pairs.length === 0) return []
   const match = or(...pairs.map((p) => and(eq(stocks.market, p.market), eq(stocks.ticker, p.ticker))))
-  return await db.select(columns).from(stocks).where(and(eq(stocks.userId, userId), match))
+  const query = db.select(columns).from(stocks).where(and(eq(stocks.userId, userId), match))
+  return await (opts.lock ? query.for('update') : query)
 }
 
 export async function findIdByMarketTicker(db: DbOrTx, userId: string, market: string, ticker: string): Promise<string | undefined> {

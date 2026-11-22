@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { FastifyInstance } from 'fastify'
-import { buildApp } from '../src/app.ts'
+import { buildApp, type AppDeps } from '../src/app.ts'
 import { loadConfig } from '../src/config/env.ts'
 import { createDb, type DbHandle } from '../src/db/client.ts'
 import { baseEnv } from './env.ts'
@@ -31,7 +31,7 @@ export type TestApp = {
  * The API against the local Supabase database, signed in as `userId` (a fresh random user by default).
  * Each test file uses its own user ids, so files can run in parallel without truncating tables.
  */
-export async function buildTestApp(userId: string = newUserId()): Promise<TestApp> {
+export async function buildTestApp(userId: string = newUserId(), overrides: Partial<AppDeps> = {}): Promise<TestApp> {
   const config = loadConfig({ ...baseEnv, DATABASE_URL: testDatabaseUrl, MOCK_USER_ID: userId })
   const handle = createDb(config)
   const users = new Set([userId])
@@ -39,7 +39,7 @@ export async function buildTestApp(userId: string = newUserId()): Promise<TestAp
   const identityFor = (id: string) => async () => ({ userId: id, email: undefined, displayName: undefined })
   // The pool is closed once, by cleanup; apps built here do not own it.
   const build = (id: string) =>
-    buildApp({ config, db: { ping: handle.ping, db: handle.db }, resolveIdentity: identityFor(id), logStream: quiet })
+    buildApp({ config, db: { ping: handle.ping, db: handle.db }, resolveIdentity: identityFor(id), logStream: quiet, ...overrides })
   const app = await build(userId)
   return {
     app,
