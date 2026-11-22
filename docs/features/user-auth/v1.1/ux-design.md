@@ -1,6 +1,6 @@
 ---
 version: 1.1
-status: draft
+status: superseded
 date: 2026-11-22
 requires: design.md
 extends: ../v1.0/ux-design.md

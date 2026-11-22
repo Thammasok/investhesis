@@ -1,6 +1,6 @@
 ---
 version: 1.1
-status: active
+status: superseded
 date: 2026-11-22
 requires: design.md
 ux-design: ux-design.md

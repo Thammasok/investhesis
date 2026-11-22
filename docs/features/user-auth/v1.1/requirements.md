@@ -1,6 +1,6 @@
 ---
 version: 1.1
-status: draft
+status: superseded
 date: 2026-11-22
 supersedes: ../v1.0/requirements.md#fr-018
 source: owner request 2026-11-22 ("unlock the sign-up allowlist to open sign-up")
