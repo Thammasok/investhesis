@@ -1,6 +1,4 @@
-import { redirect } from 'react-router'
 import type { AuthClient } from '@/features/auth/auth-client'
-import { signInLocation } from '@/features/auth/guards'
 
 export type FieldProblem = { path: string; message: string; code?: string }
 
@@ -91,12 +89,27 @@ export function createApiClient(options: ApiClientOptions) {
     }
   }
 
+  /** Signs out (a failure to clear the local session must not keep the visitor here) and leads to sign-in. */
+  async function endSession(from: string) {
+    try {
+      await authClient.signOut()
+    } catch {
+      // the redirect below is what matters
+    }
+    await onSessionEnded(from)
+  }
+
   /** Sends with the bearer token and, on a 401, one refresh and retry; returns the raw response. */
   async function exchange(method: string, path: string, opts: RequestOptions): Promise<Response> {
     let token: string | null = null
     if (authClient.mode === 'supabase') {
       token = await authClient.getAccessToken()
-      if (!token) throw redirect(signInLocation(currentPath()))
+      if (!token) {
+        // Not `throw redirect(...)`: that only works inside a loader or action, and a component
+        // handler (the import wizard, template downloads) would throw a bare Response.
+        await endSession(currentPath())
+        throw new ApiError(401, undefined, 'unauthenticated')
+      }
     }
 
     let response = await send(method, path, opts, token)
@@ -104,9 +117,7 @@ export function createApiClient(options: ApiClientOptions) {
       const refreshed = await authClient.refresh()
       if (refreshed) response = await send(method, path, opts, refreshed.accessToken)
       if (!refreshed || response.status === 401) {
-        const from = currentPath()
-        await authClient.signOut()
-        await onSessionEnded(from)
+        await endSession(currentPath())
         throw new ApiError(401, await parse(response))
       }
     }

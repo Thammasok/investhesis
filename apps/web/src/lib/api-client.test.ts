@@ -49,13 +49,30 @@ describe('api-client', () => {
     expect(headers.authorization).toBeUndefined()
   })
 
-  it('TC-C-007: makes no request without a session and redirects like the guard', async () => {
-    const { client, fetchMock } = setup([json(200)], FakeAuthClient.signedOut(), '/lists')
-    const thrown = await client.get('/lists').catch((e: unknown) => e)
-    expect(thrown).toBeInstanceOf(Response)
-    expect((thrown as Response).status).toBe(302)
-    expect((thrown as Response).headers.get('location')).toBe('/auth/sign-in?next=%2Flists')
+  it('TC-C-007: makes no request without a session and ends the session like the guard', async () => {
+    const { client, fetchMock, router } = setup([json(200)], FakeAuthClient.signedOut(), '/lists')
+    await expect(client.get('/lists')).rejects.toMatchObject({ name: 'ApiError', status: 401, code: 'unauthenticated' })
     expect(fetchMock).toHaveBeenCalledTimes(0)
+    expect(router.state.location.pathname + router.state.location.search).toBe('/auth/sign-in?next=%2Flists')
+    expect(router.state.location.state).toEqual({ reason: 'session_ended' })
+  })
+
+  it('TC-C-007: a call made outside a loader (no session) throws an ApiError, not a bare redirect Response', async () => {
+    const { client } = setup([], FakeAuthClient.signedOut(), '/lists')
+    const thrown = await client.post('/imports', { body: new FormData() }).catch((e: unknown) => e)
+    expect(thrown).toBeInstanceOf(ApiError)
+    expect(thrown).not.toBeInstanceOf(Response)
+  })
+
+  it('TC-C-011: still leads to sign-in when signOut itself throws', async () => {
+    const auth = new FakeAuthClient({ session: fakeSession('T1'), refreshResult: null })
+    auth.signOut = async () => {
+      throw new Error('storage unavailable')
+    }
+    const { client, router } = setup([json(401)], auth, '/lists')
+    await expect(client.get('/lists')).rejects.toMatchObject({ name: 'ApiError', status: 401 })
+    expect(router.state.location.pathname + router.state.location.search).toBe('/auth/sign-in?next=%2Flists')
+    expect(router.state.location.state).toEqual({ reason: 'session_ended' })
   })
 
   it('TC-U-017: recovers from one expired token', async () => {
