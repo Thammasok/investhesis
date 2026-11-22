@@ -897,7 +897,7 @@ unit:
   NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-007, T-008]
-- status: doing
+- status: review
 - size: M
 ```
 
