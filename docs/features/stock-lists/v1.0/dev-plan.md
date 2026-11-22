@@ -653,7 +653,7 @@ unit:
   ticker or list name (design.md §Web, ux-design.md §Shared patterns).
 - agent: react-vite-developer
 - depends_on: [T-002]
-- status: doing
+- status: review
 - size: M
 ```
 
