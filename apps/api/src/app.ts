@@ -1,6 +1,7 @@
 import { serializerCompiler, validatorCompiler } from '@fastify/type-provider-zod'
 import Fastify, { type FastifyInstance } from 'fastify'
 import type { DestinationStream } from 'pino'
+import { MARKETS } from '@investhesis/domain'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
@@ -17,6 +18,9 @@ declare module 'fastify' {
     shuttingDown: boolean
   }
 }
+
+// Proves ADR-005 (the API loads the domain package from source); routes use it from T-004.
+void MARKETS
 
 export type AppDeps = {
   config: Config
