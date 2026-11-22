@@ -6,7 +6,7 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
-| Stock Lists | v1.0 | [dev-plan.md](features/stock-lists/v1.0/dev-plan.md) | todo | Phase 4 — dev plan approved | 2026-11-21 |
+| Stock Lists | v1.0 | [dev-plan.md](features/stock-lists/v1.0/dev-plan.md) | built | All 13 tasks done; awaiting release tag | 2026-11-22 |
 | User Auth | v1.0 | [dev-plan.md](features/user-auth/v1.0/dev-plan.md) | done | Released as v0.1.0 | 2026-11-21 |
 
 ## Carried work
@@ -14,3 +14,8 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 | Item | From | Notes |
 |---|---|---|
 | Rewrite `.claude/rules/test-gate.md` command table for Investhesis | Stock Lists v1.0 | Proposed in T-001's review note |
+| Fix destructive contrast: delete confirm buttons are not solid in light mode (F-2), dark mode 4.26:1 (F-3), highlighted destructive menu item 4.28:1 (F-4); remove the matching `test.fail` cases when fixed | Stock Lists v1.0 | Pinned in `sl-a11y.spec.ts`; see test-report.md |
+| Decide how to stop `TC-C-114` (NFR-003 timing, `stocks-page.test.tsx`) failing under CPU load | Stock Lists v1.0 | Failed once at 209 ms vs 200 ms; passed in 12 re-runs |
+| Check F-1 (import wizard focus under StrictMode) against a production build | Stock Lists v1.0 | Probably dev-only |
+| Decide on spreadsheet formula escaping in the error CSV and templates | Stock Lists v1.0 | Not escaped, per NFR-009; pinned by TC-A-149 |
+| Rewrite or delete the Pacta rule files in `.claude/rules/` | Stock Lists v1.0 | Still open from CLAUDE.md |
