@@ -461,7 +461,7 @@ unit:
   for the preview half.
 - agent: software-engineer-backend
 - depends_on: [T-002, T-004]
-- status: review
+- status: done
 - size: L
 ```
 
@@ -567,7 +567,7 @@ unit:
   NFR-006.
 - agent: software-engineer-backend
 - depends_on: [T-005]
-- status: backlog
+- status: doing
 - size: M
 ```
 
