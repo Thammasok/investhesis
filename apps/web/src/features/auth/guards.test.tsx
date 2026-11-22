@@ -4,10 +4,11 @@ import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it, vi } from 'vitest'
 import { createRoutes } from '@/routers/router'
 import { FakeAuthClient } from '@/test/fake-auth-client'
+import { emptyApi } from '@/test/stub-api'
 import { watchAuth } from './guards'
 
 function renderAt(path: string, authClient: FakeAuthClient, extend?: (routes: RouteObject[]) => void) {
-  const routes = createRoutes(authClient)
+  const routes = createRoutes(authClient, { apiClient: emptyApi().client() })
   extend?.(routes)
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(<RouterProvider router={router} />)

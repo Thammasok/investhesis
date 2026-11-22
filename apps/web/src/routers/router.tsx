@@ -1,11 +1,13 @@
 import { createBrowserRouter, redirect, type DataRouter, type RouteObject } from 'react-router'
 import { AppLayout } from '@/components/layout/app-layout'
+import { PageSkeleton } from '@/components/page-skeleton'
 import { AuthLayout } from '@/components/layout/auth-layout'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { loadCurrentUser } from '@/features/auth/current-user'
 import { createGuards, sessionEndedHandler } from '@/features/auth/guards'
 import { createAuthLoaders } from '@/features/auth/loaders'
+import { stocksRoutes } from '@/features/stocks/stocks-routes'
 import { createApiClient, type ApiClient } from '@/lib/api-client'
 import { ConfirmFailed, ConfirmingScreen } from '@/features/auth/components/confirming'
 import { RouteError } from '@/views/route-error'
@@ -64,34 +66,12 @@ export function createRoutes(
       middleware: [requireSession],
       loader: () => loadCurrentUser(apiClient, authClient),
       Component: AppShell,
+      // The first paint, while this loader and the page's own run in parallel (ux-design.md: Loading).
+      HydrateFallback: PageSkeleton,
       ErrorBoundary: RouteError,
       children: [
         { index: true, loader: () => redirect('/stocks') },
-        {
-          path: 'stocks',
-          handle: { crumb: 'Stocks' } satisfies RouteHandle,
-          children: [
-            { index: true, lazy: () => import('@/views/stocks') },
-            {
-              path: 'new',
-              handle: { crumb: 'New stock' } satisfies RouteHandle,
-              lazy: () => import('@/views/stock-new'),
-            },
-            {
-              path: ':id',
-              // Stock pages replace this with the ticker from their loader data.
-              handle: { crumb: (params) => params.id ?? '' } satisfies RouteHandle,
-              children: [
-                { index: true, lazy: () => import('@/views/stock-detail') },
-                {
-                  path: 'edit',
-                  handle: { crumb: 'Edit' } satisfies RouteHandle,
-                  lazy: () => import('@/views/stock-edit'),
-                },
-              ],
-            },
-          ],
-        },
+        stocksRoutes(apiClient),
         {
           path: 'account',
           handle: { crumb: 'Account' } satisfies RouteHandle,

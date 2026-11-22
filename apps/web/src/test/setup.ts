@@ -29,3 +29,6 @@ vi.stubGlobal(
     disconnect() {}
   },
 )
+
+// jsdom has no scrollIntoView; cmdk (the add-to-list picker) scrolls the highlighted option into view.
+Element.prototype.scrollIntoView = () => {}

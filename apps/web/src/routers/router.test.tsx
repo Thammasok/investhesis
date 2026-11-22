@@ -5,16 +5,25 @@ import { RouterProvider } from 'react-router/dom'
 import { describe, expect, it } from 'vitest'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { FakeAuthClient } from '@/test/fake-auth-client'
+import { makeStock } from '@/test/stock-fixtures'
+import { emptyApi } from '@/test/stub-api'
 import { createRoutes } from './router'
+
+// Stocks the detail and edit pages can load.
+function pagesApi() {
+  return emptyApi()
+    .on('GET /stocks/AAPL', makeStock({ id: 'AAPL', ticker: 'AAPL' }))
+    .on('GET /stocks/PTT', makeStock({ id: 'PTT', ticker: 'PTT' }))
+}
 
 // Signed in by default; guest pages (the sign-in tests below) use a signed-out fake.
 function renderAt(path: string, authClient: AuthClient = FakeAuthClient.signedIn()) {
-  const router = createMemoryRouter(createRoutes(authClient), { initialEntries: [path] })
+  const router = createMemoryRouter(createRoutes(authClient, { apiClient: pagesApi().client() }), { initialEntries: [path] })
   render(<RouterProvider router={router} />)
   return router
 }
 
-const heading = (name: string) => screen.findByRole('heading', { level: 1, name })
+const heading = (name: string | RegExp) => screen.findByRole('heading', { level: 1, name })
 const breadcrumb = () => screen.getByRole('navigation', { name: 'breadcrumb' })
 const mainNav = () => within(screen.getByRole('navigation', { name: 'Main' }))
 
@@ -30,7 +39,7 @@ describe('router', () => {
     ['/chains', 'Value chains'],
     ['/lists', 'Lists'],
     ['/import-export', 'Import / export'],
-    ['/stocks/AAPL', 'Stock AAPL'],
+    ['/stocks/AAPL', /^AAPL/],
     ['/stocks/new', 'Add stock'],
     ['/stocks/AAPL/edit', 'Edit stock'],
     ['/lists/L1', 'List L1'],
@@ -60,7 +69,7 @@ describe('app layout', () => {
 
   it('keeps Stocks active on a stock page and shows the trail in the breadcrumb', async () => {
     renderAt('/stocks/PTT')
-    await heading('Stock PTT')
+    await heading(/^PTT/)
 
     expect(mainNav().getByRole('link', { name: 'Stocks' })).toHaveAttribute('data-active', 'true')
 

@@ -9,6 +9,7 @@ import { RouterProvider } from 'react-router/dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiClient } from '@/lib/api-client'
 import { createRoutes } from '@/routers/router'
+import { emptyApi } from '@/test/stub-api'
 import { FakeAuthClient, fakeSession } from '@/test/fake-auth-client'
 import type { AuthClient } from './auth-client'
 import { watchAuth } from './guards'
@@ -68,7 +69,9 @@ describe('TC-C-003 mock mode keeps the old behaviour', () => {
   it('TC-C-003: /stocks renders, no Authorization header, the menu shows the /me email', async () => {
     // Arrange
     const authClient = createMockAuthClient()
-    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => json(200, { id: 'm', email: 'mock@x.io', displayName: null }))
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) =>
+      url.endsWith('/me') ? json(200, { id: 'm', email: 'mock@x.io', displayName: null }) : json(200, { items: [] }),
+    )
     const apiClient = createApiClient({ authClient, onSessionEnded: () => {}, fetch: fetchMock as unknown as typeof fetch })
 
     // Act
@@ -80,13 +83,14 @@ describe('TC-C-003 mock mode keeps the old behaviour', () => {
     expect(router.state.location.pathname).toBe('/stocks')
     const trigger = await screen.findByRole('button', { name: 'Account menu' })
     expect(within(trigger).getByText('mock@x.io')).toBeInTheDocument()
-    const headers = fetchMock.mock.calls[0][1]?.headers as Record<string, string>
+    const meCall = fetchMock.mock.calls.find(([url]) => url.endsWith('/me'))
+    const headers = meCall?.[1]?.headers as Record<string, string>
     expect(headers.authorization).toBeUndefined()
   })
 
   it('TC-C-003: opening the sign-in page leads straight to /stocks', async () => {
     const authClient = createMockAuthClient()
-    const router = createMemoryRouter(createRoutes(authClient), { initialEntries: ['/auth/sign-in'] })
+    const router = createMemoryRouter(createRoutes(authClient, { apiClient: emptyApi().client() }), { initialEntries: ['/auth/sign-in'] })
     render(<RouterProvider router={router} />)
     await h1('Stocks')
     expect(router.state.location.pathname).toBe('/stocks')
@@ -170,7 +174,7 @@ describe('TC-C-005 an expired but refreshable session is renewed before the page
 describe('TC-C-006 a refreshed token needs no navigation', () => {
   it('TC-C-006: TOKEN_REFRESHED keeps the location and shows no notice', async () => {
     const auth = FakeAuthClient.signedIn()
-    const router = createMemoryRouter(createRoutes(auth), { initialEntries: ['/stocks'] })
+    const router = createMemoryRouter(createRoutes(auth, { apiClient: emptyApi().client() }), { initialEntries: ['/stocks'] })
     render(<RouterProvider router={router} />)
     await h1('Stocks')
     watchAuth(router, auth)
@@ -280,6 +284,8 @@ describe('TC-E-001 regression: the app root creates one router', () => {
     const auth = FakeAuthClient.signedOut()
     auth.validLinks = { hash1: 'email' }
     window.history.pushState({}, '', '/auth/confirm?token_hash=hash1&type=email')
+    // The router built by App has the real api-client; /stocks answers with no stocks.
+    vi.stubGlobal('fetch', vi.fn(async () => json(200, { items: [] })))
 
     // Act
     render(

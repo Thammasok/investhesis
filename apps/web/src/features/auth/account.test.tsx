@@ -11,7 +11,7 @@ import type { AuthClient } from './auth-client'
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
 vi.mock('sonner', () => ({ toast, Toaster: () => null }))
 
-/** A `GET /me` stub; any other path is a 404 so a stray call is visible. */
+/** A `GET /me` stub with an empty stock list; any other path is a 404 so a stray call is visible. */
 function meFetch(email: string | null) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
@@ -20,6 +20,10 @@ function meFetch(email: string | null) {
         status: 200,
         headers: { 'content-type': 'application/json' },
       })
+    }
+    // The pages behind the menu load their own data; the user has none.
+    if (url.endsWith('/stocks') || url.endsWith('/lists')) {
+      return new Response(JSON.stringify({ items: [] }), { status: 200, headers: { 'content-type': 'application/json' } })
     }
     return new Response('{}', { status: 404 })
   })
