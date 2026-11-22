@@ -402,8 +402,8 @@ the same rule as 3.6.
 
 ### TC-U-135
 **File-level problem code to message mapper** | Level: Unit | P1 | EP
-- **Input:** `file_too_large`, `file_unsupported`, `file_too_many_rows` (with and without a row count), `file_empty`, `file_missing_headers` (paths `ticker`, `name`), `file_missing`, a network error, an unknown code `boom`, status 500.
-- **Expected:** `File is larger than 1 MB`; `Use a .csv or .xlsx file`; `The file has 1,248 rows; the limit is 1,000` (with count) or a generic form naming the limit (without, see G-3); `The file has no data rows`; `Missing columns: ticker, name`; a "choose a file" message; a retryable "could not reach the server" message; a generic message for the unknown code and 500, none showing raw JSON.
+- **Input:** `file_too_large`, `file_unsupported`, `file_too_many_rows`, `file_empty`, `file_missing_headers` (paths `ticker`, `name`), `file_missing`, a network error, an unknown code `boom`, status 500.
+- **Expected:** `File is larger than 1 MB`; `Use a .csv or .xlsx file`; `The file has more than 1,000 rows; the limit is 1,000` (the `file_too_many_rows` problem carries no row count, so the message never shows one; G-3 resolved, see D-2); `The file has no data rows`; `Missing columns: ticker, name`; a "choose a file" message; a retryable "could not reach the server" message; a generic message for the unknown code and 500, none showing raw JSON.
 - **Mock needed:** none. **Covers:** FR-016, FR-017.
 
 ---
@@ -725,6 +725,12 @@ user ids and `afterAll` cleanup. Inject helpers sign a token for U or V.
 - **Expected:** either the whole import is stored (1,000 stocks, the list, all memberships) or none of it; never a partial set; API still answers `/health` and a new confirm of the same file then reports a consistent state (`created 0, skipped 1000` or `created 1000`).
 - **Mock needed:** LocalJWKS, DB, Fixtures. **Covers:** NFR-006, FR-022.
 
+### TC-A-149
+**Formula-like cells are stored and echoed byte for byte** | Level: API | P2 | EG
+- **Input:** a CSV and an XLSX whose `name` cells are `=1+1`, `+SUM(A1:A2)`, `-2+3`, `@SUM(A1)`, `=HYPERLINK("http://example.test","x")`, `=cmd|' /C calc'!A0`; preview, then confirm the CSV, then `GET /stocks` and a direct SQL read.
+- **Expected:** the preview rows, the stored values and the API output are identical to the input in code points and bytes (no `'` prefix, no escaping). This pins the owner's decision that spreadsheet formulas are not escaped (NFR-009 byte-for-byte; the `Risk: CSV/formula injection` item below); the web error-rows CSV builder is pinned the same way by TC-U-115. A leading tab or space is trimmed like any name (G-5).
+- **Mock needed:** LocalJWKS-free (mock identity), DB. **Covers:** NFR-009.
+
 ---
 
 ## 9. Web component and static cases (TC-C)
@@ -945,8 +951,8 @@ Queries use roles and labels, so each assertion also proves an accessible name.
 
 ### TC-C-161
 **Template links** | Level: Component | P1 | EP
-- **Input:** render step 1.
-- **Expected:** two links `CSV template` and `Excel template` with `href` `/api/imports/template.csv` and `/api/imports/template.xlsx` and the `download` attribute; both keyboard focusable. (Whether a plain link can authenticate in `supabase` mode is the subject of G-2 and TC-E-115.)
+- **Input:** render step 1; click each template button.
+- **Expected:** two buttons `CSV template` and `Excel template` (not links: a plain `<a download>` cannot send the bearer token, G-2 resolved, see D-1); both keyboard focusable; each click calls `api.download('/imports/template.csv')` / `api.download('/imports/template.xlsx')`, which fetches with the bearer token, and saves the returned blob under the server's file name; the button is disabled while a download runs; a failed download shows `Could not download the template. Try again.`
 - **Mock needed:** FakeAuth, StubApi. **Covers:** FR-015.
 
 ### TC-C-162
@@ -1136,7 +1142,7 @@ Mock-mode cases say so.
 **Template downloads work with real sign-in** | Level: E2E | P1 | EG
 - **Preconditions:** `supabase` mode, signed-in user (access token held by supabase-js, no cookie).
 - **Input:** click `CSV template` and `Excel template` on `/import-export` and read each download.
-- **Expected:** both downloads succeed with the correct file names and content (19 headers, BOM on the CSV, valid XLSX) and a `200` response; no `401` is seen on `/api/imports/template.*`. If the plain `<a download>` link cannot send the bearer token, this case fails and exposes defect/gap G-2 (the design requires an identity on every import endpoint and the UX specifies a plain link).
+- **Expected:** both downloads succeed with the file names the API sends in `Content-Disposition` and valid content (19 headers, BOM on the CSV, valid XLSX with the same header row) and a `200` response; no `401` is seen on `/api/imports/template.*`. The templates are buttons that fetch with the bearer token through `api.download` (G-2 resolved, see D-1), so the case passes with every import endpoint still requiring an identity (TC-A-101).
 - **Mock needed:** AdminAPI. **Covers:** FR-015, NFR-004.
 
 ### Isolation, session and resilience
@@ -1289,9 +1295,9 @@ in section 6.
 | Responsive (360 px) | n/a | n/a | n/a | n/a | E-118, E-119 | Yes |
 | Accessibility (keyboard, ARIA, contrast) | n/a | C-110, C-112, C-130, C-139, C-160, C-180 | n/a | n/a | E-120..E-125 | Yes |
 | Contract (OpenAPI, problem+json) | n/a | n/a | U-006 | A-123, A-124 | n/a | Yes |
-| Security (injection, abuse) | U-131 | C-163 | A-106 | A-105, A-135, A-136 | E-115 | Yes |
+| Security (injection, abuse) | U-131 | C-163 | A-106 | A-105, A-135, A-136, A-149 | E-115 | Yes |
 
-New cases per level: Unit 16 (`TC-U-120..135`), API/Integration 48 (`TC-A-101..148`),
+New cases per level: Unit 16 (`TC-U-120..135`), API/Integration 49 (`TC-A-101..149`),
 Component/Static 47 (`TC-C-101..103, 110..114, 120..124, 130..141, 150..156, 160..172, 180, 181`),
 E2E 34 (`TC-E-101..134`). Existing dev-plan cases kept: 80 `TC-U`.
 
@@ -1332,7 +1338,7 @@ E2E 34 (`TC-E-101..134`). Existing dev-plan cases kept: 80 `TC-U`.
 | NFR-006 | A-142, A-144, A-148, C-171, E-133 |
 | NFR-007 | E-118, E-119 |
 | NFR-008 | C-101, C-110, C-112, C-122, C-124, C-130, C-136, C-138, C-139, C-151, C-153, C-155, C-160, C-162, C-163, C-165, C-166, C-168, C-169, C-170, C-180, E-120, E-121, E-122, E-123, E-124, E-125, E-134 |
-| NFR-009 | U-017, U-048, U-056, U-121, U-127, U-132, A-126, A-127, A-130, A-139, A-145, C-111, C-136, C-150, C-155, C-181, E-102, E-109, E-111, E-128 |
+| NFR-009 | U-017, U-048, U-056, U-121, U-127, U-132, A-126, A-127, A-130, A-139, A-145, A-149, C-111, C-136, C-150, C-155, C-181, E-102, E-109, E-111, E-128 |
 
 Use-case coverage: UC-001 (E-101, E-102, E-103, E-120), UC-002 (E-104, E-105), UC-003 (E-106,
 E-107, E-121), UC-004 (E-108, E-118), UC-005 (E-109..E-114, E-122). The destructive-button and badge
@@ -1350,12 +1356,12 @@ default is what the case currently expects):
   and `-t` filters. Proposal: automation prefixes every Stock Lists title with `[stock-lists]`
   (for example `[stock-lists] TC-U-001: ...`) and keeps one report per feature folder. New ids
   start at 101 (120 for unit) to avoid further clashes.
-- **G-2: template download needs an identity but is a plain link.** design.md and NFR-004 require a
+- **G-2 (resolved, D-1): template download needs an identity but was specified as a plain link.** design.md and NFR-004 require a
   token on every import endpoint, while ux-design.md specifies `<a href="/api/imports/template.csv"
   download>`, which carries no `Authorization` header in `supabase` mode. Either the link must
   become a fetch-and-save button, or the template routes become public (they contain no user data).
   TC-E-115 will fail until one is chosen; TC-A-101 currently asserts that the routes need a token.
-- **G-3: row count in the "too many rows" message.** ux-design.md shows `The file has 1,248 rows;
+- **G-3 (resolved, D-2): row count in the "too many rows" message.** ux-design.md shows `The file has 1,248 rows;
   the limit is 1,000`, but the `422 file_too_many_rows` contract carries no count. Proposal: add
   `rows` (or put it in `detail`); TC-U-135 accepts the generic form until then.
 - **G-4: "update" semantics for multi-value cells.** FR-021 says non-empty values overwrite; for
@@ -1395,7 +1401,7 @@ default is what the case currently expects):
   noisy on CI: assert the percentile named in the requirement, log the rest, fix flakiness rather
   than retry. Hosted-Supabase behaviour (pooler mode, RLS exposure through the REST API) is covered
   locally by TC-A-106 only.
-- **Risk: CSV/formula injection.** The error-rows CSV and the templates echo user text, so a cell
+- **Risk: CSV/formula injection (decided: not escaped, pinned by TC-A-149 and TC-U-115).** The error-rows CSV and the templates echo user text, so a cell
   starting with `=`, `+`, `-` or `@` becomes a formula when opened in Excel. NFR-009 demands
   byte-for-byte text, which conflicts with the usual `'` prefix mitigation. No case pins either;
   decide and add one.
@@ -1409,3 +1415,32 @@ default is what the case currently expects):
   `pnpm db:reset`) and share the User Auth Playwright setup (`pnpm test:e2e`, ports 5173 and 3000);
   fixtures F-13..F-31 must be generated by a script, not committed as large binaries (F-06, F-07,
   F-08, F-13, F-14, F-24, F-30 are generated at test time); coverage targets are in T-013's criteria.
+
+---
+
+## 13. Deviations (T-013)
+
+Behaviour that implementation decisions changed after this design. The cases above were reworded to
+match where the product is right; the rest are recorded here and pinned by the automated tests.
+
+| # | Case | Designed | Implemented (and tested) |
+|---|---|---|---|
+| D-1 | TC-C-161, TC-E-115, G-2 | `<a href download>` template links | Buttons that fetch through `api.download` with the bearer token and save the blob (the template routes still need an identity, TC-A-101). |
+| D-2 | TC-U-135, TC-E-112, G-3 | `The file has 1,248 rows; the limit is 1,000` | `The file has more than 1,000 rows; the limit is 1,000` (no row count in the problem). |
+| D-3 | TC-A-111 | a PATCH that sets only one of the two TH sector fields is refused | Refused only when it would leave exactly one of them set (`{ gicsSector: null }`, `{ setIndustryGroup: null }`); changing one valid value while the other stays set is 200. |
+| D-4 | TC-A-116, G-12 | an empty patch changes nothing | An empty patch answers 200 with the same body except `updatedAt`, which moves. |
+| D-5 | TC-A-112 | an unknown position names `valueChain` | The error path is `valueChainPosition`. |
+| D-6 | TC-A-117 | the 409 `detail` names `AAPL (US)` | `detail` is `You already saved this stock`; the form composes `AAPL (US) is already saved.` and the link from `existingStockId`. |
+| D-7 | TC-C-101, TC-E-134 | breadcrumb `Stocks › New` | `Stocks › New stock`; the tab title is `Add stock · Investhesis`. |
+| D-8 | TC-U-132 | error-rows CSV header is the original columns plus `errors` | A leading `row` column is added: `row,<columns>,errors` (TC-U-115). |
+| D-9 | TC-E-118 | action bars full width with Save last | Save is last in the DOM and tab order and shown first on a phone (`flex-col-reverse`, ux-design.md). |
+| D-10 | TC-E-123 | tab order Edit, More, remove buttons, Add to list | The list name links are tab stops too: Edit, More, list link, remove, Add to list. |
+| D-11 | TC-A-118 | forced failure after the insert through `RepoFault` | The stock create route has no repository seam; the fault is a database trigger that fails the membership insert for one user (dropped afterwards). The transaction rolls the stock back. |
+| D-12 | TC-E-130 | server-side `NetBlock`, API temp directory | Asserted from the browser (every request goes to the app origin or local Auth; the file bytes only in the preview and confirm bodies), from the database (an abandoned import saves nothing) and from the API log (no cell value). The API holds files in memory only, so no temp directory is checked. |
+| D-13 | TC-E-126 | CPU throttle factor documented | No throttling (factor 1): render 94 ms, median sort 28 ms on the development machine. |
+| D-14 | TC-E-121, TC-E-123 | toast shortcut reaches Undo | Alt+T moves focus into the toast region; one or two Tab presses reach `Undo`. |
+| D-15 | TC-E-105, TC-E-116 | not-found page | The heading is `Not found`. |
+| D-16 | TC-E-117 | one case | Automated as two tests: signed-out deep links, and an expired token during import (one `401`, one refresh, the same file re-sent). |
+| D-17 | TC-E-122, TC-E-120 | arrow keys on radio groups | Radix moves focus on a timer after the key goes down, so the tests hold the key for 60 ms; a user does not notice. |
+| D-18 | TC-A-106 | database unreachable | Verified for the REST API (`app` schema not exposed to the publishable key or a user token), `SET ROLE anon/authenticated`, `NOT NULL user_id` and RLS, in `scripts/stock-lists-integration.test.ts` (runs with `pnpm test:supabase`). |
+| D-19 | TC-A-149 (new) | not specified | Added to pin that formulas are not escaped (NFR-009). |
