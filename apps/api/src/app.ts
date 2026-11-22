@@ -5,6 +5,7 @@ import { MARKETS } from '@investhesis/domain'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
+import { listsRoutes } from './modules/lists/lists.routes.ts'
 import { meRoutes } from './modules/me/me.routes.ts'
 import { authenticatePlugin, identityResolverFor, type IdentityResolver } from './plugins/authenticate.ts'
 import { errorHandlerPlugin } from './plugins/error-handler.ts'
@@ -56,6 +57,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(healthPlugin, { db: deps.db })
   await app.register(authenticatePlugin, { resolve: deps.resolveIdentity ?? identityResolverFor(config) })
   await app.register(meRoutes)
+  await app.register(listsRoutes, { db: deps.db?.db })
 
   return app
 }
