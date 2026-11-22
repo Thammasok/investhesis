@@ -4,12 +4,14 @@ import type { DestinationStream } from 'pino'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
+import { importsRoutes } from './modules/imports/imports.routes.ts'
 import { listsRoutes } from './modules/lists/lists.routes.ts'
 import { stocksRoutes } from './modules/stocks/stocks.routes.ts'
 import { meRoutes } from './modules/me/me.routes.ts'
 import { authenticatePlugin, identityResolverFor, type IdentityResolver } from './plugins/authenticate.ts'
 import { errorHandlerPlugin } from './plugins/error-handler.ts'
 import { healthPlugin, type DbHealth } from './plugins/health.ts'
+import { multipartPlugin } from './plugins/multipart.ts'
 import { openapiPlugin } from './plugins/openapi.ts'
 import { genReqId, requestIdPlugin } from './plugins/request-id.ts'
 import { securityPlugin } from './plugins/security.ts'
@@ -53,9 +55,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(openapiPlugin)
   await app.register(healthPlugin, { db: deps.db })
   await app.register(authenticatePlugin, { resolve: deps.resolveIdentity ?? identityResolverFor(config) })
+  await app.register(multipartPlugin)
   await app.register(meRoutes)
   await app.register(listsRoutes, { db: deps.db?.db })
   await app.register(stocksRoutes, { db: deps.db?.db })
+  await app.register(importsRoutes, { db: deps.db?.db })
 
   return app
 }
