@@ -1,0 +1,6 @@
+﻿ticker,market,exchange,name,index_membership,sector,gics_sector,value_chain,value_chain_position,size,style,economic_cycle,lynch_type,life_cycle,customers,revenue_types,moat,themes,volatility
+PTT,TH,SET,บมจ. ปตท.,SET50,Resources,Energy,,,,,,,,,,,พลังงาน;ปันผล,
+AOT,TH,SET,บมจ. ท่าอากาศยานไทย,SET50,Services,Industrials,,,,,,,,,,,พลังงาน;ปันผล,
+CPALL,TH,SET,ซีพี ออลล์,SET50,Services,Consumer Staples,,,,,,,,,,,พลังงาน;ปันผล,
+KBANK,TH,SET,ธนาคารกสิกรไทย,SET50,Financials,Financials,,,,,,,,,,,พลังงาน;ปันผล,
+SCC,TH,SET,ปูนซิเมนต์ไทย,SET50,Industrials,Materials,,,,,,,,,,,พลังงาน;ปันผล,
