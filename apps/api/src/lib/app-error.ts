@@ -6,6 +6,8 @@ export class AppError extends Error {
   readonly detail: string | undefined
   readonly errors: FieldError[] | undefined
   readonly headers: Record<string, string> | undefined
+  /** Extra problem members, e.g. `existingStockId` on stock_exists. */
+  readonly extensions: Record<string, unknown> | undefined
 
   constructor(opts: {
     status: number
@@ -13,6 +15,7 @@ export class AppError extends Error {
     detail?: string
     errors?: FieldError[]
     headers?: Record<string, string>
+    extensions?: Record<string, unknown>
     cause?: unknown
   }) {
     super(opts.detail ?? opts.code, { cause: opts.cause })
@@ -22,5 +25,6 @@ export class AppError extends Error {
     this.detail = opts.detail
     this.errors = opts.errors
     this.headers = opts.headers
+    this.extensions = opts.extensions
   }
 }

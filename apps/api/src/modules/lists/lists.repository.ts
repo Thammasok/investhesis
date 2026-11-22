@@ -1,5 +1,5 @@
 import { and, eq, sql } from 'drizzle-orm'
-import type { Db } from '../../db/client.ts'
+import type { Db, DbOrTx } from '../../db/client.ts'
 import { listStocks, lists } from '../../db/schema/index.ts'
 
 export type ListRow = {
@@ -34,7 +34,7 @@ const columns = {
   updatedAt: lists.updatedAt,
 }
 
-export async function findOwnedList(db: Db, userId: string, id: string): Promise<ListRow | undefined> {
+export async function findOwnedList(db: DbOrTx, userId: string, id: string): Promise<ListRow | undefined> {
   const [row] = await db.select(columns).from(lists).where(and(eq(lists.id, id), eq(lists.userId, userId)))
   return row
 }
@@ -81,7 +81,7 @@ export async function addMembership(db: Db, userId: string, listId: string, stoc
 }
 
 /** Bulk add for create and import: existing memberships are skipped. Returns how many were new. */
-export async function addMemberships(db: Db, userId: string, listId: string, stockIds: readonly string[]): Promise<number> {
+export async function addMemberships(db: DbOrTx, userId: string, listId: string, stockIds: readonly string[]): Promise<number> {
   if (stockIds.length === 0) return 0
   const rows = await db
     .insert(listStocks)

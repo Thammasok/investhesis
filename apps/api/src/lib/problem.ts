@@ -1,6 +1,6 @@
 import type { FieldError } from './app-error.ts'
 
-export type Problem = {
+export type Problem = Record<string, unknown> & {
   type: string
   title: string
   status: number
@@ -28,8 +28,10 @@ export function problem(opts: {
   code: string
   detail?: string
   errors?: FieldError[]
+  extensions?: Record<string, unknown> | undefined
 }): Problem {
   return {
+    ...opts.extensions,
     type: `urn:investhesis:problem:${opts.code}`,
     title: TITLES[opts.status] ?? (opts.status >= 500 ? 'Server Error' : 'Client Error'),
     status: opts.status,

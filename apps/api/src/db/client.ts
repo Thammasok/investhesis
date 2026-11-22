@@ -5,6 +5,9 @@ import * as schema from './schema/index.ts'
 
 export type Db = NodePgDatabase<typeof schema>
 
+/** A database handle or the transaction handed out by `db.transaction`. */
+export type DbOrTx = Db | Parameters<Parameters<Db['transaction']>[0]>[0]
+
 export type DbHandle = {
   db: Db
   pool: Pool
