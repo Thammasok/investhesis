@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture และ System Design | Investhesis</title>
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Architecture</a>
+    <nav aria-label="Main">
+      <a href="index.html" aria-current="page">ภาพรวม</a>
+      <a href="system-design.html">System Design</a>
+      <a href="system-architecture.html">สถาปัตยกรรม</a>
+      <a href="auth-sign-in-sequence.html">Sign-in</a>
+      <a href="import-flow-sequence.html">Import</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Architecture และ System Design</h1>
+  <p class="lead">เอกสารสถาปัตยกรรมของ Investhesis ตามระบบที่สร้างไว้ใน v0.2.0 (user-auth และ stock-lists) ประกอบด้วยบทอธิบายหนึ่งหน้าและแผนภาพแบบโต้ตอบสามชุด</p>
+
+  <div class="cards">
+    <a class="card" href="system-design.html">
+      <h3>System Design</h3>
+      <p>ชั้นของระบบ API pipeline data model การแยกข้อมูลรายผู้ใช้ ADR การทดสอบ และความเสี่ยง</p>
+    </a>
+    <a class="card" href="system-architecture.html">
+      <h3>แผนภาพสถาปัตยกรรม</h3>
+      <p>web, API, Supabase Auth, Postgres และ domain package เชื่อมกันอย่างไร</p>
+    </a>
+    <a class="card" href="auth-sign-in-sequence.html">
+      <h3>ลำดับ Sign-in</h3>
+      <p>sign-in, เรียก API ด้วย Bearer token และการ refresh เมื่อ token หมดอายุ</p>
+    </a>
+    <a class="card" href="import-flow-sequence.html">
+      <h3>ลำดับ Import</h3>
+      <p>preview ที่ไม่เขียนอะไร แล้ว confirm ใน transaction เดียว</p>
+    </a>
+  </div>
+
+  <h2 id="summary">สรุปใน 5 ข้อ</h2>
+  <ol>
+    <li><strong>API เป็นทางเดียวสู่ฐานข้อมูล</strong> เบราว์เซอร์คุยกับ API และ Supabase Auth เท่านั้น</li>
+    <li><strong>ข้อมูลแยกรายผู้ใช้สามชั้น</strong>: repository กรองด้วย <code>userId</code>, foreign key แบบ (id, user_id) และปิดทาง Data API ของ Supabase</li>
+    <li><strong>ตรวจ token ในเครื่อง</strong> ด้วย JWKS ที่ cache ไว้ ไม่เรียก Supabase ทุก request</li>
+    <li><strong>กฎชุดเดียว</strong> ใน <code>packages/domain</code> ใช้ทั้งตอนกรอกมือและตอน import</li>
+    <li><strong>Import ไม่เก็บสถานะ</strong>: preview ไม่เขียนอะไร confirm เขียนทั้งหมดใน transaction เดียว</li>
+  </ol>
+
+  <h2 id="how">วิธีใช้แผนภาพ</h2>
+  <ul>
+    <li>แต่ละแผนภาพเป็นไฟล์ HTML ไฟล์เดียว เปิดได้ด้วยการดับเบิลคลิก ไม่ต้องมี server</li>
+    <li>ปุ่มมุมขวาบนสลับโหมดสว่างและมืด เปลี่ยนสไตล์ เปิดโหมดนำเสนอ และ Export เป็นภาพได้</li>
+    <li>กด PATH, MAP หรือ LENS ที่มุมขวาล่างเพื่อไล่เส้นทางความสัมพันธ์ ค้นหา หรือโฟกัสบาง node</li>
+    <li>ข้อความในแผนภาพเป็นภาษาไทย ส่วนปุ่มและเมนูของตัวแสดงผลเป็นภาษาอังกฤษ</li>
+  </ul>
+
+  <h2 id="source">ไฟล์ต้นฉบับ</h2>
+  <p>แผนภาพสร้างจากสเปก JSON ใน <code>source/</code> ถ้าระบบเปลี่ยน ให้แก้สเปกแล้วสร้าง HTML ใหม่ด้วย skill <code>archify</code></p>
+  <table>
+    <thead><tr><th>แผนภาพ</th><th>สเปก</th></tr></thead>
+    <tbody>
+      <tr><td><code>system-architecture.html</code></td><td><code>source/system-architecture.architecture.json</code></td></tr>
+      <tr><td><code>auth-sign-in-sequence.html</code></td><td><code>source/auth-sign-in.sequence.json</code></td></tr>
+      <tr><td><code>import-flow-sequence.html</code></td><td><code>source/import-flow.sequence.json</code></td></tr>
+    </tbody>
+  </table>
+  <p>เอกสารออกแบบเต็มที่ใช้เป็นแหล่งข้อมูลอยู่ที่ <code>docs/features/stock-lists/v1.0/design.md</code> และ <code>docs/features/user-auth/v1.0/design.md</code> คู่มือ setup อยู่ที่ <a href="../guild/index.html">docs/guild</a></p>
+
+</main>
+<script src="doc.js"></script>
+</body>
+</html>

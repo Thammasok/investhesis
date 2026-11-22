@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Sign-in และการเรียก API",
+    "output": "../auth-sign-in-sequence.html",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      1060,
+      665
+    ]
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "ผู้ใช้",
+      "sublabel": "เบราว์เซอร์"
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web",
+      "sublabel": "apps/web"
+    },
+    {
+      "id": "sb",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "บัญชีและ token"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API",
+      "sublabel": "apps/api"
+    }
+  ],
+  "segments": [
+    {
+      "from": 160,
+      "to": 300,
+      "label": "เข้าสู่ระบบ"
+    },
+    {
+      "from": 306,
+      "to": 368,
+      "label": "เรียก API"
+    },
+    {
+      "from": 374,
+      "to": 560,
+      "label": "token หมดอายุ"
+    }
+  ],
+  "messages": [
+    {
+      "from": "user",
+      "to": "web",
+      "y": 190,
+      "label": "เปิด /lists",
+      "variant": "default"
+    },
+    {
+      "from": "web",
+      "to": "user",
+      "y": 220,
+      "label": "ไม่มี session: redirect /auth/sign-in?next=/lists",
+      "variant": "return"
+    },
+    {
+      "from": "web",
+      "to": "sb",
+      "y": 250,
+      "label": "signInWithPassword (email + password)",
+      "variant": "security"
+    },
+    {
+      "from": "sb",
+      "to": "web",
+      "y": 284,
+      "label": "access token (1 ชม.) + refresh token",
+      "variant": "return"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "y": 322,
+      "label": "GET /lists + Bearer",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "web",
+      "y": 352,
+      "label": "200 เฉพาะแถวของ sub",
+      "variant": "return"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "y": 392,
+      "label": "GET /lists (token หมดอายุ)",
+      "variant": "default"
+    },
+    {
+      "from": "api",
+      "to": "web",
+      "y": 422,
+      "label": "401 unauthenticated",
+      "variant": "return"
+    },
+    {
+      "from": "web",
+      "to": "sb",
+      "y": 452,
+      "label": "refreshSession() ครั้งเดียว",
+      "variant": "security"
+    },
+    {
+      "from": "sb",
+      "to": "web",
+      "y": 482,
+      "label": "access token ใหม่",
+      "variant": "return"
+    },
+    {
+      "from": "web",
+      "to": "api",
+      "y": 512,
+      "label": "ลองใหม่ + Bearer",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api",
+      "to": "web",
+      "y": 542,
+      "label": "200",
+      "variant": "return"
+    }
+  ]
+}

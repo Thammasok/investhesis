@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Investhesis: สถาปัตยกรรมระบบ",
+    "output": "../system-architecture.html",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1200,
+      600
+    ]
+  },
+  "components": [
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "apps/web",
+      "sublabel": "React + Vite SPA",
+      "tag": "Router loaders/actions",
+      "pos": [
+        40,
+        270
+      ],
+      "size": [
+        150,
+        70
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "บัญชี, session, JWKS",
+      "pos": [
+        30,
+        90
+      ],
+      "size": [
+        170,
+        70
+      ]
+    },
+    {
+      "id": "smtp",
+      "type": "external",
+      "label": "SMTP",
+      "sublabel": "Mailpit (local)",
+      "pos": [
+        330,
+        90
+      ],
+      "size": [
+        140,
+        70
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "authenticate",
+      "sublabel": "ตรวจ Bearer JWT",
+      "pos": [
+        300,
+        270
+      ],
+      "size": [
+        150,
+        70
+      ]
+    },
+    {
+      "id": "modules",
+      "type": "backend",
+      "label": "modules",
+      "sublabel": "stocks, lists, imports",
+      "pos": [
+        530,
+        270
+      ],
+      "size": [
+        150,
+        70
+      ]
+    },
+    {
+      "id": "repo",
+      "type": "backend",
+      "label": "repositories",
+      "sublabel": "Drizzle, กรองด้วย userId",
+      "pos": [
+        760,
+        270
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "schema app",
+      "pos": [
+        1020,
+        270
+      ],
+      "size": [
+        120,
+        70
+      ]
+    },
+    {
+      "id": "domain",
+      "type": "backend",
+      "label": "packages/domain",
+      "sublabel": "คำศัพท์, กฎ, Zod",
+      "pos": [
+        530,
+        470
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "mig",
+      "type": "cloud",
+      "label": "supabase/migrations",
+      "sublabel": "SQL, Supabase CLI",
+      "pos": [
+        995,
+        470
+      ],
+      "size": [
+        170,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "apps/api (Fastify 5)",
+      "wraps": [
+        "gate",
+        "modules",
+        "repo"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "web-gate",
+      "from": "web",
+      "to": "gate",
+      "label": "/api/* + Bearer",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-modules",
+      "from": "gate",
+      "to": "modules"
+    },
+    {
+      "id": "modules-repo",
+      "from": "modules",
+      "to": "repo"
+    },
+    {
+      "id": "repo-db",
+      "from": "repo",
+      "to": "db",
+      "label": "SQL (pg)"
+    },
+    {
+      "id": "web-auth",
+      "from": "web",
+      "to": "auth",
+      "label": "sign-in / refresh",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "auth-smtp",
+      "from": "auth",
+      "to": "smtp",
+      "label": "ส่งอีเมล",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "gate-auth",
+      "from": "gate",
+      "to": "auth",
+      "label": "ดึง JWKS",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "right"
+    },
+    {
+      "id": "modules-domain",
+      "from": "modules",
+      "to": "domain",
+      "label": "import",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "web-domain",
+      "from": "web",
+      "to": "domain",
+      "label": "import (build)",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "labelDy": 30
+    },
+    {
+      "id": "mig-db",
+      "from": "mig",
+      "to": "db",
+      "label": "db reset / push",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ]
+}

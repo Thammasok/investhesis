@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Design | Investhesis</title>
+<link rel="stylesheet" href="doc.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Investhesis Architecture</a>
+    <nav aria-label="Main">
+      <a href="index.html">ภาพรวม</a>
+      <a href="system-design.html" aria-current="page">System Design</a>
+      <a href="system-architecture.html">สถาปัตยกรรม</a>
+      <a href="auth-sign-in-sequence.html">Sign-in</a>
+      <a href="import-flow-sequence.html">Import</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <h1>System Design</h1>
+  <p class="lead">การออกแบบระบบของ Investhesis ตามที่สร้างจริงใน v0.2.0 (user-auth และ stock-lists) อธิบายชั้นของระบบ ข้อมูล การแยกข้อมูลรายผู้ใช้ และเหตุผลของการตัดสินใจสำคัญ</p>
+
+  <div class="toc">
+    <strong>ในหน้านี้</strong>
+    <ol>
+      <li><a href="#overview">ภาพรวม</a></li>
+      <li><a href="#layers">ชั้นของระบบ</a></li>
+      <li><a href="#api">API: pipeline, module และ route</a></li>
+      <li><a href="#web">Web: route, data และ auth</a></li>
+      <li><a href="#data">Data model</a></li>
+      <li><a href="#isolation">การแยกข้อมูลรายผู้ใช้</a></li>
+      <li><a href="#auth">Auth: token และ sign-up</a></li>
+      <li><a href="#import">Import</a></li>
+      <li><a href="#decisions">การตัดสินใจสำคัญ (ADR)</a></li>
+      <li><a href="#testing">การทดสอบและ gate</a></li>
+      <li><a href="#risks">ความเสี่ยงและเรื่องที่ยังเปิดอยู่</a></li>
+    </ol>
+  </div>
+
+  <h2 id="overview">1. ภาพรวม</h2>
+  <p>Investhesis เป็นเว็บแอปส่วนตัว ผู้ใช้หนึ่งคนบันทึกหุ้นสหรัฐฯ และไทย (SET/mai) จัดกลุ่มเป็นลิสต์ และ import จากไฟล์ CSV หรือ Excel ระบบแบ่งเป็นสี่ส่วนที่ติดต่อกันตามเส้นทางด้านล่าง</p>
+  <div class="frame"><iframe src="system-architecture.html" title="แผนภาพสถาปัตยกรรมระบบ" loading="lazy"></iframe></div>
+  <p class="cap">เปิดเต็มหน้า: <a href="system-architecture.html">system-architecture.html</a> (กด PATH, MAP หรือ LENS ในแผนภาพเพื่อไล่เส้นทาง)</p>
+  <ul>
+    <li><strong>Web</strong> (<code>apps/web</code>): React + Vite แบบ SPA คุยกับ API และ Supabase Auth เท่านั้น ไม่เข้าฐานข้อมูลเอง</li>
+    <li><strong>API</strong> (<code>apps/api</code>): Fastify 5 เป็นตัวเดียวที่แตะฐานข้อมูล</li>
+    <li><strong>Supabase</strong>: Postgres (schema <code>app</code>) และ Auth (email + password, invite-only)</li>
+    <li><strong>Domain</strong> (<code>packages/domain</code>): คำศัพท์ กฎ และ Zod schema ที่ web กับ API ใช้ร่วมกัน เพื่อให้กรอกมือกับ import ตรวจด้วยกฎเดียวกัน</li>
+  </ul>
+
+  <h2 id="layers">2. ชั้นของระบบ</h2>
+  <table>
+    <thead><tr><th>ส่วน</th><th>เทคโนโลยี</th><th>หน้าที่</th><th>ไม่ทำ</th></tr></thead>
+    <tbody>
+      <tr><td><code>apps/web</code></td><td>React 19, Vite 8, TypeScript, Tailwind v4, shadcn/ui, React Router (data mode)</td><td>UI, อ่านและเขียนผ่าน loader/action, เก็บ session ของ Supabase</td><td>ไม่เข้า Postgres, ไม่เก็บ cache ข้าม route</td></tr>
+      <tr><td><code>apps/api</code></td><td>Node 24, Fastify 5, Zod 4, Drizzle บน <code>pg</code>, pino, jose</td><td>ตรวจ token, กฎธุรกิจ, query ที่กรองด้วย <code>userId</code>, สร้าง OpenAPI</td><td>ไม่จัดการบัญชีผู้ใช้, ไม่เปลี่ยน schema</td></tr>
+      <tr><td><code>packages/domain</code></td><td>TypeScript + Zod เท่านั้น</td><td>vocabulary ของ lens, กฎ market/exchange, ticker, default ของ economic cycle, <code>canonicaliseRow</code></td><td>ไม่มี I/O</td></tr>
+      <tr><td><code>supabase/</code></td><td>Supabase CLI, Postgres 17</td><td>เป็นเจ้าของ DDL ทั้งหมด (<code>migrations/*.sql</code>), config ของ Auth, email template</td><td>ไม่มี business logic ใน trigger</td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    <p><strong>กฎของโปรเจกต์:</strong> ตารางทุกตัวอยู่ใน schema <code>app</code> และ API ต่อฐานข้อมูลแบบ direct หรือ session pooler เท่านั้น (transaction pooler ทำให้ prepared statement พัง)</p>
+  </div>
+
+  <h2 id="api">3. API: pipeline, module และ route</h2>
+  <h3>pipeline ของทุก request</h3>
+  <ol class="steps">
+    <li><strong>request-id</strong>: ใส่ id ให้ทุก request และแนบใน error body</li>
+    <li><strong>security</strong>: helmet, CORS และ <code>cache-control: no-store</code> ทุก response</li>
+    <li><strong>authenticate</strong>: สร้าง <code>req.identity</code> ทุก path ยกเว้น path สาธารณะ (<code>/health</code>, <code>/ready</code>, <code>/openapi.json</code>) ผ่าน <code>IdentityResolver</code> ที่เลือกตาม <code>AUTH_MODE</code></li>
+    <li><strong>route → service → repository</strong>: route ตรวจ input ด้วย Zod, service ใช้กฎธุรกิจ, repository รับ <code>userId</code> ทุกฟังก์ชัน</li>
+    <li><strong>error-handler</strong>: แปลงทุก error เป็น RFC 7807 <code>application/problem+json</code> ที่มี <code>code</code> และ <code>requestId</code> ไม่เปิดเผยชื่อ constraint หรือ SQL</li>
+  </ol>
+
+  <h3>module และ route</h3>
+  <table>
+    <thead><tr><th>module</th><th>route</th><th>หมายเหตุ</th></tr></thead>
+    <tbody>
+      <tr><td><code>stocks</code></td><td><code>GET/POST /stocks</code>, <code>GET/PATCH/DELETE /stocks/{id}</code></td><td>ซ้ำ (market, ticker) ตอบ 409 <code>stock_exists</code> พร้อม <code>existingStockId</code>; <code>lens_sources</code> จำว่าค่าไหนตั้งเองหรือเป็นค่า default</td></tr>
+      <tr><td><code>lists</code></td><td><code>GET/POST /lists</code>, <code>GET/PATCH/DELETE /lists/{id}</code>, <code>POST /lists/{id}/stocks</code>, <code>DELETE /lists/{id}/stocks/{stockId}</code></td><td>ชื่อซ้ำ (ไม่สนตัวพิมพ์) ตอบ 409 <code>list_name_taken</code>; เพิ่มซ้ำตอบ 409 <code>already_in_list</code></td></tr>
+      <tr><td><code>imports</code></td><td><code>GET /imports/template.csv|.xlsx</code>, <code>POST /imports/preview</code>, <code>POST /imports</code></td><td>multipart ไม่เกิน 1 MB, 1,000 แถว; อ่าน CSV ด้วย <code>csv-parse</code> และ XLSX ด้วย <code>exceljs</code></td></tr>
+      <tr><td><code>me</code></td><td><code>GET /me</code></td><td>ตอบตัวตนที่ authenticate ได้</td></tr>
+      <tr><td>ops</td><td><code>GET /health</code>, <code>GET /ready</code>, <code>GET /openapi.json</code></td><td><code>/ready</code> ตอบ 503 ถ้าต่อ DB ไม่ได้หรือกำลังปิดตัว</td></tr>
+    </tbody>
+  </table>
+  <p>ไฟล์ OpenAPI ที่ <code>/openapi.json</code> สร้างจาก Zod schema ของ route ทุก route ที่ไม่ใช่สาธารณะประกาศ <code>bearerAuth</code></p>
+
+  <h2 id="web">4. Web: route, data และ auth</h2>
+  <ul>
+    <li><strong>Routes</strong>: <code>/stocks</code>, <code>/stocks/new</code>, <code>/stocks/:id</code>, <code>/stocks/:id/edit</code>, <code>/lists</code>, <code>/lists/:id</code>, <code>/import-export</code> และ <code>/auth/*</code> ทุกหน้าโหลดแบบ lazy จึงแยก chunk</li>
+    <li><strong>Data</strong>: แต่ละ view มี <code>loader</code> (และ <code>action</code> ถ้าเขียนข้อมูล) เรียกผ่าน <code>lib/api-client.ts</code> หลัง action React Router โหลด loader ใหม่ให้เอง จึงไม่ต้องมี client cache (ADR-008)</li>
+    <li><strong>api-client</strong>: ใส่ <code>/api</code> prefix และ bearer token, แปลง <code>problem+json</code> เป็น <code>ApiError</code> (<code>status</code>, <code>code</code>, <code>errors</code>, <code>existingStockId</code>), ได้ 401 แล้ว refresh ครั้งเดียวและลองใหม่ ถ้ายังไม่ผ่านจะ sign out</li>
+    <li><strong>Auth guard</strong>: middleware ของ route <code>app</code> ตรวจ session ก่อน loader ใดทำงาน จึงไม่ต้องตรวจซ้ำใน loader</li>
+    <li><strong>Import wizard</strong>: เก็บ <code>File</code> ใน state ข้ามขั้น เพราะ confirm ต้องส่งไฟล์เดิมอีกครั้ง; error CSV สร้างในเบราว์เซอร์</li>
+  </ul>
+
+  <h2 id="data">5. Data model</h2>
+  <p>ทุกตารางอยู่ใน schema <code>app</code> id เป็น UUIDv7 ที่ API สร้าง ค่า lens เก็บเป็น <code>text</code> และตรวจด้วย <code>@investhesis/domain</code> ส่วน <code>CHECK</code> ใช้เฉพาะ market, exchange, currency, ticker และ name</p>
+  <div class="tables">
+    <div class="tbl">
+      <h4>app.stocks</h4>
+      <ul>
+        <li>id <span>uuid PK</span></li>
+        <li>user_id <span>uuid</span></li>
+        <li>market <span>US | TH</span></li>
+        <li>ticker, exchange, currency, name</li>
+        <li>index_membership <span>text[]</span></li>
+        <li>gics_sector, set_industry_group</li>
+        <li>value_chain, value_chain_position</li>
+        <li>size, style, economic_cycle</li>
+        <li>lynch_type, life_cycle, moat, volatility</li>
+        <li>customers, revenue_types, themes <span>text[]</span></li>
+        <li>lens_sources <span>jsonb</span></li>
+        <li>created_at, updated_at</li>
+      </ul>
+    </div>
+    <div class="tbl">
+      <h4>app.lists</h4>
+      <ul>
+        <li>id <span>uuid PK</span></li>
+        <li>user_id <span>uuid</span></li>
+        <li>name <span>1–60 ตัวอักษร</span></li>
+        <li>created_at, updated_at</li>
+      </ul>
+    </div>
+    <div class="tbl">
+      <h4>app.list_stocks</h4>
+      <ul>
+        <li>list_id, stock_id <span>PK ร่วม</span></li>
+        <li>user_id <span>uuid</span></li>
+        <li>added_at</li>
+        <li><span>FK (list_id, user_id) → lists, cascade</span></li>
+        <li><span>FK (stock_id, user_id) → stocks, cascade</span></li>
+      </ul>
+    </div>
+  </div>
+  <p>ความสัมพันธ์: หนึ่งหุ้นอยู่ได้หลายลิสต์ และหนึ่งลิสต์มีได้หลายหุ้น ผ่านตาราง <code>list_stocks</code> การลบหุ้นหรือลิสต์ลบเฉพาะแถวสมาชิก ไม่ลบอีกฝั่ง</p>
+  <table>
+    <thead><tr><th>constraint</th><th>กฎ</th></tr></thead>
+    <tbody>
+      <tr><td><code>stocks_exchange_market</code></td><td>US ใช้ NYSE หรือ NASDAQ และสกุล USD; TH ใช้ SET หรือ mai และสกุล THB</td></tr>
+      <tr><td><code>stocks_user_market_ticker</code></td><td>ผู้ใช้หนึ่งคนมี (market, ticker) ซ้ำไม่ได้ แต่คนละผู้ใช้หรือคนละ market ใช้ ticker เดียวกันได้</td></tr>
+      <tr><td><code>stocks_id_user</code>, <code>lists_id_user</code></td><td>unique คู่ (id, user_id) เพื่อเป็นเป้าของ foreign key แบบ composite</td></tr>
+      <tr><td><code>lists_user_name_ci</code></td><td>ชื่อลิสต์ซ้ำกันไม่ได้ในผู้ใช้เดียว โดยไม่สนตัวพิมพ์เล็กใหญ่</td></tr>
+      <tr><td><code>ticker</code> pattern</td><td>ตัวพิมพ์ใหญ่ ตัวเลข จุด และขีด ยาว 1–12 ตัว ขึ้นต้นด้วยตัวอักษรหรือตัวเลข</td></tr>
+    </tbody>
+  </table>
+  <p>Drizzle ใน <code>apps/api/src/db/schema/</code> เขียนมือไว้สำหรับ query เท่านั้น มี drift test เทียบกับ <code>information_schema</code> ของฐานข้อมูลที่ migrate แล้ว (ไม่ใช้ drizzle-kit)</p>
+
+  <h2 id="isolation">6. การแยกข้อมูลรายผู้ใช้</h2>
+  <p>ข้อมูลของผู้ใช้แต่ละคนถูกกันด้วยสามชั้น เพื่อไม่ให้พึ่งชั้นเดียว</p>
+  <ol class="steps">
+    <li><strong>Repository</strong>: ทุกฟังก์ชันรับ <code>userId</code> และกรองด้วยค่านี้ id ของผู้ใช้อื่นจึงตอบ <code>404 not_found</code> เหมือนไม่มีอยู่ (ADR-003)</li>
+    <li><strong>Composite foreign key</strong>: <code>list_stocks</code> อ้างอิง (id, user_id) ทำให้ผูกลิสต์ของคนหนึ่งกับหุ้นของอีกคนไม่ได้ แม้โค้ดผิดก็ถูก DB ปฏิเสธ (SQLSTATE 23503)</li>
+    <li><strong>ปิดทาง Data API</strong>: ถอนสิทธิ์ schema <code>app</code> จาก <code>anon</code> และ <code>authenticated</code> และเปิด RLS โดยไม่มี policy ต่อให้คีย์รั่ว REST ของ Supabase ก็เข้าตารางไม่ได้ (ADR-002)</li>
+  </ol>
+  <p>มี test สองผู้ใช้พิสูจน์ว่าผู้ใช้ V ได้ 404 ทุก route ของข้อมูลผู้ใช้ U และเพิ่มหุ้นของ U ลงลิสต์ของ V ไม่ได้</p>
+
+  <h2 id="auth">7. Auth: token และ sign-up</h2>
+  <div class="frame"><iframe src="auth-sign-in-sequence.html" title="ลำดับการ sign-in และเรียก API" loading="lazy"></iframe></div>
+  <p class="cap">เปิดเต็มหน้า: <a href="auth-sign-in-sequence.html">auth-sign-in-sequence.html</a></p>
+  <ul>
+    <li><strong>ตรวจ token ในเครื่อง</strong>: API ใช้ <code>jose</code> ตรวจลายเซ็นด้วย JWKS ที่ cache ไว้ รับเฉพาะ ES256 และ RS256 แล้วตรวจ issuer, audience, <code>exp</code> และ <code>sub</code> (ต้องเป็น UUID, <code>role=authenticated</code>, ไม่ใช่ anonymous) ไม่ต้องเรียก Supabase ทุก request และไม่มี shared secret ใน API (ADR-001)</li>
+    <li><strong>ทุกความล้มเหลวเป็น 401</strong> <code>unauthenticated</code> พร้อม <code>WWW-Authenticate: Bearer</code> โดยเหตุผลอยู่ใน log เท่านั้น</li>
+    <li><strong>JWKS ล่ม</strong>: ตอบ 503 <code>auth_unavailable</code> พร้อม <code>Retry-After</code> ไม่ใช่ 401 เพื่อไม่ให้ web sign out ผู้ใช้เพราะ Supabase สะดุด (ADR-007)</li>
+    <li><strong>ลิงก์ในอีเมล</strong> ใช้ <code>token_hash</code> กับ <code>verifyOtp</code> ใน loader ของ <code>/auth/confirm</code> เปิดข้ามเบราว์เซอร์ได้ และไม่มี token ค้างใน URL (ADR-002)</li>
+    <li><strong>Session</strong> อยู่ใน <code>localStorage</code> ผ่าน supabase-js (ADR-003) และมีเพียง <code>supabase-auth-client.ts</code> ที่ import SDK เพราะ web ใช้รูปแบบ <code>AuthClient</code> port กับ adapter (ADR-005)</li>
+    <li><strong>Sign-up แบบ invite-only</strong>: hook <code>Before User Created</code> ตรวจ <code>app.signup_allowlist</code> (อีเมลเดี่ยวหรือทั้งโดเมน) ก่อนสร้างผู้ใช้และก่อนส่งอีเมลใด ๆ (ADR-009)</li>
+    <li><strong>โหมด mock</strong>: <code>AUTH_MODE=mock</code> ทำให้ทุก request เป็นผู้ใช้คนเดียวสำหรับ dev และ test config จะปฏิเสธเมื่อ <code>NODE_ENV=production</code></li>
+  </ul>
+
+  <h2 id="import">8. Import</h2>
+  <div class="frame"><iframe src="import-flow-sequence.html" title="ลำดับการ import แบบ preview แล้ว confirm" loading="lazy"></iframe></div>
+  <p class="cap">เปิดเต็มหน้า: <a href="import-flow-sequence.html">import-flow-sequence.html</a></p>
+  <ul>
+    <li><strong>ไม่เก็บสถานะ</strong> (ADR-006): preview อ่านและตรวจโดยไม่เขียนอะไรเลย ส่วน confirm อ่านไฟล์เดิมใหม่แล้วเขียนทั้งหมดใน transaction เดียว ไม่มีตาราง session ไม่มีงานลบหมดอายุ และไม่เก็บไฟล์ ราคาที่จ่ายคืออัปโหลดสองครั้ง (≤ 1 MB)</li>
+    <li><strong>ตรวจซ้ำตอน confirm</strong>: หุ้นที่ผู้ใช้เพิ่มระหว่าง preview กับ confirm จะกลายเป็น duplicate ไม่ใช่ error</li>
+    <li><strong>ทั้งหมดหรือไม่เลย</strong>: ถ้าล้มกลางทาง rollback ทั้งก้อน (stocks, lists และ memberships ไม่เปลี่ยน)</li>
+    <li><strong>โหมด duplicate</strong>: <code>skip</code> ข้ามแต่ยังเพิ่มเข้าลิสต์ หรือ <code>update</code> เขียนทับเฉพาะเซลล์ที่ไม่ว่างและทำเครื่องหมายเป็นค่าที่ตั้งเอง</li>
+    <li><strong>ไฟล์</strong>: อ่านที่ API (<code>csv-parse</code> รองรับ BOM, <code>exceljs</code> อ่านชีตแรกและผลของสูตรที่ cache ไว้) เพื่อให้ตัวตรวจเดียวกับการกรอกมือ และ template สร้างจาก <code>TEMPLATE_COLUMNS</code> จึงไม่เคยเพี้ยนจากตัวอ่าน (ADR-007, ADR-010)</li>
+    <li><strong>ข้อจำกัด</strong>: ไฟล์ ≤ 1 MB, ≤ 1,000 แถว, UTF-8; error ระดับไฟล์ใช้ code <code>file_too_large</code>, <code>file_unsupported</code>, <code>file_too_many_rows</code>, <code>file_empty</code>, <code>file_missing_headers</code></li>
+  </ul>
+
+  <h2 id="decisions">9. การตัดสินใจสำคัญ (ADR)</h2>
+  <table>
+    <thead><tr><th>เรื่อง</th><th>เลือก</th><th>เหตุผล</th></tr></thead>
+    <tbody>
+      <tr><td>Migration</td><td>Supabase CLI, SQL ใน <code>supabase/migrations/</code></td><td>เป็น SQL ธรรมดา ใช้ <code>db reset</code> ในเครื่องและ <code>db push</code> บน hosted; Drizzle ใช้ query อย่างเดียว</td></tr>
+      <tr><td>ที่อยู่ของตาราง</td><td>schema <code>app</code> ที่ไม่เปิด Data API</td><td>กัน REST อัตโนมัติของ Supabase ไม่ให้เข้าถึงข้อมูล</td></tr>
+      <tr><td>แยกข้อมูลรายผู้ใช้</td><td><code>userId</code> ใน repository + composite FK</td><td>เข้ากับ DB role เดียวของ API และกัน join ข้ามผู้ใช้ที่ระดับ DB</td></tr>
+      <tr><td>ค่า lens ใน DB</td><td><code>text</code> ตรวจด้วย domain package</td><td>vocabulary เปลี่ยนบ่อย; เปลี่ยน enum หรือ CHECK ต้อง migration ทุกครั้ง</td></tr>
+      <tr><td>แชร์กฎระหว่าง web และ API</td><td><code>packages/domain</code> ส่งออก source TypeScript (erasable syntax)</td><td>Vite compile ให้ web และ Node 24 ลบ type ตอนรัน จึงไม่ต้อง build ระหว่างพัฒนา (พิสูจน์แล้วใน T-002)</td></tr>
+      <tr><td>สถานะของ import</td><td>stateless: preview และ confirm ส่งไฟล์ทั้งคู่</td><td>ไม่มีตารางหรืองานหมดอายุ และ confirm ตรวจกับ DB ตอนเขียน</td></tr>
+      <tr><td>Server state ใน web</td><td>loader/action ของ React Router</td><td>router อยู่ใน data mode แล้ว revalidation หลัง action พอสำหรับงานนี้ ไม่ต้องเพิ่ม dependency</td></tr>
+      <tr><td>ติดตามค่าอัตโนมัติกับค่าที่ตั้งเอง</td><td><code>lens_sources jsonb</code></td><td>ไม่ต้องเพิ่ม 14 คอลัมน์ และต่อยอดค่า stale ได้โดยไม่ migrate แถว</td></tr>
+      <tr><td>การตรวจ token</td><td>JWKS ในเครื่อง ด้วย <code>jose</code></td><td>ไม่เรียกเครือข่ายทุก request, ไม่มี shared secret, หมุนคีย์ได้โดยไม่ต้อง deploy ใหม่</td></tr>
+      <tr><td>ลิงก์อีเมล</td><td><code>token_hash</code> + <code>verifyOtp</code></td><td>ใช้ได้ข้ามเบราว์เซอร์ และไม่มี token ใน URL</td></tr>
+      <tr><td>ตารางผู้ใช้</td><td>ไม่มี; <code>user_id</code> คือ id ของ Supabase</td><td>v1 ยังไม่ต้องใช้ข้อมูลโปรไฟล์ และไม่ผูก migration กับ schema ภายในของ Supabase</td></tr>
+    </tbody>
+  </table>
+  <p>รายละเอียดเต็มของแต่ละ ADR อยู่ที่ <code>docs/features/stock-lists/v1.0/design.md</code> และ <code>docs/features/user-auth/v1.0/design.md</code></p>
+
+  <h2 id="testing">10. การทดสอบและ gate</h2>
+  <table>
+    <thead><tr><th>ระดับ</th><th>เครื่องมือ</th><th>ครอบคลุม</th></tr></thead>
+    <tbody>
+      <tr><td>Unit (domain)</td><td>Vitest</td><td>vocabulary, ticker, cycle default, <code>canonicaliseRow</code> (coverage 100%)</td></tr>
+      <tr><td>API</td><td>Vitest + <code>app.inject</code> กับ Supabase local</td><td>ทุก route, error code, การแยกผู้ใช้สองคน, drift test ของ Drizzle, transaction rollback ของ import</td></tr>
+      <tr><td>Web component</td><td>Vitest + Testing Library</td><td>ตาราง ฟอร์ม dialog และ import wizard เทียบกับ api-client ที่ stub</td></tr>
+      <tr><td>Script</td><td>Vitest (<code>pnpm test:supabase</code>)</td><td>ค่า Auth, allowlist, flow ของ sign-up กับ Supabase local</td></tr>
+      <tr><td>E2E</td><td>Playwright (Chromium) + axe</td><td>การใช้งานจริงตั้งแต่ sign-up ถึง import, จอ 360 px, คีย์บอร์ด, contrast ทั้งโหมดสว่างและมืด</td></tr>
+    </tbody>
+  </table>
+  <p>ชื่อ test ทุกตัวขึ้นต้นด้วยรหัส <code>TC-</code> ของ test case และผลต่อ TC อยู่ที่ <code>docs/features/stock-lists/v1.0/test-report.md</code> ก่อนส่งงานรัน gate ตามลำดับในหน้า <a href="../guild/project-setup.html#test">Setup โปรเจกต์</a></p>
+
+  <h2 id="risks">11. ความเสี่ยงและเรื่องที่ยังเปิดอยู่</h2>
+  <ul>
+    <li><strong>XLSX ขยายตัวในหน่วยความจำ</strong>: ไฟล์ที่บีบอัดอาจขยายมากตอนโหลด ถูกจำกัดด้วย 1 MB และ 1,000 แถวเท่านั้น (ตรวจจำนวนแถวหลังโหลด) ยอมรับได้สำหรับผู้ใช้เดียวใน v1</li>
+    <li><strong>Token ใน <code>localStorage</code></strong>: XSS ทำให้อันตรายขึ้น ควรเพิ่ม CSP เมื่อเลือกที่ host</li>
+    <li><strong>Config ของ hosted กับ local อาจไม่ตรงกัน</strong>: เช็กลิสต์ hosted ทำมือ และ E2E ครอบคลุมเฉพาะ local</li>
+    <li><strong>Type stripping ของ workspace package</strong>: ถ้า Node หรือ tsc รุ่นใหม่ทำให้พัง จะเห็นจาก <code>pnpm build</code> และ test ของ API</li>
+    <li><strong>Contrast ของข้อความ destructive</strong>: ปุ่มยืนยันลบในโหมดสว่างยังตกเกณฑ์ (F-2 ถึง F-4 ใน test report) รอตัดสินใจเรื่อง theme token</li>
+    <li><strong>Test หน่วงเวลา <code>TC-C-114</code></strong> (render 200 หุ้นภายใน 200 ms) เคยล้มครั้งเดียวตอนเครื่องโหลดหนัก</li>
+    <li><strong>ยังไม่เลือก</strong>: ผู้ให้บริการ SMTP สำหรับ production (OQ-1) และที่ deploy ของ API กับ web</li>
+    <li><strong>นอก scope ของ v0.2.0</strong>: ราคา/กราฟสด, ข้อมูลตลาดและ market cap อัตโนมัติ, concentration, thesis notes, i18n ไทย/อังกฤษ และ export เต็มรูปแบบ</li>
+  </ul>
+
+  <footer>เอกสารนี้สรุปจาก <code>design.md</code> ของ stock-lists และ user-auth กับโค้ดที่ commit ใน v0.2.0 ถ้าโค้ดเปลี่ยน ให้แก้ที่นี่และอัปเดต diagram ใน <code>source/</code> ด้วย</footer>
+</main>
+<script src="doc.js"></script>
+</body>
+</html>
