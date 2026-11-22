@@ -95,3 +95,56 @@ function failureMessage(intent: Intent, error: ApiError, listName: string, ticke
       return `Couldn't remove from ${listName}. Try again.`
   }
 }
+
+export type StockNewData = { lists: ListSummary[] }
+
+/** Loader of `/stocks/new`: the lists the new stock can be put in. */
+export const createStockNewLoader = (api: ApiClient) => async (): Promise<StockNewData> => {
+  const lists = await api.get<{ items: ListSummary[] }>('/lists')
+  return { lists: lists.items }
+}
+
+/** What a save that did not succeed tells the form; success redirects instead. */
+export type StockFormResult = {
+  ok: false
+  status: number
+  code: string
+  errors: { path: string; message: string }[]
+  existingStockId?: string
+}
+
+function failure(error: ApiError): StockFormResult {
+  return { ok: false, status: error.status, code: error.code, errors: error.errors, existingStockId: error.existingStockId }
+}
+
+/**
+ * Action of `/stocks/new`. The form posts the finished body as JSON; success toasts and opens the new
+ * stock. Problems the user can act on (400, 404, 409, 5xx, no network) come back as data for the form;
+ * a 401 means the session ended, which the API client has already handled.
+ */
+export const createStockCreateAction =
+  (api: ApiClient) =>
+  async ({ request }: ActionFunctionArgs): Promise<StockFormResult | Response> => {
+    try {
+      const stock = await api.post<Stock>('/stocks', { body: await request.json() })
+      toast.success(`${stock.ticker} added`)
+      return redirect(`/stocks/${encodeURIComponent(stock.id)}`)
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status === 401) throw error
+      return failure(error)
+    }
+  }
+
+/** Action of `/stocks/:id/edit`: PATCHes the changed fields the form sends. */
+export const createStockUpdateAction =
+  (api: ApiClient) =>
+  async ({ request, params }: ActionFunctionArgs): Promise<StockFormResult | Response> => {
+    try {
+      const stock = await api.patch<Stock>(`/stocks/${encodeURIComponent(params.id ?? '')}`, { body: await request.json() })
+      toast.success(`${stock.ticker} updated`)
+      return redirect(`/stocks/${encodeURIComponent(stock.id)}`)
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status === 401) throw error
+      return failure(error)
+    }
+  }

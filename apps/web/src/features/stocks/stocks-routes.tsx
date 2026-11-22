@@ -24,7 +24,10 @@ export function stocksRoutes(api: ApiClient): RouteObject {
       {
         path: 'new',
         handle: { crumb: 'New stock' } satisfies RouteHandle,
-        lazy: () => import('@/views/stock-new'),
+        lazy: async () => {
+          const [{ createStockNewLoader, createStockCreateAction }, view] = await Promise.all([data(), import('@/views/stock-new')])
+          return { Component: view.Component, loader: createStockNewLoader(api), action: createStockCreateAction(api) }
+        },
       },
       {
         path: ':id',
@@ -52,7 +55,10 @@ export function stocksRoutes(api: ApiClient): RouteObject {
           {
             path: 'edit',
             handle: { crumb: 'Edit' } satisfies RouteHandle,
-            lazy: () => import('@/views/stock-edit'),
+            lazy: async () => {
+              const [{ createStockUpdateAction }, view] = await Promise.all([data(), import('@/views/stock-edit')])
+              return { Component: view.Component, action: createStockUpdateAction(api) }
+            },
           },
         ],
       },

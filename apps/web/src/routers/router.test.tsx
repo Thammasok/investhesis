@@ -42,7 +42,7 @@ describe('router', () => {
     ['/import-export', 'Import / export'],
     ['/stocks/AAPL', /^AAPL/],
     ['/stocks/new', 'Add stock'],
-    ['/stocks/AAPL/edit', 'Edit stock'],
+    ['/stocks/AAPL/edit', 'Edit AAPL'],
     ['/lists/L1', 'Core holdings'],
   ])('renders %s', async (path, name) => {
     renderAt(path)

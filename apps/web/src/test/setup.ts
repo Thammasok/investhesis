@@ -32,3 +32,8 @@ vi.stubGlobal(
 
 // jsdom has no scrollIntoView; cmdk (the add-to-list picker) scrolls the highlighted option into view.
 Element.prototype.scrollIntoView = () => {}
+
+// jsdom lacks the pointer-capture API that Radix Select reads when it opens.
+Element.prototype.hasPointerCapture = () => false
+Element.prototype.setPointerCapture = () => {}
+Element.prototype.releasePointerCapture = () => {}
