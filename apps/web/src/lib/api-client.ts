@@ -2,14 +2,34 @@ import { redirect } from 'react-router'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { signInLocation } from '@/features/auth/guards'
 
+export type FieldProblem = { path: string; message: string; code?: string }
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {}
+}
+
+/**
+ * A failed API call. `code`, `detail`, `errors` and `existingStockId` come from an RFC 7807 body;
+ * `body` keeps whatever was parsed. A request that never reached the API has status 0 and code
+ * `network_error`.
+ */
 export class ApiError extends Error {
   readonly status: number
   readonly body: unknown
-  constructor(status: number, body: unknown) {
-    super(`API request failed with ${status}`)
+  readonly code: string
+  readonly detail: string | undefined
+  readonly errors: FieldProblem[]
+  readonly existingStockId: string | undefined
+  constructor(status: number, body: unknown, code?: string) {
+    const b = asRecord(body)
+    super(typeof b.detail === 'string' ? b.detail : `API request failed with ${status}`)
     this.name = 'ApiError'
     this.status = status
     this.body = body
+    this.code = code ?? (typeof b.code === 'string' ? b.code : `http_${status}`)
+    this.detail = typeof b.detail === 'string' ? b.detail : undefined
+    this.errors = Array.isArray(b.errors) ? (b.errors as FieldProblem[]) : []
+    this.existingStockId = typeof b.existingStockId === 'string' ? b.existingStockId : undefined
   }
 }
 
@@ -26,7 +46,11 @@ export type RequestOptions = {
   /** A plain object (sent as JSON), a JSON string or `FormData`. Never a stream: a 401 retry re-sends it. */
   body?: unknown
   headers?: Record<string, string>
+  /** The `accept` header; JSON unless a download asks otherwise. */
+  accept?: string
 }
+
+export type DownloadedFile = { blob: Blob; filename: string }
 
 function encodeBody(body: unknown): { body?: BodyInit; contentType?: string } {
   if (body === undefined) return {}
@@ -57,13 +81,18 @@ export function createApiClient(options: ApiClientOptions) {
 
   async function send(method: string, path: string, opts: RequestOptions, token: string | null) {
     const { body, contentType } = encodeBody(opts.body)
-    const headers: Record<string, string> = { accept: 'application/json', ...opts.headers }
+    const headers: Record<string, string> = { accept: opts.accept ?? 'application/json', ...opts.headers }
     if (contentType) headers['content-type'] = contentType
     if (token) headers.authorization = `Bearer ${token}`
-    return doFetch(`${baseUrl}${path}`, { method, headers, body })
+    try {
+      return await doFetch(`${baseUrl}${path}`, { method, headers, body })
+    } catch {
+      throw new ApiError(0, undefined, 'network_error')
+    }
   }
 
-  async function request<T>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
+  /** Sends with the bearer token and, on a 401, one refresh and retry; returns the raw response. */
+  async function exchange(method: string, path: string, opts: RequestOptions): Promise<Response> {
     let token: string | null = null
     if (authClient.mode === 'supabase') {
       token = await authClient.getAccessToken()
@@ -81,14 +110,29 @@ export function createApiClient(options: ApiClientOptions) {
         throw new ApiError(401, await parse(response))
       }
     }
+    return response
+  }
 
+  async function request<T>(method: string, path: string, opts: RequestOptions = {}): Promise<T> {
+    const response = await exchange(method, path, opts)
+    if (response.status === 204) return undefined as T
     const data = await parse(response)
     if (!response.ok) throw new ApiError(response.status, data)
     return data as T
   }
 
+  /** Fetches a file with the bearer token (a plain link cannot send it) for saving in the browser. */
+  async function download(path: string, opts: RequestOptions = {}): Promise<DownloadedFile> {
+    const response = await exchange('GET', path, { ...opts, accept: opts.accept ?? '*/*' })
+    if (!response.ok) throw new ApiError(response.status, await parse(response))
+    const named = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(response.headers.get('content-disposition') ?? '')
+    const filename = named ? decodeURIComponent(named[1]) : (path.split('/').pop() ?? 'download')
+    return { blob: await response.blob(), filename }
+  }
+
   return {
     request,
+    download,
     get: <T>(path: string, opts?: RequestOptions) => request<T>('GET', path, opts),
     post: <T>(path: string, opts?: RequestOptions) => request<T>('POST', path, opts),
     put: <T>(path: string, opts?: RequestOptions) => request<T>('PUT', path, opts),

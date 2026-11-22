@@ -118,3 +118,96 @@ describe('api-client', () => {
     expect(auth.calls.signOut).toBe(0)
   })
 })
+
+const problem = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/problem+json' } })
+
+describe('api-client requests and errors', () => {
+  it('TC-U-070: a problem response becomes an ApiError with code, detail, errors and existingStockId', async () => {
+    const { client } = setup([
+      problem(409, {
+        code: 'stock_exists',
+        detail: 'Already saved',
+        existingStockId: 'A',
+        errors: [{ path: 'ticker', message: 'taken' }],
+      }),
+    ])
+    const thrown = await client.post('/stocks', { body: { ticker: 'AAPL' } }).catch((e: unknown) => e)
+    expect(thrown).toBeInstanceOf(ApiError)
+    expect(thrown).toMatchObject({
+      status: 409,
+      code: 'stock_exists',
+      detail: 'Already saved',
+      existingStockId: 'A',
+      errors: [{ path: 'ticker', message: 'taken' }],
+    })
+  })
+
+  it('TC-U-070: a non-problem error body still gives an ApiError with a code', async () => {
+    const { client } = setup([new Response('boom', { status: 502 })])
+    await expect(client.get('/stocks')).rejects.toMatchObject({ status: 502, code: 'http_502', errors: [] })
+  })
+
+  it('TC-U-071: requests are prefixed with /api and send JSON', async () => {
+    const { client, fetchMock } = setup([json(200, {})])
+    await client.patch('/stocks/1', { body: { moat: null } })
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/stocks/1')
+    expect(init.method).toBe('PATCH')
+    expect((init.headers as Record<string, string>)['content-type']).toBe('application/json')
+    expect(init.body).toBe('{"moat":null}')
+  })
+
+  it('TC-U-072: a 204 resolves to undefined without parsing a body', async () => {
+    const { client } = setup([new Response(null, { status: 204 })])
+    await expect(client.delete('/lists/1')).resolves.toBeUndefined()
+  })
+
+  it('TC-U-073: a network failure becomes ApiError status 0 network_error', async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new TypeError('Failed to fetch')
+    })
+    const client = createApiClient({
+      authClient: createMockAuthClient(),
+      fetch: fetchMock as unknown as typeof fetch,
+      onSessionEnded: () => {},
+    })
+    await expect(client.get('/stocks')).rejects.toMatchObject({ name: 'ApiError', status: 0, code: 'network_error' })
+  })
+
+  it('TC-U-071: a FormData body is sent as is, with no content-type so the browser adds the boundary', async () => {
+    const { client, fetchMock } = setup([json(200, {})])
+    const form = new FormData()
+    form.append('file', new File(['a'], 'a.csv'))
+    await client.post('/imports/preview', { body: form })
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.body).toBe(form)
+    expect((init.headers as Record<string, string>)['content-type']).toBeUndefined()
+  })
+
+  it('TC-U-070: download sends the bearer token and returns the blob with its file name', async () => {
+    const res = new Response('a,b', {
+      status: 200,
+      headers: { 'content-type': 'text/csv', 'content-disposition': 'attachment; filename="stocks-template.csv"' },
+    })
+    const { client, fetchMock } = setup([res])
+    const file = await client.download('/imports/template.csv')
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/imports/template.csv')
+    expect(authHeader(fetchMock, 0)).toBe('Bearer T1')
+    expect(file.filename).toBe('stocks-template.csv')
+    expect(await file.blob.text()).toBe('a,b')
+  })
+
+  it('TC-U-070: download falls back to the path name and refreshes once on a 401', async () => {
+    const auth = new FakeAuthClient({ session: fakeSession('T1'), refreshResult: fakeSession('T2') })
+    const { client, fetchMock } = setup([json(401), new Response('x', { status: 200 })], auth)
+    const file = await client.download('/imports/template.xlsx')
+    expect(file.filename).toBe('template.xlsx')
+    expect(authHeader(fetchMock, 1)).toBe('Bearer T2')
+  })
+
+  it('TC-U-070: download failure is an ApiError', async () => {
+    const { client } = setup([problem(500, { code: 'internal' })])
+    await expect(client.download('/imports/template.csv')).rejects.toMatchObject({ status: 500, code: 'internal' })
+  })
+})
