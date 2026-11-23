@@ -22,7 +22,7 @@ const rows = async (id: string) =>
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 describe('settings', () => {
-  it('TC-U-440 answers the defaults without writing a row', async () => {
+  it('TC-U-440 and TC-A-415 answers the defaults without writing a row', async () => {
     const u = newUserId()
     const a = await t.appFor(u)
     for (let i = 0; i < 3; i++) {
@@ -33,7 +33,7 @@ describe('settings', () => {
     expect(await rows(u)).toBe(0)
   })
 
-  it('TC-U-441 upserts and patches partially, with the exact rate text', async () => {
+  it('TC-U-441 and TC-A-416 upserts and patches partially, with the exact rate text', async () => {
     const u = newUserId()
     const a = await t.appFor(u)
     const first = await patch({ usdThbRate: '36.25' }, a)
@@ -76,7 +76,7 @@ describe('settings', () => {
     expect(Date.parse(d3)).toBeGreaterThan(Date.parse(d2))
   })
 
-  it('TC-U-443 refuses invalid values with the field path and changes nothing', async () => {
+  it('TC-U-443 and TC-A-417 refuses invalid values with the field path and changes nothing', async () => {
     const u = newUserId()
     const a = await t.appFor(u)
     const bad: [unknown, string][] = [
@@ -86,7 +86,11 @@ describe('settings', () => {
       [{ concentrationThreshold: '40' }, 'concentrationThreshold'],
       [{ concentrationThreshold: null }, 'concentrationThreshold'],
       [{ usdThbRate: 36.25 }, 'usdThbRate'],
+      [{ concentrationThreshold: -5 }, 'concentrationThreshold'],
       [{ usdThbRate: '0' }, 'usdThbRate'],
+      [{ usdThbRate: '0.000000' }, 'usdThbRate'],
+      [{ usdThbRate: '0.0000001' }, 'usdThbRate'],
+      [{ usdThbRate: '-36' }, 'usdThbRate'],
       [{ usdThbRate: '1.1234567' }, 'usdThbRate'],
       [{ usdThbRate: '1000000000000' }, 'usdThbRate'],
       [{ usdThbRate: '36,25' }, 'usdThbRate'],
@@ -103,8 +107,26 @@ describe('settings', () => {
       expect(json.code).toBe('validation_failed')
       expect(json.requestId).toBeTruthy()
       expect(json.errors.map((e: { path: string }) => e.path)).toContain(path)
+      // The message names the limit and never echoes a long typed value back.
+      const typed = Object.values(body as object).filter((v): v is string => typeof v === 'string' && v.length >= 6)
+      for (const value of typed) expect(JSON.stringify(json.errors)).not.toContain(value)
     }
     expect(await rows(u)).toBe(0)
+  })
+
+  it('TC-A-417 accepts the limits and a cleared rate, and a 400 leaves the saved settings alone', async () => {
+    const u = newUserId()
+    const a = await t.appFor(u)
+    await patch({ concentrationThreshold: 55, usdThbRate: '36.25' }, a)
+    const before = (await get(a)).json()
+    for (const body of [{ concentrationThreshold: 0 }, { usdThbRate: '1.1234567' }, { theme: 'dark' }, { concentrationThreshold: 101, usdThbRate: '40' }]) {
+      expect((await patch(body, a)).statusCode).toBe(400)
+      expect((await get(a)).json()).toEqual(before)
+    }
+    expect((await patch({ concentrationThreshold: 1 }, a)).json().concentrationThreshold).toBe(1)
+    expect((await patch({ concentrationThreshold: 100 }, a)).json().concentrationThreshold).toBe(100)
+    expect((await patch({ usdThbRate: '0.000001' }, a)).json().usdThbRate).toBe('0.000001')
+    expect((await patch({ usdThbRate: null }, a)).json()).toMatchObject({ usdThbRate: null, usdThbRateUpdatedAt: null })
   })
 
   it('accepts the limits, including 1e2', async () => {
@@ -136,16 +158,57 @@ describe('settings', () => {
     expect(await rows(u)).toBe(1)
     const stored = (await t.handle.pool.query('select concentration_threshold c, usd_thb_rate r from app.user_settings where user_id = $1', [u])).rows[0]
     expect((await get(a)).json()).toMatchObject({ concentrationThreshold: stored.c, usdThbRate: stored.r })
+    // Both stored values are valid and come from the requests (a rate row exists only if a rate request won).
+    expect(bodies.some((b) => 'concentrationThreshold' in b && b.concentrationThreshold === stored.c) || stored.c === 40).toBe(true)
+    expect([null, '30.000000', '31.000000']).toContain(stored.r)
   })
 
-  it('two users keep independent settings', async () => {
+  it('TC-A-419 a second wave of writes on the existing row still answers 200 and keeps one row', async () => {
+    const u = newUserId()
+    const a = await t.appFor(u)
+    await patch({ concentrationThreshold: 50 }, a)
+    const results = await Promise.all(Array.from({ length: 8 }, (_, i) => patch({ concentrationThreshold: i + 10, usdThbRate: String(30 + i) }, a)))
+    expect(results.map((r) => r.statusCode)).toEqual(Array(8).fill(200))
+    expect(await rows(u)).toBe(1)
+  })
+
+  it('TC-A-420 p95 of 50 sequential PATCH /settings is under 500 ms (informational for NFR-002)', async () => {
+    const a = await t.appFor(newUserId())
+    const times: number[] = []
+    for (let i = 0; i < 50; i++) {
+      const start = performance.now()
+      const res = await patch({ concentrationThreshold: (i % 99) + 1, usdThbRate: `${30 + (i % 10)}.25` }, a)
+      times.push(performance.now() - start)
+      expect(res.statusCode).toBe(200)
+    }
+    const sorted = [...times].sort((x, y) => x - y)
+    const at = (i: number) => sorted[i] ?? Infinity
+    const p95 = at(Math.ceil(0.95 * sorted.length) - 1)
+    console.log(`NFR-002 PATCH settings: min ${at(0).toFixed(1)} ms, median ${at(24).toFixed(1)} ms, p95 ${p95.toFixed(1)} ms, max ${at(49).toFixed(1)} ms`)
+    expect(p95).toBeLessThan(500)
+  })
+
+  it('TC-A-402 two-user proof: settings', async () => {
     const U = newUserId()
+    const V = newUserId()
     const aU = await t.appFor(U)
     await patch({ concentrationThreshold: 25, usdThbRate: '36.482917' }, aU)
-    const v = await t.appFor(newUserId())
+    const uDate = (await get(aU)).json().usdThbRateUpdatedAt
+    const v = await t.appFor(V)
     expect((await get(v)).json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
+    expect(await rows(V)).toBe(0)
     expect((await patch({ concentrationThreshold: 90 }, v)).json()).toMatchObject({ concentrationThreshold: 90, usdThbRate: null })
-    expect((await get(aU)).json()).toMatchObject({ concentrationThreshold: 25, usdThbRate: '36.482917' })
+    const total = Number((await t.handle.pool.query('select count(*) n from app.user_settings where user_id = any($1)', [[U, V]])).rows[0].n)
+    expect(total).toBe(2)
+    expect((await get(v)).json()).toEqual({ concentrationThreshold: 90, usdThbRate: null, usdThbRateUpdatedAt: null })
+    expect((await get(aU)).json()).toEqual({ concentrationThreshold: 25, usdThbRate: '36.482917', usdThbRateUpdatedAt: uDate })
+    const sneaky = await patch({ userId: U, concentrationThreshold: 10 }, v)
+    expect(sneaky.statusCode).toBe(400)
+    expect(sneaky.json().errors.map((e: { path: string }) => e.path)).toContain('userId')
+    expect((await get(aU)).json().concentrationThreshold).toBe(25)
+    expect((await get(v)).json().concentrationThreshold).toBe(90)
+    const owners = (await t.handle.pool.query('select user_id from app.user_settings where user_id = any($1)', [[U, V]])).rows.map((r) => r.user_id)
+    expect(owners.sort()).toEqual([U, V].sort())
   })
 })
 
