@@ -18,4 +18,31 @@ export const MESSAGES = {
   chainNeedsName: 'is required when the value chain position is not None',
   unknownField: 'is not an accepted field',
   rowBadValue: 'is not valid',
+  decimalString: 'must be a decimal number written as text',
+  sharesFormat: 'must be greater than 0, with at most 14 digits before and 4 after the decimal point',
+  averageCostFormat: 'must be 0 or more, with at most 14 digits before and 4 after the decimal point',
+  thresholdRange: 'must be a whole number from 1 to 100',
+  usdThbRateFormat: 'must be greater than 0, with at most 12 digits before and 6 after the decimal point',
 } as const
+
+/** Lens names shown in the concentration page, in FR-006 order. */
+export const LENS_LABELS = {
+  gicsSector: 'Sector (GICS)',
+  setIndustryGroup: 'SET industry group',
+  valueChain: 'Value chain',
+  valueChainPosition: 'Value chain position',
+  size: 'Size',
+  style: 'Style',
+  economicCycle: 'Economic cycle',
+  lynchType: 'Lynch type',
+  lifeCycle: 'Life cycle',
+  customers: 'Customers',
+  revenueTypes: 'Revenue types',
+  moat: 'Moat',
+  themes: 'Themes',
+  volatility: 'Volatility',
+  market: 'Market',
+  indexMembership: 'Index membership',
+} as const
+
+export const NOT_SET_LABEL = 'Not set'

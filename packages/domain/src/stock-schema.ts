@@ -48,7 +48,7 @@ const patchShape = {
 }
 
 /** Rejects any key outside the shape; the issue path is the key itself. */
-function rejectUnknownKeys(value: Record<string, unknown>, known: readonly string[], ctx: z.RefinementCtx) {
+export function rejectUnknownKeys(value: Record<string, unknown>, known: readonly string[], ctx: z.RefinementCtx) {
   for (const key of Object.keys(value)) {
     if (!known.includes(key)) ctx.addIssue({ code: 'custom', path: [key], message: MESSAGES.unknownField })
   }
