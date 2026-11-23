@@ -3,7 +3,7 @@ import { CircleAlertIcon, InfoIcon } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { useAuthClient } from '../auth-client-context'
@@ -141,12 +141,6 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
             {submitting ? <Spinner /> : null}
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-          <FieldDescription className="text-center">
-            Don&apos;t have an account?{' '}
-            <Link to={withNext('/auth/sign-up', next)} className="underline underline-offset-4 hover:text-primary">
-              Sign up
-            </Link>
-          </FieldDescription>
         </Field>
       </FieldGroup>
     </form>

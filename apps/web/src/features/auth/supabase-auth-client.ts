@@ -1,6 +1,6 @@
 import { createClient, type Session } from '@supabase/supabase-js'
 import type { AuthClient, AuthEvent, AuthListener, AuthResult, AuthSession } from './auth-client'
-import { isAlreadyRegistered, mapSupabaseError } from './map-supabase-error'
+import { mapSupabaseError } from './map-supabase-error'
 
 export type SupabaseAuthOptions = { url: string; publishableKey: string; origin?: string }
 
@@ -60,15 +60,7 @@ export function createSupabaseAuthClient({ url, publishableKey, origin = window.
       return error ? null : toSession(data.session)
     },
     signIn: (email, password) => run(() => auth.signInWithPassword({ email, password })),
-    async signUp(email, password) {
-      try {
-        const { error } = await auth.signUp({ email, password, options: { emailRedirectTo: `${origin}/auth/confirm` } })
-        if (!error || isAlreadyRegistered(error)) return { ok: true }
-        return { ok: false, error: mapSupabaseError(error) }
-      } catch (error) {
-        return { ok: false, error: mapSupabaseError(error) }
-      }
-    },
+    // Supabase's name for the confirmation-email resend type; it is not a registration call.
     resendConfirmation: (email) => run(() => auth.resend({ type: 'signup', email })),
     verifyEmailLink: (tokenHash, type) => run(() => auth.verifyOtp({ token_hash: tokenHash, type })),
     requestPasswordReset: (email) => run(() => auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/confirm` })),

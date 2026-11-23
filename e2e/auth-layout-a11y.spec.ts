@@ -79,10 +79,10 @@ test.describe('360 px layout', () => {
 
   test('TC-E-026: focusing the last field at 360x360 keeps the submit reachable', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 360 })
-    await page.goto('/auth/sign-up')
-    await page.getByLabel('Confirm password', { exact: true }).focus()
+    await page.goto('/auth/sign-in')
+    await page.getByLabel('Password', { exact: true }).focus()
 
-    const button = page.getByRole('button', { name: 'Create account' })
+    const button = page.getByRole('button', { name: 'Sign in' })
     await button.scrollIntoViewIfNeeded()
     const box = await button.boundingBox()
 
@@ -112,7 +112,9 @@ test.describe('accessibility (axe)', () => {
       for (const screen of signedInScreens) await scan(screen)
 
       expect(findings).toEqual([])
-      expect(SCREENS.length).toBeGreaterThan(8)
+      // Eight screens since sign-up was removed (v1.2); none of them is a registration screen.
+      expect(SCREENS.map((screen) => screen.name)).toHaveLength(8)
+      expect(SCREENS.some((screen) => /sign-?up/i.test(screen.name))).toBe(false)
     })
   }
 })

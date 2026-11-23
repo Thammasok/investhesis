@@ -194,7 +194,6 @@ describe('TC-C-006 a refreshed token needs no navigation', () => {
 describe('TC-C-050 labels and live regions', () => {
   const ROUTES: [string, string[]][] = [
     ['/auth/sign-in', ['Email', 'Password']],
-    ['/auth/sign-up', ['Email', 'Password', 'Confirm password']],
     ['/auth/forgot-password', ['Email']],
   ]
 
@@ -233,15 +232,14 @@ describe('TC-C-050 labels and live regions', () => {
   })
 
   it('TC-C-050: a field error is announced through the field it belongs to', async () => {
-    const router = createMemoryRouter(createRoutes(FakeAuthClient.signedOut()), { initialEntries: ['/auth/sign-up'] })
+    const router = createMemoryRouter(createRoutes(FakeAuthClient.signedIn()), { initialEntries: ['/auth/reset-password'] })
     render(<RouterProvider router={router} />)
     await screen.findByRole('heading', { level: 1 })
-    await userEvent.type(screen.getByLabelText('Email'), 'a@x.io')
-    await userEvent.type(screen.getByLabelText('Password', { selector: 'input' }), 'Abc12345')
-    await userEvent.type(screen.getByLabelText('Confirm password', { selector: 'input' }), 'Different1')
-    await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    await userEvent.type(screen.getByLabelText('New password', { selector: 'input' }), 'Abc12345')
+    await userEvent.type(screen.getByLabelText('Confirm new password', { selector: 'input' }), 'Different1')
+    await userEvent.click(screen.getByRole('button', { name: 'Save password' }))
 
-    const confirm = screen.getByLabelText('Confirm password', { selector: 'input' })
+    const confirm = screen.getByLabelText('Confirm new password', { selector: 'input' })
     await waitFor(() => expect(confirm).toHaveAttribute('aria-invalid', 'true'))
     const describedBy = confirm.getAttribute('aria-describedby') ?? ''
     expect(describedBy).not.toBe('')
@@ -249,7 +247,7 @@ describe('TC-C-050 labels and live regions', () => {
   })
 
   it('TC-C-050: decorative icons are aria-hidden on every auth page', async () => {
-    for (const route of ['/auth/sign-in', '/auth/sign-up', '/auth/forgot-password', '/auth/link-expired']) {
+    for (const route of ['/auth/sign-in', '/auth/forgot-password', '/auth/link-expired']) {
       const router = createMemoryRouter(createRoutes(FakeAuthClient.signedOut()), { initialEntries: [route] })
       const { unmount } = render(<RouterProvider router={router} />)
       await screen.findByRole('heading', { level: 1 })

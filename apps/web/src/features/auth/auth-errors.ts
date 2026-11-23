@@ -4,7 +4,6 @@ import type { AuthErrorCode } from './auth-client'
 export const authErrorMessages: Record<AuthErrorCode, string> = {
   invalid_credentials: 'Email or password is incorrect.',
   email_not_confirmed: 'Confirm your email first.',
-  signup_not_allowed: 'Sign-up is invite-only. Ask the owner to add this email.',
   weak_password: 'Use 8 to 72 characters for your password.',
   same_password: "Choose a password you haven't used here.",
   wrong_current_password: 'Current password is incorrect.',

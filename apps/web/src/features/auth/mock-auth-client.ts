@@ -14,7 +14,6 @@ export function createMockAuthClient(): AuthClient {
     getAccessToken: async () => null,
     refresh: async () => MOCK_SESSION,
     signIn: ok,
-    signUp: ok,
     resendConfirmation: ok,
     verifyEmailLink: ok,
     requestPasswordReset: ok,

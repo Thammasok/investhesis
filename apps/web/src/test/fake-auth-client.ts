@@ -33,10 +33,9 @@ export class FakeAuthClient implements AuthClient {
   validLinks: Record<string, VerifyLinkType> = {}
   /** When set, `verifyEmailLink` waits for it before answering (pending-UI tests). */
   verifyGate: Promise<void> | null = null
-  readonly calls = { refresh: 0, signOut: 0, signIn: 0, signUp: 0, resend: 0, verify: 0, reset: 0 }
+  readonly calls = { refresh: 0, signOut: 0, signIn: 0, resend: 0, verify: 0, reset: 0 }
   readonly args = {
     signIn: [] as Array<[string, string]>,
-    signUp: [] as Array<[string, string]>,
     resend: [] as string[],
     reset: [] as string[],
     verify: [] as Array<[string, VerifyLinkType]>,
@@ -83,11 +82,6 @@ export class FakeAuthClient implements AuthClient {
     const result = this.result(email)
     if (result.ok) this.session = fakeSession('T1', email)
     return result
-  }
-  signUp = async (email: string, password: string) => {
-    this.calls.signUp += 1
-    this.args.signUp.push([email, password])
-    return this.result(email)
   }
   resendConfirmation = async (email: string) => {
     this.calls.resend += 1

@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { expect, test } from '@playwright/test'
 
 // Runs last (files run in name order, one worker): the log holds everything the API printed while the
-// sign-up, session and API specs above ran (TC-E-001, TC-E-010, TC-E-021 among them).
+// sign-in, session and API specs above ran (TC-E-010 and TC-E-021 among them).
 test('TC-E-023: the API output never contains a token or a password', () => {
   const log = readFileSync(join(__dirname, '.output/dev-server.log'), 'utf8')
 

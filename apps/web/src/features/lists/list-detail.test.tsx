@@ -114,7 +114,8 @@ describe('list detail: add stock', () => {
 
     await waitFor(() => expect(api.callsTo('POST /lists/core/stocks')).toHaveLength(1))
     expect(api.callsTo('POST /lists/core/stocks')[0]?.body).toEqual({ stockId: pttep.id })
-    expect(toast.success).toHaveBeenCalledWith('Added PTTEP to Core holdings')
+    // The toast is raised after the POST resolves, so it can land a tick after the request is logged.
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Added PTTEP to Core holdings'))
     expect(await screen.findByText('2 stocks')).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByRole('link', { name: 'PTTEP' })).toBeInTheDocument()
   })

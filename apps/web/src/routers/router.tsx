@@ -47,7 +47,6 @@ export function createRoutes(
       children: [
         { index: true, loader: () => redirect('/auth/sign-in') },
         { path: 'sign-in', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-in') },
-        { path: 'sign-up', loader: redirectIfSignedIn, lazy: () => import('@/views/sign-up') },
         { path: 'check-email', lazy: () => import('@/views/check-email') },
         // Email-link pages are not guest pages: a recovery link makes a signed-in session.
         {
@@ -59,6 +58,9 @@ export function createRoutes(
         { path: 'link-expired', loader: authLoaders.linkExpired, lazy: () => import('@/views/link-expired') },
         { path: 'forgot-password', loader: redirectIfSignedIn, lazy: () => import('@/views/forgot-password') },
         { path: 'reset-password', loader: authLoaders.resetPassword, lazy: () => import('@/views/reset-password') },
+        // Any other /auth path (including the retired registration page) is not-found, signed in or out,
+        // instead of falling through to the signed-in area's guard.
+        { path: '*', lazy: () => import('@/views/not-found') },
       ],
     },
     {

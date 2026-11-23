@@ -24,13 +24,6 @@ async function signIn(email = 'a@x.io', password = 'Abc12345') {
   await userEvent.keyboard('{Enter}')
 }
 
-async function signUp(email: string, password: string, confirm = password) {
-  await userEvent.type(screen.getByLabelText('Email'), email)
-  if (password) await userEvent.type(screen.getByLabelText('Password', { selector: 'input' }), password)
-  if (confirm) await userEvent.type(screen.getByLabelText('Confirm password', { selector: 'input' }), confirm)
-  await userEvent.click(screen.getByRole('button', { name: 'Create account' }))
-}
-
 afterEach(() => vi.useRealTimers())
 
 describe('sign-in', () => {
@@ -53,7 +46,7 @@ describe('sign-in', () => {
       ['https://evil.example/', '/stocks'],
       ['javascript:alert(1)', '/stocks'],
       ['%2F%2Fevil.example', '/stocks'],
-      ['/auth/sign-up', '/stocks'],
+      ['/auth/forgot-password', '/stocks'],
       ['/lists', '/lists'],
     ]) {
       const { router } = renderAt({ pathname: '/auth/sign-in', search: `?next=${encodeURIComponent(next)}` })
@@ -140,20 +133,20 @@ describe('sign-in', () => {
     await waitFor(() => expect(fake.calls.signIn).toBe(1))
   })
 
-  it('TC-C-016: next is carried to the sign-up and forgot links', async () => {
+  it('TC-C-305: next is carried to the forgot link, and no link goes toward registration', async () => {
     renderAt('/auth/sign-in?next=%2Flists')
     await h1('Sign in to your account')
-    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/auth/sign-up?next=%2Flists')
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute(
       'href',
       '/auth/forgot-password?next=%2Flists',
     )
+    const hrefs = screen.getAllByRole('link').map((link) => link.getAttribute('href'))
+    expect(hrefs.filter((href) => /sign-?up|register/i.test(href ?? ''))).toEqual([])
   })
 
-  it('TC-C-016: no next, no query on the links', async () => {
+  it('TC-C-305: no next, no query on the forgot link', async () => {
     renderAt('/auth/sign-in')
     await h1('Sign in to your account')
-    expect(screen.getByRole('link', { name: 'Sign up' })).toHaveAttribute('href', '/auth/sign-up')
     expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute('href', '/auth/forgot-password')
   })
 
@@ -169,7 +162,9 @@ describe('sign-in', () => {
 
   it('TC-C-049: focuses the h1 and sets the title', async () => {
     renderAt('/auth/sign-in')
-    expect(await h1('Sign in to your account')).toHaveFocus()
+    const heading = await h1('Sign in to your account')
+    // Focus and title are set in an effect right after the heading mounts.
+    await waitFor(() => expect(heading).toHaveFocus())
     expect(document.title).toBe('Sign in · Investhesis')
   })
 
@@ -185,116 +180,12 @@ describe('sign-in', () => {
     }
   })
 
-  it('TC-U-015: a signed-in visitor on a guest page lands on /stocks', async () => {
-    for (const path of ['/auth/sign-in', '/auth/sign-up']) {
+  it('TC-C-310: a signed-in visitor on a guest page lands on /stocks', async () => {
+    for (const path of ['/auth/sign-in', '/auth/forgot-password']) {
       const { router } = renderAt(path, FakeAuthClient.signedIn())
       await waitFor(() => expect(router.state.location.pathname).toBe('/stocks'))
       document.body.innerHTML = ''
     }
-  })
-})
-
-describe('sign-up', () => {
-  it.each([
-    ['', '', 'Enter a password.', 'Password'],
-    ['Abc1234', 'Abc1234', 'Use at least 8 characters.', 'Password'],
-    ['a'.repeat(73), 'a'.repeat(73), 'Use 72 characters or fewer.', 'Password'],
-    ['Abc12345', 'Abc12346', "Passwords don't match.", 'Confirm password'],
-  ])('TC-C-022: (%#) blocks the call and focuses the first invalid field', async (password, confirm, message, field) => {
-    const { fake } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    await signUp('new@x.io', password, confirm)
-
-    expect(await screen.findByText(message)).toBeInTheDocument()
-    expect(fake.calls.signUp).toBe(0)
-    expect(screen.getByLabelText(field, { selector: 'input' })).toHaveFocus()
-  })
-
-  it('TC-C-024: the error is tied to its input', async () => {
-    renderAt('/auth/sign-up')
-    await h1('Create your account')
-    await signUp('new@x.io', 'Abc12345', 'Abc12346')
-    const input = screen.getByLabelText('Confirm password', { selector: 'input' })
-    const error = await screen.findByText("Passwords don't match.")
-    expect(input).toHaveAttribute('aria-invalid', 'true')
-    expect(input.getAttribute('aria-describedby')).toContain(error.id)
-    expect(input.closest('[data-slot="field"]')).toHaveAttribute('data-invalid', 'true')
-  })
-
-  it.each(['Abc12345', 'a'.repeat(72)])('TC-C-023: accepts a %#-th boundary password', async (password) => {
-    const { fake } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    await signUp('new@x.io', password)
-    await waitFor(() => expect(fake.args.signUp).toEqual([['new@x.io', password]]))
-  })
-
-  it('TC-U-025 / TC-C-032: new and taken emails reach the same check-email screen, email only in state', async () => {
-    for (const email of ['taken@x.io', 'new@x.io']) {
-      const { router } = renderAt('/auth/sign-up')
-      await h1('Create your account')
-      await signUp(email, 'Abc12345')
-      const heading = await h1('Check your email')
-      expect(heading).toHaveFocus()
-      expect(where(router)).toBe('/auth/check-email')
-      expect(screen.getByText(email, { exact: false })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Back to sign in' })).toBeInTheDocument()
-      document.body.innerHTML = ''
-    }
-  })
-
-  it('TC-U-025b / TC-C-027: a non-allowlisted email shows the invite-only alert and keeps the passwords', async () => {
-    const { router, fake } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    fake.errorsByEmail['stranger@gmail.com'] = 'signup_not_allowed'
-
-    await signUp('stranger@gmail.com', 'Abc12345')
-
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sign-up is invite-only. Ask the owner to add this email.')
-    expect(where(router)).toBe('/auth/sign-up')
-    expect(screen.getByLabelText('Email')).toHaveFocus()
-    expect(screen.getByLabelText('Password', { selector: 'input' })).toHaveValue('Abc12345')
-    expect(screen.getByLabelText('Confirm password', { selector: 'input' })).toHaveValue('Abc12345')
-  })
-
-  it('TC-C-025: weak_password from the server lands on the Password field', async () => {
-    const { fake } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    fake.nextError = 'weak_password'
-    await signUp('new@x.io', 'Abc12345')
-    expect(await screen.findByText('Use 8 to 72 characters for your password.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Password', { selector: 'input' })).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getByLabelText('Password', { selector: 'input' })).toHaveValue('Abc12345')
-  })
-
-  it.each([
-    ['rate_limited', 'Too many attempts. Try again in a few minutes.'],
-    ['unavailable', "Can't reach the sign-in service. Try again."],
-  ] as const)('TC-C-026: %s shows an alert and keeps every value', async (code, text) => {
-    const { router, fake } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    fake.nextError = code
-    await signUp('new@x.io', 'Abc12345')
-    expect(await screen.findByRole('alert')).toHaveTextContent(text)
-    expect(screen.getByLabelText('Email')).toHaveValue('new@x.io')
-    expect(screen.getByLabelText('Confirm password', { selector: 'input' })).toHaveValue('Abc12345')
-    expect(where(router)).toBe('/auth/sign-up')
-  })
-
-  it('TC-C-028: the passwords are empty after going back', async () => {
-    const { router } = renderAt('/auth/sign-up')
-    await h1('Create your account')
-    await signUp('new@x.io', 'Abc12345')
-    await h1('Check your email')
-    await act(() => router.navigate(-1))
-    await h1('Create your account')
-    expect(screen.getByLabelText('Password', { selector: 'input' })).toHaveValue('')
-    expect(screen.getByLabelText('Confirm password', { selector: 'input' })).toHaveValue('')
-  })
-
-  it('TC-C-016: next survives to the sign-in link', async () => {
-    renderAt('/auth/sign-up?next=%2Flists')
-    await h1('Create your account')
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/auth/sign-in?next=%2Flists')
   })
 })
 
@@ -318,19 +209,11 @@ describe('password input', () => {
     expect(fake.calls.signIn).toBe(0)
   })
 
-  it('TC-C-030: autocomplete tokens', async () => {
+  it('TC-C-311: autocomplete tokens on sign-in', async () => {
     renderAt('/auth/sign-in')
     await h1('Sign in to your account')
     expect(screen.getByLabelText('Email')).toHaveAttribute('autocomplete', 'email')
     expect(screen.getByLabelText('Password')).toHaveAttribute('autocomplete', 'current-password')
-    document.body.innerHTML = ''
-    renderAt('/auth/sign-up')
-    await h1('Create your account')
-    expect(screen.getByLabelText('Password', { selector: 'input' })).toHaveAttribute('autocomplete', 'new-password')
-    expect(screen.getByLabelText('Confirm password', { selector: 'input' })).toHaveAttribute(
-      'autocomplete',
-      'new-password',
-    )
   })
 })
 

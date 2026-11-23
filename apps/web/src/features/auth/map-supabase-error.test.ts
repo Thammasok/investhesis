@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAlreadyRegistered, mapSupabaseError } from './map-supabase-error'
+import { mapSupabaseError } from './map-supabase-error'
 
 describe('mapSupabaseError', () => {
   // TC-U-019
@@ -17,7 +17,6 @@ describe('mapSupabaseError', () => {
     [{ code: 'bad_code_verifier' }, 'link_invalid'],
     [{ status: 429 }, 'rate_limited'],
     [{ code: 'over_request_rate_limit' }, 'rate_limited'],
-    [{ status: 403, message: 'Error running hook URI: signup_not_allowed' }, 'signup_not_allowed'],
     [{ name: 'AuthRetryableFetchError', status: 0 }, 'unavailable'],
     [{ code: 'current_password_invalid' }, 'wrong_current_password'],
     [{ code: 'current_password_required' }, 'wrong_current_password'],
@@ -26,11 +25,5 @@ describe('mapSupabaseError', () => {
     [null, 'unknown'],
   ])('TC-U-019: maps %j to %s', (error, expected) => {
     expect(mapSupabaseError(error)).toBe(expected)
-  })
-
-  it('recognises an already-registered sign-up', () => {
-    expect(isAlreadyRegistered({ code: 'user_already_exists' })).toBe(true)
-    expect(isAlreadyRegistered({ code: 'email_exists' })).toBe(true)
-    expect(isAlreadyRegistered({ code: 'weak_password' })).toBe(false)
   })
 })

@@ -54,26 +54,6 @@ describe('supabase auth adapter', () => {
     expect(await client.getAccessToken()).toBe('ACCESS-1')
   })
 
-  it('signUp sends the confirm redirect, and an already-registered email is a success', async () => {
-    handler = () => json(200, { id: USER.id, email: USER.email })
-    const client = make()
-    expect(await client.signUp('a@example.test', 'Abc12345')).toEqual({ ok: true })
-    expect(calls[0]?.path).toContain('redirect_to=http%3A%2F%2Flocalhost%3A5173%2Fauth%2Fconfirm')
-
-    handler = () => json(422, { code: 'user_already_exists', message: 'User already registered' })
-    expect(await client.signUp('a@example.test', 'Abc12345')).toEqual({ ok: true })
-
-    handler = () => json(403, { code: 'unexpected_failure', message: 'Hook requested to reject: signup_not_allowed' })
-    expect(await client.signUp('x@gmail.com', 'Abc12345')).toEqual({ ok: false, error: 'signup_not_allowed' })
-  })
-
-  it('signUp reports an unreachable service as unavailable', async () => {
-    handler = () => {
-      throw new TypeError('fetch failed')
-    }
-    expect(await make().signUp('a@example.test', 'Abc12345')).toEqual({ ok: false, error: 'unavailable' })
-  })
-
   it('resend, reset, verify and the password calls map their results', async () => {
     const client = make()
     handler = () => json(200, {})

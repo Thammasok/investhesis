@@ -189,6 +189,8 @@ test.describe('lists', () => {
 
     // Assert
     await expect(page.getByRole('link', { name: 'Watching' })).toBeVisible()
-    expect((await api.lists()).map((l) => l.stockCount)).toEqual([1, 1])
+    // The Watching link is still on screen while the removal is pending, so the link alone does not
+    // prove the undo finished; poll the API for the final state instead of reading it once.
+    await expect.poll(async () => (await api.lists()).map((l) => l.stockCount)).toEqual([1, 1])
   })
 })

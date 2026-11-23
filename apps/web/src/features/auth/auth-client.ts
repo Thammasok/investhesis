@@ -6,7 +6,6 @@
 export type AuthErrorCode =
   | 'invalid_credentials'
   | 'email_not_confirmed'
-  | 'signup_not_allowed'
   | 'weak_password'
   | 'same_password'
   | 'wrong_current_password'
@@ -34,7 +33,6 @@ export interface AuthClient {
   /** Forces a token refresh. `null` when it fails (the session is over). */
   refresh(): Promise<AuthSession | null>
   signIn(email: string, password: string): Promise<AuthResult>
-  signUp(email: string, password: string): Promise<AuthResult>
   resendConfirmation(email: string): Promise<AuthResult>
   verifyEmailLink(tokenHash: string, type: VerifyLinkType): Promise<AuthResult>
   requestPasswordReset(email: string): Promise<AuthResult>

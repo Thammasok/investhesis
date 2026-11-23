@@ -8,7 +8,6 @@ import {
   historyUrls,
   mailFor,
   makeUser,
-  messagesTo,
   newEmail,
   openSignedIn,
   PASSWORD,
@@ -92,7 +91,7 @@ test.describe('sign-in', () => {
     const user = await makeUser('e2e-8')
     await openSignedIn(page, user)
 
-    for (const guest of ['/auth/sign-in', '/auth/sign-up', '/auth/forgot-password']) {
+    for (const guest of ['/auth/sign-in', '/auth/forgot-password']) {
       await page.goto(guest)
       await expect(page).toHaveURL(/\/stocks$/)
     }
@@ -110,14 +109,13 @@ test.describe('sign-in', () => {
         return (css.boxShadow !== 'none' && css.boxShadow !== '') || (css.outlineStyle !== 'none' && parseFloat(css.outlineWidth) > 0)
       })
 
-    // Focus order: Email -> Forgot password? -> Password -> toggle -> Sign in -> Sign up
+    // Focus order: Email -> Forgot password? -> Password -> toggle -> Sign in (nothing after it)
     const order: [string, (p: Page) => ReturnType<Page['locator']>][] = [
       ['Email', (p) => p.getByLabel('Email')],
       ['Forgot password?', (p) => p.getByRole('link', { name: 'Forgot password?' })],
       ['Password', (p) => p.getByLabel('Password', { exact: true })],
       ['Show password', (p) => p.getByRole('button', { name: 'Show password' })],
       ['Sign in', (p) => p.getByRole('button', { name: 'Sign in' })],
-      ['Sign up', (p) => p.getByRole('link', { name: 'Sign up' })],
     ]
     for (const [name, locate] of order) {
       await page.keyboard.press('Tab')
@@ -167,37 +165,38 @@ test.describe('sign-in', () => {
     await expect(page).toHaveURL(/\/stocks$/)
   })
 
-  test('TC-E-025: keyboard-only sign-up, error focus and visibility toggle', async ({ page }) => {
-    await page.goto('/auth/sign-up')
-    await expect(page.getByRole('heading', { level: 1, name: 'Create your account' })).toBeFocused()
+  test('TC-E-305 (replaces TC-E-025): keyboard-only sign-in, error focus and visibility toggle', async ({ page }) => {
+    const user = await makeUser('e2e-305')
+    await page.goto('/auth/sign-in')
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in to your account' })).toBeFocused()
     await page.keyboard.press('Tab')
-    await page.keyboard.type(newEmail('e2e-25'))
+    await expect(page.getByLabel('Email')).toBeFocused()
+    await page.keyboard.type(user.email)
     await page.keyboard.press('Tab')
-    await expect(page.getByLabel('Password', { exact: true })).toBeFocused()
-    await page.keyboard.type(PASSWORD)
-    await page.keyboard.press('Tab') // show/hide toggle of Password
+    await expect(page.getByRole('link', { name: 'Forgot password?' })).toBeFocused()
     await page.keyboard.press('Tab')
-    await expect(page.getByLabel('Confirm password', { exact: true })).toBeFocused()
-    await page.keyboard.type('Different1')
+    const password = page.getByLabel('Password', { exact: true })
+    await expect(password).toBeFocused()
+    await page.keyboard.type('Wrong12345')
 
+    // Enter with a wrong password: the alert shows and focus returns to the (cleared) password field
     await page.keyboard.press('Enter')
-
-    const confirm = page.getByLabel('Confirm password', { exact: true })
-    await expect(confirm).toBeFocused()
-    await expect(confirm).toHaveAttribute('aria-invalid', 'true')
-    const describedBy = (await confirm.getAttribute('aria-describedby')) ?? ''
-    await expect(page.locator(`#${describedBy.split(' ')[0]}`)).toHaveAttribute('role', 'alert')
+    await expect(page.getByRole('alert')).toHaveText('Email or password is incorrect.')
+    await expect(password).toBeFocused()
+    await expect(password).toHaveValue('')
 
     // Fix it, then toggle visibility with Space: focus stays on the toggle and nothing is submitted
-    await page.keyboard.press('Control+A')
     await page.keyboard.type(PASSWORD)
     await page.keyboard.press('Tab')
-    const toggle = page.getByRole('button', { name: 'Show password' }).last()
-    await expect(toggle).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Show password' })).toBeFocused()
     await page.keyboard.press('Space')
-    await expect(page.getByRole('button', { name: 'Hide password' }).last()).toBeFocused()
-    await expect(page).toHaveURL(/\/auth\/sign-up$/)
-    await expect(confirm).toHaveAttribute('type', 'text')
-    expect(await messagesTo('nobody@example.test')).toHaveLength(0)
+    await expect(page.getByRole('button', { name: 'Hide password' })).toBeFocused()
+    await expect(page).toHaveURL(/\/auth\/sign-in$/)
+    await expect(password).toHaveAttribute('type', 'text')
+
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/stocks$/)
   })
 })

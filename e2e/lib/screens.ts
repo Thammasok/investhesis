@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test'
-import { newEmail, openSignedIn, PASSWORD } from './kit.ts'
+import { adminCreateUser, newEmail, openSignedIn, PASSWORD } from './kit.ts'
 
 export type Screen = {
   name: string
@@ -27,21 +27,14 @@ export const SCREENS: Screen[] = [
     },
   },
   {
-    name: 'sign-up',
-    submit: 'Create account',
-    visit: async (page) => {
-      await page.goto('/auth/sign-up')
-      await expect(h1(page)).toHaveText('Create your account')
-    },
-  },
-  {
     name: 'check-email',
     visit: async (page) => {
-      await page.goto('/auth/sign-up')
-      await page.getByLabel('Email').fill(newEmail('screen'))
-      await page.getByLabel('Password', { exact: true }).fill(PASSWORD)
-      await page.getByLabel('Confirm password', { exact: true }).fill(PASSWORD)
-      await page.getByRole('button', { name: 'Create account' }).click()
+      // Reached the way a visitor does: an admin-created, unconfirmed account asks for a new link.
+      const user = await adminCreateUser(newEmail('screen'), { confirmed: false })
+      await page.goto('/auth/sign-in')
+      await fillSignInWith(page, user.email, PASSWORD)
+      await page.getByRole('button', { name: 'Sign in' }).click()
+      await page.getByRole('button', { name: 'Resend' }).click()
       await expect(h1(page)).toHaveText('Check your email')
     },
   },
@@ -77,17 +70,6 @@ export const SCREENS: Screen[] = [
       await fillSignInWith(page, newEmail('screen-nobody'), 'Wrong12345')
       await page.getByRole('button', { name: 'Sign in' }).click()
       await expect(page.getByRole('alert')).toBeVisible()
-    },
-  },
-  {
-    name: 'sign-up-error',
-    visit: async (page) => {
-      await page.goto('/auth/sign-up')
-      await page.getByLabel('Email').fill(newEmail('screen'))
-      await page.getByLabel('Password', { exact: true }).fill(PASSWORD)
-      await page.getByLabel('Confirm password', { exact: true }).fill('Different1')
-      await page.getByRole('button', { name: 'Create account' }).click()
-      await expect(page.getByLabel('Confirm password', { exact: true })).toHaveAttribute('aria-invalid', 'true')
     },
   },
   {

@@ -18,12 +18,6 @@ const CODE_MAP: Record<string, AuthErrorCode> = {
   bad_jwt: 'link_invalid',
   over_request_rate_limit: 'rate_limited',
   over_email_send_rate_limit: 'rate_limited',
-  signup_not_allowed: 'signup_not_allowed',
-}
-
-/** Sign-up errors that mean "already registered": treated as success so accounts stay private. */
-export function isAlreadyRegistered(error: SupabaseErrorLike): boolean {
-  return error.code === 'user_already_exists' || error.code === 'email_exists'
 }
 
 export function mapSupabaseError(error: unknown): AuthErrorCode {
@@ -32,8 +26,6 @@ export function mapSupabaseError(error: unknown): AuthErrorCode {
   const e = error as SupabaseErrorLike
 
   if (e.code && e.code in CODE_MAP) return CODE_MAP[e.code]
-  // The sign-up hook rejects with 403 and its message carrying `signup_not_allowed`.
-  if (e.status === 403 && e.message?.includes('signup_not_allowed')) return 'signup_not_allowed'
   if (e.status === 429) return 'rate_limited'
   if (typeof e.status === 'number' && e.status >= 500) return 'unavailable'
   if (error instanceof TypeError || e.name === 'AuthRetryableFetchError' || e.status === 0) return 'unavailable'
