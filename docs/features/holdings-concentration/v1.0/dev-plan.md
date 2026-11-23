@@ -487,7 +487,7 @@ unit:
   Mark as held after Stop holding. Covers FR-001, FR-002, FR-004.
 - agent: react-vite-developer
 - depends_on: [T-005]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -551,7 +551,7 @@ unit:
   FR-010, FR-012 to FR-014, NFR-001, NFR-006, NFR-007.
 - agent: react-vite-developer
 - depends_on: [T-002, T-005]
-- status: review
+- status: done
 - size: L
 ```
 
@@ -645,7 +645,7 @@ unit:
   errors stay in the dialog; focus returns to the opener. Covers FR-010, FR-011.
 - agent: react-vite-developer
 - depends_on: [T-007]
-- status: backlog
+- status: doing
 - size: S
 ```
 
