@@ -258,7 +258,7 @@ unit:
   `holding: null`. Covers FR-001 to FR-004, NFR-002, NFR-003, NFR-004.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: doing
+- status: done
 - size: L
 ```
 
@@ -340,7 +340,7 @@ unit:
   both routes with bearerAuth. Covers FR-011, NFR-003, NFR-004.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: doing
+- status: done
 - size: S
 ```
 
@@ -408,7 +408,7 @@ unit:
   Covers FR-001 to FR-004.
 - agent: react-vite-developer
 - depends_on: [T-002]
-- status: doing
+- status: done
 - size: M
 ```
 
