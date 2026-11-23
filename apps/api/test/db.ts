@@ -11,10 +11,11 @@ export const testDatabaseUrl = process.env['DATABASE_URL'] ?? baseEnv.DATABASE_U
 
 export const newUserId = (): string => randomUUID()
 
-/** Deletes everything the given users own. Lists go first; memberships cascade. */
+/** Deletes everything the given users own. Lists go first; memberships and holdings cascade. */
 export async function deleteUserRows(handle: DbHandle, ...userIds: string[]): Promise<void> {
   await handle.pool.query('delete from app.lists where user_id = any($1)', [userIds])
   await handle.pool.query('delete from app.stocks where user_id = any($1)', [userIds])
+  await handle.pool.query('delete from app.user_settings where user_id = any($1)', [userIds])
 }
 
 export type TestApp = {
