@@ -645,7 +645,7 @@ unit:
   errors stay in the dialog; focus returns to the opener. Covers FR-010, FR-011.
 - agent: react-vite-developer
 - depends_on: [T-007]
-- status: doing
+- status: done
 - size: S
 ```
 
