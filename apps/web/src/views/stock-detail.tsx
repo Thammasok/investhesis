@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ClassificationCard } from '@/features/stocks/components/classification-card'
 import { DeleteStockDialog } from '@/features/stocks/components/delete-stock-dialog'
+import { HoldingCard } from '@/features/stocks/components/holding-card'
 import { StockListsCard } from '@/features/stocks/components/stock-lists-card'
 import { identityLine } from '@/features/stocks/format'
 import type { StockDetailData } from '@/features/stocks/stocks-data'
@@ -56,7 +57,10 @@ export function Component() {
       />
       <div className="grid gap-6 lg:grid-cols-3">
         <ClassificationCard stock={stock} className="lg:col-span-2" />
-        <StockListsCard stock={stock} lists={lists} />
+        <div className="flex flex-col gap-6">
+          <HoldingCard stock={stock} />
+          <StockListsCard stock={stock} lists={lists} />
+        </div>
       </div>
       <DeleteStockDialog stock={stock} open={confirmOpen} onOpenChange={setConfirmOpen} returnFocusTo={moreRef} />
     </section>

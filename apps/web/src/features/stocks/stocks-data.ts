@@ -29,6 +29,11 @@ export const createStockDetailLoader = (api: ApiClient) => async (): Promise<Sto
 }
 
 type Intent = 'delete' | 'add-to-list' | 'remove-from-list' | 'undo-remove'
+/** What `set-holding` and `clear-holding` answer. `field` names the input a 400 points at. */
+export type HoldingActionResult =
+  | { intent: 'set-holding' | 'clear-holding'; ok: true; ticker: string; undo: boolean }
+  | { intent: 'set-holding' | 'clear-holding'; ok: false; message: string; undo: boolean; field?: 'shares' | 'averageCost' }
+
 export type DetailActionResult =
   | { intent: Exclude<Intent, 'delete'>; ok: true; listId: string; listName: string }
   | { intent: Intent; ok: false; message: string }
@@ -44,8 +49,11 @@ const isStatus = (error: unknown, status: number) => error instanceof ApiError &
  */
 export const createStockDetailAction =
   (api: ApiClient) =>
-  async ({ request, params }: ActionFunctionArgs): Promise<DetailActionResult | Response> => {
+  async ({ request, params }: ActionFunctionArgs): Promise<DetailActionResult | HoldingActionResult | Response> => {
     const form = await request.formData()
+    const intentName = text(form, 'intent')
+    if (intentName === 'set-holding' || intentName === 'clear-holding')
+      return changeHolding(api, params.id ?? '', intentName, form)
     const stockId = encodeURIComponent(params.id ?? '')
     const listId = text(form, 'listId')
     const listName = text(form, 'listName')
@@ -79,6 +87,40 @@ export const createStockDetailAction =
       return { intent, ok: false, message: failureMessage(intent, error, listName, text(form, 'ticker')) }
     }
   }
+
+/** PATCHes `{ holding }`: the whole holding (empty fields are `null`), or `null` to stop holding. */
+async function changeHolding(
+  api: ApiClient,
+  id: string,
+  intent: 'set-holding' | 'clear-holding',
+  form: FormData,
+): Promise<HoldingActionResult> {
+  const ticker = text(form, 'ticker')
+  const undo = text(form, 'undo') === '1'
+  const holding =
+    intent === 'clear-holding'
+      ? null
+      : {
+          shares: text(form, 'shares') || null,
+          averageCost: text(form, 'averageCost') || null,
+          costCurrency: text(form, 'costCurrency'),
+        }
+  try {
+    await api.patch(`/stocks/${encodeURIComponent(id)}`, { body: { holding } })
+    return { intent, ok: true, ticker, undo }
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status === 401) throw error
+    if (error.status === 404) return { intent, ok: false, undo, message: 'This stock no longer exists.' }
+    if (error.status === 400) {
+      const problem = error.errors.find((e) => e.path === 'holding.shares' || e.path === 'holding.averageCost')
+      if (problem) {
+        const field = problem.path === 'holding.shares' ? 'shares' : 'averageCost'
+        return { intent, ok: false, undo, field, message: `${field === 'shares' ? 'Shares' : 'Average cost'} ${problem.message}` }
+      }
+    }
+    return { intent, ok: false, undo, message: "Couldn't save the holding. Try again." }
+  }
+}
 
 function failureMessage(intent: Intent, error: ApiError, listName: string, ticker: string): string {
   switch (intent) {
