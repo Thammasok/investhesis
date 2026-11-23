@@ -108,7 +108,7 @@ uses `resend` for an unconfirmed user, so copy that pattern.
   `apps/web` auth paragraph in CLAUDE.md.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: doing
+- status: review
 - size: M
 ```
 
