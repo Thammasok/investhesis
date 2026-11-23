@@ -57,7 +57,7 @@ Every test title starts with its id.
   FR-011, NFR-003.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: done
 - size: S
 ```
 
@@ -125,7 +125,7 @@ unit:
   FR-011, NFR-005.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -709,7 +709,7 @@ unit:
   docs/features/holdings-concentration/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
