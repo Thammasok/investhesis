@@ -930,6 +930,11 @@ and Static 37** (`TC-C-400..436`: 35 component, 1 unit helper (C-400), 1 static 
 Every FR and NFR has at least one case. The items below need an owner or developer decision; the
 expected value written into the case is the **proposed** default.
 
+
+**Owner decision, 2026-11-23: the proposed defaults for G-1 to G-19 are accepted.** Each case keeps
+its proposed expected value as final. Where a proposal changes requirements.md, design.md or
+ux-design.md wording (G-1, G-2, G-14), the web and API tasks follow this file until those documents
+are updated.
 - **G-1: lens order differs between documents.** FR-006 lists sector, SET industry group,
   value-chain position, value-chain name, size, ...; design.md lists `valueChain` before
   `valueChainPosition`. C-413 expects the FR-006 order. Decide one; also decide whether the label is
