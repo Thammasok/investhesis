@@ -6,7 +6,7 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
-| User Auth (admin-created accounts, no sign-up) | v1.2 | [dev-plan.md](features/user-auth/v1.2/dev-plan.md) | todo | Planned (requirements, design, dev plan; no UX phase) | 2026-11-23 |
+| User Auth (admin-created accounts, no sign-up) | v1.2 | [dev-plan.md](features/user-auth/v1.2/dev-plan.md) | done | Released as v0.3.0 | 2026-11-23 |
 | User Auth (open sign-up) | v1.1 | [dev-plan.md](features/user-auth/v1.1/dev-plan.md) | superseded | Replaced by v1.2 before any task started | 2026-11-23 |
 | Stock Lists | v1.0 | [dev-plan.md](features/stock-lists/v1.0/dev-plan.md) | done | Released as v0.2.0 | 2026-11-22 |
 | User Auth | v1.0 | [dev-plan.md](features/user-auth/v1.0/dev-plan.md) | done | Released as v0.1.0 | 2026-11-21 |
