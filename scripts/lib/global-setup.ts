@@ -1,4 +1,4 @@
-import { client, mailFor, newEmail, PASSWORD } from './stack.ts'
+import { mailFor, newEmail, unconfirmedUser } from './stack.ts'
 
 /**
  * Auth fetches the email templates from Kong and reloads them about every 10 s; Kong comes up after
@@ -8,7 +8,7 @@ import { client, mailFor, newEmail, PASSWORD } from './stack.ts'
 export default async function setup() {
   for (let i = 0; i < 40; i++) {
     const email = newEmail('warmup')
-    await client().auth.signUp({ email, password: PASSWORD })
+    await unconfirmedUser(email)
     const [mail] = await mailFor(email, { timeoutMs: 5000 })
     if (mail && /\/auth\/confirm\?token_hash=/.test(mail.html)) return
     await new Promise((r) => setTimeout(r, 1000))

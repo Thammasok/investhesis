@@ -19,6 +19,7 @@ import {
   psql,
   signedIn,
   tokenHashIn,
+  unconfirmedUser,
   userCount,
 } from './lib/stack.ts'
 
@@ -153,8 +154,7 @@ describe('emails and links (TC-A-024..029)', () => {
 
   it('TC-A-026: a confirmation link works once', async () => {
     const email = newEmail()
-    const sb = client()
-    await sb.auth.signUp({ email, password: PASSWORD })
+    const sb = await unconfirmedUser(email)
     const [mail] = await mailFor(email)
     const hash = tokenHashIn(mail!)
 
@@ -169,7 +169,7 @@ describe('emails and links (TC-A-024..029)', () => {
 
   it('TC-A-027: a truncated hash and a wrong type are both invalid', async () => {
     const email = newEmail()
-    await client().auth.signUp({ email, password: PASSWORD })
+    await unconfirmedUser(email)
     const [mail] = await mailFor(email)
     const hash = tokenHashIn(mail!)
 
@@ -187,8 +187,7 @@ describe('emails and links (TC-A-024..029)', () => {
 
   it('TC-A-028: a second confirmation email inside the 60 s window is refused', async () => {
     const email = newEmail()
-    const sb = client()
-    await sb.auth.signUp({ email, password: PASSWORD })
+    const sb = await unconfirmedUser(email)
     await mailFor(email)
 
     const { error } = await sb.auth.resend({ type: 'signup', email })

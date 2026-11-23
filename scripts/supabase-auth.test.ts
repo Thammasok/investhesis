@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
+  adminCreateUser,
   API,
   client,
   confirmedUser,
@@ -12,6 +13,7 @@ import {
   newEmail,
   PASSWORD,
   psql,
+  unconfirmedUser,
 } from './lib/stack.ts'
 
 describe('signing key script', () => {
@@ -21,6 +23,24 @@ describe('signing key script', () => {
     execFileSync('pnpm', ['db:keys'], { encoding: 'utf8' })
     expect(readFileSync(file, 'utf8')).toBe(before)
     expect(JSON.parse(before)).toHaveLength(1)
+  })
+})
+
+describe('test helpers need no public sign-up (T-001)', () => {
+  it('TC-U-301 confirmedUser creates its user through the admin API', async () => {
+    const email = newEmail('h')
+    const sb = await confirmedUser(email)
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: PASSWORD })
+    expect(error).toBeNull()
+    expect(data.session).toBeTruthy()
+    expect(psql(`select email_confirmed_at is not null from auth.users where email = '${email}';`).out).toBe('t')
+  })
+
+  it('TC-U-302 the warm-up message carries the custom template link', async () => {
+    const email = newEmail('warm')
+    await unconfirmedUser(email)
+    const [mail] = await mailFor(email, { timeoutMs: 40_000, accept: (m) => /\/auth\/confirm\?token_hash=/.test(m.html) })
+    expect(mail).toBeTruthy()
   })
 })
 
@@ -52,9 +72,8 @@ describe('local Supabase Auth settings', () => {
 
   it('TC-U-004 refuses sign-in before confirmation', async () => {
     const email = newEmail()
-    const sb = client()
-    await sb.auth.signUp({ email, password: PASSWORD })
-    const { error } = await sb.auth.signInWithPassword({ email, password: PASSWORD })
+    await adminCreateUser(email, { confirmed: false })
+    const { error } = await client().auth.signInWithPassword({ email, password: PASSWORD })
     expect(error?.code).toBe('email_not_confirmed')
   })
 

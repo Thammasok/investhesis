@@ -124,11 +124,21 @@ export async function signedIn(email: string, password = PASSWORD) {
   return { sb, session: data.session }
 }
 
-/** A user who signed up and confirmed through the real email link. */
-export async function confirmedUser(email: string, password = PASSWORD) {
+/**
+ * An unconfirmed user created through the admin API, who has been sent the confirmation mail through
+ * public `resend` (ADR-018). Needs no public sign-up, so it works with `enable_signup` on or off.
+ */
+export async function unconfirmedUser(email: string, password = PASSWORD) {
+  await adminCreateUser(email, { password, confirmed: false })
   const sb = client()
-  const { error } = await sb.auth.signUp({ email, password })
-  if (error) throw new Error(`sign-up failed: ${error.code}`)
+  const { error } = await sb.auth.resend({ type: 'signup', email })
+  if (error) throw new Error(`resend failed: ${error.code}`)
+  return sb
+}
+
+/** A user who was created by the admin API and confirmed through the real email link. */
+export async function confirmedUser(email: string, password = PASSWORD) {
+  const sb = await unconfirmedUser(email, password)
   const [mail] = await mailFor(email)
   if (!mail) throw new Error('no confirmation mail')
   const verified = await sb.auth.verifyOtp({ token_hash: tokenHashIn(mail), type: 'email' })
