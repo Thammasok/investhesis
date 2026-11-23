@@ -200,7 +200,7 @@ unit:
   `db:stop` hook note).
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: doing
+- status: review
 - size: M
 ```
 
