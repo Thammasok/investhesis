@@ -1,0 +1,3 @@
+﻿ticker,market,exchange,name,index_membership,sector,gics_sector,value_chain,value_chain_position,size,style,economic_cycle,lynch_type,life_cycle,customers,revenue_types,moat,themes,volatility
+NVDA,US,NASDAQ,NVIDIA Corporation,S&P 500;Nasdaq-100,Information Technology,,AI chips,Midstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,AI;Semiconductors,High
+PTTEP,TH,SET,บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน),SET50,Resources,Energy,Oil and gas,Upstream,Large,Dividend,Cyclical,Stalwart,Mature,B2B,Product sale,Cost advantage,Energy,Mid

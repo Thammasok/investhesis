@@ -1,0 +1,504 @@
+﻿ticker,market,exchange,name,index_membership,sector,gics_sector,value_chain,value_chain_position,size,style,economic_cycle,lynch_type,life_cycle,customers,revenue_types,moat,themes,volatility
+A,US,NYSE,Agilent Technologies Inc.,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+AAPL,US,NASDAQ,Apple Inc.,S&P 500;Nasdaq-100,Information Technology,,Consumer electronics,Downstream,Mega,Growth,Sensitive,Stalwart,Mature,B2C,Product sale;Subscription,Brand,Consumer tech;Services,Mid
+ABBV,US,NYSE,AbbVie Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Mega,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Immunology;Pharma,Mid
+ABNB,US,NASDAQ,Airbnb Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Travel platforms,Downstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C,Transaction fee,Network effect,Travel;Sharing economy,High
+ABT,US,NYSE,Abbott Laboratories,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+ACGL,US,NASDAQ,Arch Capital Group Ltd.,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+ACN,US,NYSE,Accenture plc,S&P 500,Information Technology,,IT services,Downstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Switching cost,Digital transformation;AI;Consulting,Mid
+ADBE,US,NASDAQ,Adobe Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B;B2C,Subscription,Switching cost,SaaS;AI;Creative software,Mid
+ADI,US,NASDAQ,Analog Devices Inc.,S&P 500;Nasdaq-100,Information Technology,,Analog chips,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Semiconductors;Industrial;Automotive,High
+ADM,US,NYSE,Archer-Daniels-Midland Company,S&P 500,Consumer Staples,,Agriculture and food,Upstream,Large,Value,Defensive,Cyclical,Mature,B2B,Product sale,Efficient scale,Agriculture,Mid
+ADP,US,NASDAQ,Automatic Data Processing Inc.,S&P 500;Nasdaq-100,Industrials,,HR and payroll,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Subscription,Switching cost,HR tech,Low
+ADSK,US,NASDAQ,Autodesk Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription,Switching cost,SaaS;Design software;Construction tech,Mid
+AEE,US,NYSE,Ameren Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+AEP,US,NASDAQ,American Electric Power Company Inc.,S&P 500;Nasdaq-100,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+AES,US,NYSE,The AES Corporation,S&P 500,Utilities,,Electricity,Upstream,Large,Dividend,Defensive,Turnaround,Growth,B2B;B2C,Product sale,Cost advantage,Renewables;Power demand,High
+AFL,US,NYSE,AFLAC Incorporated,S&P 500,Financials,,Insurance,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Subscription;Interest,Cost advantage,Supplemental insurance;Japan,Mid
+AIG,US,NYSE,American International Group Inc. New,S&P 500,Financials,,Insurance,Downstream,Large,Value,Cyclical,Slow Grower,Mature,B2B;B2C,Subscription,Cost advantage,Insurance,Mid
+AIZ,US,NYSE,Assurant Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Value,Cyclical,Slow Grower,Mature,B2B;B2C,Subscription,Cost advantage,Insurance,Mid
+AJG,US,NYSE,Arthur J. Gallagher & Co.,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+AKAM,US,NASDAQ,Akamai Technologies Inc.,S&P 500,Information Technology,,Internet infrastructure,Midstream,Large,Value,Sensitive,Slow Grower,Mature,B2B;B2C,Subscription,Switching cost,CDN;Cybersecurity;Edge computing,Mid
+ALB,US,NYSE,Albemarle Corporation,S&P 500,Materials,,Lithium,Midstream,Mid,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Intangibles,Lithium;EV;Battery,High
+ALGN,US,NASDAQ,Align Technology Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B;B2C,Product sale,Intangibles,Medtech,High
+ALL,US,NYSE,Allstate Corporation,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+ALLE,US,NYSE,Allegion plc,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+AMAT,US,NASDAQ,Applied Materials Inc.,S&P 500;Nasdaq-100,Information Technology,,Semiconductor equipment,Upstream,Mega,Growth,Sensitive,Cyclical,Growth,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;AI;WFE,High
+AMCR,US,NYSE,Amcor plc,S&P 500,Materials,,Packaging,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+AMD,US,NASDAQ,Advanced Micro Devices Inc.,S&P 500;Nasdaq-100,Information Technology,,AI chips,Midstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,AI;Semiconductors;Data center,High
+AME,US,NYSE,AMETEK Inc.,S&P 500,Industrials,,Electrification,Midstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Product sale,Intangibles,Electrification;Data center,Mid
+AMGN,US,NASDAQ,Amgen Inc.,S&P 500;Nasdaq-100,Health Care,,Pharma and biotech,Upstream,Mega,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech;Obesity,Mid
+AMP,US,NYSE,Ameriprise Financial Inc.,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+AMT,US,NYSE,American Tower Corporation (REIT),S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;5G,Mid
+AMZN,US,NASDAQ,Amazon.com Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,E-commerce,Downstream,Mega,Growth,Cyclical,Stalwart,Growth,B2C;B2B,Product sale;Subscription;Ads,Cost advantage,E-commerce;Cloud;AI,Mid
+ANET,US,NYSE,Arista Networks Inc.,S&P 500,Information Technology,,Networking,Midstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale;Subscription,Switching cost,Networking;AI;Data center,High
+AON,US,NYSE,Aon plc,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+AOS,US,NYSE,A.O. Smith Corporation,S&P 500,Industrials,,Building and construction,Midstream,Mid,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+APA,US,NASDAQ,APA Corporation,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+APD,US,NYSE,Air Products and Chemicals Inc.,S&P 500,Materials,,Chemicals,Upstream,Large,Dividend,Cyclical,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Industrial gases;Hydrogen,Low
+APH,US,NYSE,Amphenol Corporation,S&P 500,Information Technology,,Connectors,Upstream,Large,Growth,Sensitive,Fast Grower,Mature,B2B,Product sale,Intangibles,AI;Data center;Connectors,Mid
+APO,US,NYSE,Apollo Global Management Inc. (New),S&P 500,Financials,,Alternative assets,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Private credit;Retirement;Insurance,High
+APP,US,NASDAQ,Applovin Corporation,S&P 500;Nasdaq-100,Communication Services,,Ad tech,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Transaction fee,Network effect,Ad tech;AI;Mobile gaming,High
+APTV,US,NYSE,Aptiv PLC,S&P 500,Consumer Discretionary,,Automotive,Upstream,Mid,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Switching cost,Automotive;EV,High
+ARE,US,NYSE,Alexandria Real Estate Equities Inc.,S&P 500,Real Estate,,Real estate,Downstream,Mid,Dividend,Cyclical,Turnaround,Mature,B2B,Rent,Efficient scale,REIT;Life science office,High
+ARES,US,NYSE,Ares Management Corporation,S&P 500,Financials,,Alternative assets,Midstream,Large,Growth,Cyclical,Fast Grower,Mature,B2B;B2C,Transaction fee,Intangibles,Private credit,High
+ATO,US,NYSE,Atmos Energy Corporation,S&P 500,Utilities,,Natural gas,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Natural gas,Low
+AVGO,US,NASDAQ,Broadcom Inc.,S&P 500;Nasdaq-100,Information Technology,,AI chips,Midstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale;Subscription,Intangibles,AI;Semiconductors;Custom ASIC,High
+AVY,US,NYSE,Avery Dennison Corporation,S&P 500,Materials,,Packaging,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+AWK,US,NYSE,American Water Works Company Inc.,S&P 500,Utilities,,Water,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Water,Low
+AXON,US,NASDAQ,Axon Enterprise Inc.,S&P 500;Nasdaq-100,Industrials,,Aerospace and defense,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,Government,Subscription;Product sale,Switching cost,Public safety;AI;SaaS,High
+AXP,US,NYSE,American Express Company,S&P 500,Financials,,Banking and credit,Downstream,Mega,Growth,Cyclical,Stalwart,Mature,B2C,Transaction fee;Interest;Subscription,Network effect,Payments;Premium cards,Mid
+AZO,US,NYSE,AutoZone Inc.,S&P 500,Consumer Discretionary,,Automotive,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C;B2B,Product sale,Cost advantage,Auto parts,Low
+BA,US,NYSE,Boeing Company,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Value,Sensitive,Turnaround,Mature,B2B;Government,Product sale,Intangibles,Aerospace;Defense,High
+BAC,US,NYSE,Bank of America Corporation,S&P 500,Financials,,Banking and credit,Downstream,Mega,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+BALL,US,NYSE,Ball Corporation,S&P 500,Materials,,Packaging,Midstream,Large,Value,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+BAX,US,NYSE,Baxter International Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+BBY,US,NYSE,Best Buy Co. Inc.,S&P 500,Consumer Discretionary,,Retail,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Product sale,Unclear,Consumer electronics,Mid
+BDX,US,NYSE,Becton Dickinson and Company,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+BE,US,NYSE,Bloom Energy Corporation,S&P 500,Industrials,,Fuel cells,Upstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,Fuel cells;Power demand;AI;Data center,High
+BEN,US,NYSE,Franklin Templeton Inc.,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+BF.B,US,NYSE,Brown-Forman Corporation (Class B),S&P 500,Consumer Staples,,Beverages,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Alcohol,Mid
+BG,US,NYSE,Bunge Limited,S&P 500,Consumer Staples,,Agriculture and food,Upstream,Large,Value,Defensive,Cyclical,Mature,B2B,Product sale,Efficient scale,Agriculture,Mid
+BIIB,US,NASDAQ,Biogen Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Value,Defensive,Turnaround,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech;Neurology,Mid
+BKNG,US,NASDAQ,Booking Holdings Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Travel platforms,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Transaction fee;Ads,Network effect,Travel;Online travel,High
+BKR,US,NASDAQ,Baker Hughes Company,S&P 500;Nasdaq-100,Energy,,Oil and gas,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Intangibles,Energy;LNG;Gas turbines,High
+BLK,US,NYSE,BlackRock Inc.,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Cost advantage,ETFs;Asset management;Private markets,Mid
+BMY,US,NYSE,Bristol-Myers Squibb Company,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Dividend,Defensive,Slow Grower,Mature,B2B,Product sale;Transaction fee,Intangibles,Pharma,Low
+BNY,US,NYSE,The Bank of New York Mellon Corporation,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+BR,US,NYSE,Broadridge Financial Solutions Inc.,S&P 500,Industrials,,Financial infrastructure,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Switching cost,Fintech,Low
+BRK.B,US,NYSE,Berkshire Hathaway Inc. (Class B),S&P 500,Financials,,Conglomerate,Midstream,Mega,Value,Cyclical,Stalwart,Mature,B2B;B2C,Subscription;Product sale,Cost advantage,Value investing;Insurance;Conglomerate,Low
+BRO,US,NYSE,Brown & Brown Inc.,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+BSX,US,NYSE,Boston Scientific Corporation,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Fast Grower,Mature,B2B,Product sale;Subscription,Switching cost,Medtech;Cardiology,Mid
+BX,US,NYSE,Blackstone Inc.,S&P 500,Financials,,Alternative assets,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Private equity;Private credit;Real estate,High
+BXP,US,NYSE,BXP Inc.,S&P 500,Real Estate,,Real estate,Downstream,Mid,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Office,High
+C,US,NYSE,Citigroup Inc.,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+CAH,US,NYSE,Cardinal Health Inc.,S&P 500,Health Care,,Healthcare distribution,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B,Product sale,Efficient scale,Pharma distribution,Low
+CARR,US,NYSE,Carrier Global Corporation,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+CASY,US,NASDAQ,Casey's General Stores Inc.,S&P 500,Consumer Staples,,Retail,Downstream,Large,Growth,Defensive,Stalwart,Mature,B2C,Product sale,Cost advantage,Convenience stores;Fuel,Low
+CAT,US,NYSE,Caterpillar Inc.,S&P 500,Industrials,,Machinery,Midstream,Mega,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Subscription,Intangibles,Infrastructure;Mining;Data center power,Mid
+CB,US,NYSE,Chubb Limited,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+CBOE,US,NYSE,Cboe Global Markets,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Network effect,Options;Exchanges,Low
+CBRE,US,NYSE,CBRE Group Inc.,S&P 500,Real Estate,,Real estate,Midstream,Large,Growth,Cyclical,Cyclical,Mature,B2B,Subscription,Network effect,Commercial real estate;Data center,Mid
+CCI,US,NYSE,Crown Castle Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;5G,Mid
+CCL,US,NYSE,Carnival Corporation Ltd.,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Large,Growth,Cyclical,Turnaround,Mature,B2C,Product sale,Brand,Travel;Cruise,High
+CDNS,US,NASDAQ,Cadence Design Systems Inc.,S&P 500;Nasdaq-100,Information Technology,,EDA software,Upstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription;Transaction fee,Switching cost,Semiconductors;EDA;AI,Mid
+CDW,US,NASDAQ,CDW Corporation,S&P 500,Information Technology,,IT distribution,Midstream,Large,Value,Sensitive,Slow Grower,Mature,B2B;Government,Product sale,Cost advantage,IT services,Mid
+CEG,US,NASDAQ,Constellation Energy Corporation,S&P 500;Nasdaq-100,Utilities,,Nuclear power,Downstream,Large,Growth,Defensive,Fast Grower,Mature,B2C;B2B,Product sale,Efficient scale,Nuclear;AI;Power demand;Data center,Low
+CF,US,NYSE,CF Industries Holdings Inc.,S&P 500,Materials,,Agriculture and food,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Agriculture,High
+CFG,US,NYSE,Citizens Financial Group Inc.,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+CHD,US,NYSE,Church & Dwight Company Inc.,S&P 500,Consumer Staples,,Consumer staples,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+CHRW,US,NASDAQ,C.H. Robinson Worldwide Inc.,S&P 500,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Transaction fee,Efficient scale,Logistics,Mid
+CHTR,US,NASDAQ,Charter Communications Inc.,S&P 500,Communication Services,,Telecom and broadband,Downstream,Large,Value,Sensitive,Slow Grower,Decline,B2C,Subscription,Efficient scale,Broadband;Cable,High
+CI,US,NYSE,The Cigna Group,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Healthcare services,Mid
+CIEN,US,NYSE,Ciena Corporation,S&P 500,Information Technology,,Optical networking,Midstream,Large,Growth,Sensitive,Fast Grower,Mature,B2B,Product sale;Subscription,Switching cost,Optical networking;AI;Data center,High
+CINF,US,NASDAQ,Cincinnati Financial Corporation,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+CL,US,NYSE,Colgate-Palmolive Company,S&P 500,Consumer Staples,,Consumer staples,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+CLX,US,NYSE,Clorox Company,S&P 500,Consumer Staples,,Consumer staples,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+CMCSA,US,NASDAQ,Comcast Corporation,S&P 500;Nasdaq-100,Communication Services,,Telecom and broadband,Downstream,Large,Value,Sensitive,Slow Grower,Decline,B2C,Subscription;Ads,Efficient scale,Broadband;Media;Theme parks,Mid
+CME,US,NASDAQ,CME Group Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Dividend,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Network effect,Derivatives;Exchanges,Low
+CMG,US,NYSE,Chipotle Mexican Grill Inc.,S&P 500,Consumer Discretionary,,Restaurants,Downstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C,Product sale;Transaction fee,Brand,Restaurants,High
+CMI,US,NYSE,Cummins Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Subscription,Intangibles,Infrastructure,Mid
+CMS,US,NYSE,CMS Energy Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+CNC,US,NYSE,Centene Corporation,S&P 500,Health Care,,Health insurance,Downstream,Large,Value,Defensive,Stalwart,Mature,B2C;B2B;Government,Subscription,Efficient scale,Managed care;Medicare,Mid
+CNP,US,NYSE,CenterPoint Energy Inc (Holding Co),S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+COF,US,NYSE,Capital One Financial Corporation,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Interest;Transaction fee,Network effect,Consumer credit,Mid
+COHR,US,NYSE,Coherent Corp.,S&P 500,Information Technology,,Optical networking,Upstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,Optical networking;AI;Photonics,High
+COIN,US,NASDAQ,Coinbase Global Inc.,S&P 500,Financials,,Crypto exchanges,Midstream,Large,Growth,Cyclical,Cyclical,Growth,B2C;B2B,Transaction fee;Interest;Subscription,Network effect,Crypto;Bitcoin;Stablecoin,High
+COO,US,NASDAQ,The Cooper Companies Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B;B2C,Product sale,Intangibles,Medtech,High
+COP,US,NYSE,ConocoPhillips,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+COR,US,NYSE,Cencora Inc.,S&P 500,Health Care,,Healthcare distribution,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B,Product sale,Efficient scale,Pharma distribution,Low
+COST,US,NASDAQ,Costco Wholesale Corporation,S&P 500;Nasdaq-100,Consumer Staples,,Retail,Downstream,Mega,Growth,Defensive,Stalwart,Mature,B2C,Product sale;Subscription,Cost advantage,Retail;Membership,Low
+CPAY,US,NYSE,Corpay Inc.,S&P 500,Financials,,Payments,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+CPRT,US,NASDAQ,Copart Inc. (DE),S&P 500;Nasdaq-100,Industrials,,Vehicle auctions,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Transaction fee,Network effect,Online auctions;Insurance salvage,Low
+CPT,US,NYSE,Camden Property Trust,S&P 500,Real Estate,,Real estate,Downstream,Mid,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+CRH,US,NYSE,CRH PLC,S&P 500,Materials,,Building and construction,Upstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;Government,Product sale,Efficient scale,Infrastructure,Mid
+CRL,US,NYSE,Charles River Laboratories International Inc.,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+CRM,US,NYSE,Salesforce Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Switching cost,SaaS;AI;CRM,Mid
+CRWD,US,NASDAQ,CrowdStrike Holdings Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Subscription,Switching cost,Cybersecurity;Cloud;AI,High
+CSCO,US,NASDAQ,Cisco Systems Inc.,S&P 500;Nasdaq-100,Information Technology,,Networking,Midstream,Mega,Dividend,Sensitive,Slow Grower,Mature,B2B,Product sale;Subscription,Switching cost,Networking;AI;Cybersecurity,Mid
+CSGP,US,NASDAQ,CoStar Group Inc.,S&P 500,Real Estate,,Real estate data,Midstream,Large,Growth,Cyclical,Fast Grower,Mature,B2B,Subscription,Network effect,Real estate data;Marketplace,Mid
+CSX,US,NASDAQ,CSX Corporation,S&P 500;Nasdaq-100,Industrials,,Logistics,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Transaction fee,Efficient scale,Railroad,Low
+CTAS,US,NASDAQ,Cintas Corporation,S&P 500;Nasdaq-100,Industrials,,Uniform services,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Cost advantage,Business services,Low
+CTSH,US,NASDAQ,Cognizant Technology Solutions Corporation,S&P 500,Information Technology,,IT services,Downstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Switching cost,Digital transformation;AI,Mid
+CVNA,US,NYSE,Carvana Co.,S&P 500,Consumer Discretionary,,Automotive,Downstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C;B2B,Product sale;Interest,Cost advantage,Used cars;E-commerce,High
+CVS,US,NYSE,CVS Health Corporation,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Turnaround,Mature,B2C;B2B,Product sale,Efficient scale,Pharmacy;Managed care,Mid
+CVX,US,NYSE,Chevron Corporation,S&P 500,Energy,,Oil and gas,Upstream,Mega,Dividend,Cyclical,Stalwart,Mature,B2B,Product sale,Cost advantage,Energy,Mid
+D,US,NYSE,Dominion Energy Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+DAL,US,NYSE,Delta Air Lines Inc.,S&P 500,Industrials,,Airlines,Downstream,Large,Value,Sensitive,Cyclical,Mature,B2C,Product sale,Unclear,Travel,High
+DASH,US,NASDAQ,DoorDash Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Delivery platforms,Downstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C;B2B,Transaction fee;Subscription,Network effect,Delivery;Gig economy,High
+DD,US,NYSE,DuPont de Nemours Inc.,S&P 500,Industrials,,Industrial conglomerate,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Industrial,Mid
+DDOG,US,NASDAQ,Datadog Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Subscription,Switching cost,SaaS;Observability;Cloud,High
+DE,US,NYSE,Deere & Company,S&P 500,Industrials,,Agriculture equipment,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Interest,Intangibles,Agriculture;Precision ag,Mid
+DECK,US,NYSE,Deckers Outdoor Corporation,S&P 500,Consumer Discretionary,,Apparel and luxury,Downstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C,Product sale,Brand,Consumer brands;HOKA;UGG,High
+DELL,US,NYSE,Dell Technologies Inc.,S&P 500,Information Technology,,Computer hardware,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,AI servers;PC;Storage,High
+DG,US,NYSE,Dollar General Corporation,S&P 500,Consumer Staples,,Retail,Downstream,Large,Value,Defensive,Turnaround,Mature,B2C,Product sale,Cost advantage,Discount retail,Mid
+DGX,US,NYSE,Quest Diagnostics Incorporated,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Healthcare services,Mid
+DHI,US,NYSE,D.R. Horton Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Cost advantage,Housing,High
+DHR,US,NYSE,Danaher Corporation,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+DIS,US,NYSE,Walt Disney Company,S&P 500,Communication Services,,Media and entertainment,Upstream,Mega,Quality,Sensitive,Stalwart,Mature,B2C,Subscription;Product sale;Transaction fee,Brand,Streaming;Theme parks;Media,Mid
+DLR,US,NYSE,Digital Realty Trust Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Data center;AI,Mid
+DLTR,US,NASDAQ,Dollar Tree Inc.,S&P 500,Consumer Staples,,Retail,Downstream,Large,Value,Defensive,Turnaround,Mature,B2C,Product sale,Cost advantage,Discount retail,Mid
+DOC,US,NYSE,Healthpeak Properties Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Senior housing,Mid
+DOV,US,NYSE,Dover Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+DOW,US,NYSE,Dow Inc.,S&P 500,Materials,,Chemicals,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Chemicals,High
+DPZ,US,NASDAQ,Domino's Pizza Inc.,S&P 500,Consumer Discretionary,,Restaurants,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C,Transaction fee;Product sale,Brand,Restaurants,Mid
+DRI,US,NYSE,Darden Restaurants Inc.,S&P 500,Consumer Discretionary,,Restaurants,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C,Product sale;Transaction fee,Brand,Restaurants,Mid
+DTE,US,NYSE,DTE Energy Company,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+DUK,US,NYSE,Duke Energy Corporation (Holding Company),S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+DVA,US,NYSE,DaVita Inc.,S&P 500,Health Care,,Healthcare services,Downstream,Mid,Value,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Healthcare services,Mid
+DVN,US,NYSE,Devon Energy Corporation,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+DXCM,US,NASDAQ,DexCom Inc.,S&P 500;Nasdaq-100,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Diabetes tech;Medtech,High
+EBAY,US,NASDAQ,eBay Inc.,S&P 500,Consumer Discretionary,,E-commerce,Downstream,Large,Value,Cyclical,Slow Grower,Mature,B2C,Transaction fee;Ads,Network effect,E-commerce;Marketplace,Mid
+ECHO,US,NASDAQ,EchoStar Corporation,S&P 500,Communication Services,,Telecom and broadband,Downstream,Large,Value,Sensitive,Turnaround,Mature,B2C;B2B,Subscription,Efficient scale,Spectrum;Satellite;Telecom,High
+ECL,US,NYSE,Ecolab Inc.,S&P 500,Materials,,Water and hygiene,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B,Product sale,Switching cost,Water;Hygiene,Mid
+ED,US,NYSE,Consolidated Edison Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+EFX,US,NYSE,Equifax Inc.,S&P 500,Industrials,,Data and analytics,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Intangibles,Data analytics,Low
+EG,US,NYSE,Everest Group Ltd.,S&P 500,Financials,,Insurance,Upstream,Large,Value,Cyclical,Slow Grower,Mature,B2B,Subscription,Cost advantage,Insurance,Mid
+EIX,US,NYSE,Edison International,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Wildfire risk,Mid
+EL,US,NYSE,Estee Lauder Companies Inc.,S&P 500,Consumer Staples,,Consumer staples,Midstream,Large,Dividend,Defensive,Turnaround,Mature,B2C,Product sale,Brand,Consumer brands,High
+ELV,US,NYSE,Elevance Health Inc.,S&P 500,Health Care,,Health insurance,Downstream,Large,Value,Defensive,Stalwart,Mature,B2C;B2B;Government,Subscription,Efficient scale,Managed care;Medicare,Mid
+EME,US,NYSE,EMCOR Group Inc.,S&P 500,Industrials,,Building and construction,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B;Government,Product sale,Intangibles,Data center;Construction,High
+EMR,US,NYSE,Emerson Electric Company,S&P 500,Industrials,,Electrification,Midstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Product sale,Intangibles,Electrification;Data center,Mid
+EOG,US,NYSE,EOG Resources Inc.,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+EQIX,US,NASDAQ,Equinix Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Network effect,REIT;Data center;AI,Mid
+EQT,US,NYSE,EQT Corporation,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Natural gas;LNG;Power demand,High
+ERIE,US,NASDAQ,Erie Indemnity Company,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+ES,US,NYSE,Eversource Energy (D/B/A),S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+ESS,US,NYSE,Essex Property Trust Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+ETN,US,NYSE,Eaton Corporation PLC,S&P 500,Industrials,,Electrification,Midstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Product sale,Intangibles,Electrification;Data center;AI,Mid
+ETR,US,NYSE,Entergy Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+EVRG,US,NASDAQ,Evergy Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+EW,US,NYSE,Edwards Lifesciences Corporation,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+EXC,US,NASDAQ,Exelon Corporation,S&P 500;Nasdaq-100,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+EXE,US,NASDAQ,Expand Energy Corporation,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Natural gas;LNG,High
+EXPD,US,NYSE,Expeditors International of Washington Inc.,S&P 500,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Transaction fee,Efficient scale,Logistics,Mid
+EXPE,US,NASDAQ,Expedia Group Inc.,S&P 500,Consumer Discretionary,,Travel platforms,Downstream,Large,Growth,Cyclical,Cyclical,Mature,B2C,Transaction fee;Ads,Network effect,Travel;Online travel,High
+EXR,US,NYSE,Extra Space Storage Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Self-storage,Mid
+F,US,NYSE,Ford Motor Company,S&P 500,Consumer Discretionary,,Automotive,Midstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale;Interest,Unclear,Automotive;EV,High
+FANG,US,NASDAQ,Diamondback Energy Inc.,S&P 500;Nasdaq-100,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+FAST,US,NASDAQ,Fastenal Company,S&P 500;Nasdaq-100,Industrials,,Industrial distribution,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Rent,Cost advantage,Industrial;Infrastructure,Mid
+FCX,US,NYSE,Freeport-McMoRan Inc.,S&P 500,Materials,,Metals and mining,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Copper;Gold;Electrification,High
+FDS,US,NYSE,FactSet Research Systems Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Network effect,Financial data,Low
+FDX,US,NYSE,FedEx Corporation,S&P 500,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Turnaround,Mature,B2B;B2C,Transaction fee,Efficient scale,Logistics,Mid
+FDXF,US,NYSE,FedEx Freight Holding Company Inc.,S&P 500,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Transaction fee,Cost advantage,Logistics;Trucking,Mid
+FE,US,NYSE,FirstEnergy Corp.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+FERG,US,NYSE,Ferguson Enterprises Inc.,S&P 500,Industrials,,Industrial distribution,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Rent,Cost advantage,Industrial;Infrastructure,Mid
+FFIV,US,NASDAQ,F5 Inc.,S&P 500,Information Technology,,Networking,Midstream,Large,Value,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Application delivery;Cybersecurity,Mid
+FICO,US,NYSE,Fair Isaac Corporation,S&P 500,Information Technology,,Credit scoring,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Transaction fee;Subscription,Intangibles,Credit scoring;Analytics,High
+FIS,US,NYSE,Fidelity National Information Services Inc.,S&P 500,Financials,,Payments,Midstream,Large,Value,Cyclical,Turnaround,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+FISV,US,NASDAQ,Fiserv Inc.,S&P 500,Financials,,Payments,Midstream,Large,Value,Cyclical,Turnaround,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+FITB,US,NYSE,Fifth Third Bancorp,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+FIX,US,NYSE,Comfort Systems USA Inc.,S&P 500,Industrials,,Building and construction,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B;Government,Product sale,Intangibles,Data center;HVAC;Construction,High
+FLEX,US,NASDAQ,Flex Ltd.,S&P 500,Information Technology,,Electronics manufacturing,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Subscription;Product sale,Switching cost,Electronics;AI,High
+FOX,US,NASDAQ,Fox Corporation (Class B),S&P 500,Communication Services,,Media and entertainment,Downstream,Large,Value,Sensitive,Slow Grower,Mature,B2C;B2B,Ads;Transaction fee,Brand,Media;Sports,Mid
+FOXA,US,NASDAQ,Fox Corporation (Class A),S&P 500,Communication Services,,Media and entertainment,Downstream,Large,Value,Sensitive,Slow Grower,Mature,B2C;B2B,Ads;Transaction fee,Brand,Media;Sports,Mid
+FRT,US,NYSE,Federal Realty Investment Trust,S&P 500,Real Estate,,Real estate,Downstream,Mid,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Retail,Mid
+FSLR,US,NASDAQ,First Solar Inc.,S&P 500,Information Technology,,Solar,Midstream,Large,Growth,Sensitive,Cyclical,Mature,B2B,Product sale,Cost advantage,Solar;Clean energy,High
+FTNT,US,NASDAQ,Fortinet Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Product sale;Subscription,Switching cost,Cybersecurity;Networking,High
+FTV,US,NYSE,Fortive Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+GD,US,NYSE,General Dynamics Corporation,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government;B2B,Product sale,Intangibles,Defense;Business jets,Mid
+GDDY,US,NYSE,GoDaddy Inc.,S&P 500,Information Technology,,Internet infrastructure,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2C;B2B,Subscription,Switching cost,Domains;Small business,Mid
+GE,US,NYSE,GE Aerospace,S&P 500,Industrials,,Aircraft engines,Midstream,Mega,Growth,Sensitive,Fast Grower,Mature,Government;B2B,Product sale;Subscription,Intangibles,Aerospace;Aftermarket,Mid
+GEHC,US,NASDAQ,GE HealthCare Technologies Inc.,S&P 500;Nasdaq-100,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+GEN,US,NASDAQ,Gen Digital Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Value,Sensitive,Slow Grower,Growth,B2C,Subscription,Switching cost,Cybersecurity;Consumer software,Mid
+GEV,US,NYSE,GE Vernova Inc.,S&P 500,Industrials,,Power generation,Upstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale;Subscription,Intangibles,Power demand;Gas turbines;Grid;AI,High
+GILD,US,NASDAQ,Gilead Sciences Inc.,S&P 500;Nasdaq-100,Health Care,,Pharma and biotech,Upstream,Mega,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech;HIV;Oncology,Mid
+GIS,US,NYSE,General Mills Inc.,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+GL,US,NYSE,Globe Life Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Subscription;Interest,Cost advantage,Insurance;Retirement,Mid
+GLW,US,NYSE,Corning Incorporated,S&P 500,Information Technology,,Specialty glass and fiber,Upstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Optical fiber;AI;Display glass,Mid
+GM,US,NASDAQ,General Motors Company,S&P 500,Consumer Discretionary,,Automotive,Midstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale;Interest,Unclear,Automotive;EV,High
+GNRC,US,NYSE,Generac Holdlings Inc.,S&P 500,Industrials,,Power generation,Upstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale;Subscription,Intangibles,Electrification;Power demand,High
+GOOG,US,NASDAQ,Alphabet Inc. (Class C),S&P 500;Nasdaq-100,Communication Services,,Digital advertising,Downstream,Mega,Growth,Sensitive,Stalwart,Growth,B2C;B2B,Ads;Subscription,Network effect,AI;Digital advertising;Cloud,Mid
+GOOGL,US,NASDAQ,Alphabet Inc. (Class A),S&P 500;Nasdaq-100,Communication Services,,Digital advertising,Downstream,Mega,Growth,Sensitive,Stalwart,Growth,B2C;B2B,Ads;Subscription,Network effect,AI;Digital advertising;Cloud,Mid
+GPC,US,NYSE,Genuine Parts Company,S&P 500,Consumer Discretionary,,Auto parts,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B;B2C,Product sale,Cost advantage,Auto parts,Low
+GPN,US,NYSE,Global Payments Inc.,S&P 500,Financials,,Payments,Midstream,Large,Value,Cyclical,Turnaround,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+GRMN,US,NYSE,Garmin Ltd.,S&P 500,Consumer Discretionary,,Consumer electronics,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Brand,Wearables;GPS;Aviation,Mid
+GS,US,NYSE,Goldman Sachs Group Inc.,S&P 500,Financials,,Capital markets,Midstream,Mega,Value,Cyclical,Cyclical,Mature,B2B;B2C,Transaction fee;Interest,Intangibles,Investment banking;Trading;Wealth management,Mid
+GWW,US,NYSE,W.W. Grainger Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+HAL,US,NYSE,Halliburton Company,S&P 500,Energy,,Oil and gas,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Intangibles,Energy,High
+HAS,US,NASDAQ,Hasbro Inc.,S&P 500,Consumer Discretionary,,Toys and games,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Product sale;Transaction fee,Brand,Toys,Mid
+HBAN,US,NASDAQ,Huntington Bancshares Incorporated,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+HCA,US,NYSE,HCA Healthcare Inc.,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Stalwart,Mature,B2C;B2B,Product sale,Efficient scale,Hospitals,Mid
+HD,US,NYSE,Home Depot Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Mega,Dividend,Cyclical,Stalwart,Mature,B2C;B2B,Product sale,Cost advantage,Housing,Mid
+HIG,US,NYSE,The Hartford Insurance Group Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+HII,US,NYSE,Huntington Ingalls Industries Inc.,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government,Product sale,Intangibles,Defense;Shipbuilding,Mid
+HLT,US,NASDAQ,Hilton Worldwide Holdings Inc.,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Transaction fee,Brand,Travel,Mid
+HON,US,NASDAQ,Honeywell International Inc.,S&P 500;Nasdaq-100,Industrials,,Industrial conglomerate,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Automation;Aerospace,Mid
+HONA,US,NASDAQ,Honeywell Aerospace Inc.,S&P 500;Nasdaq-100,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government;B2B,Product sale,Intangibles,Aerospace;Avionics,Mid
+HOOD,US,NASDAQ,Robinhood Markets Inc.,S&P 500,Financials,,Retail brokerage,Midstream,Large,Growth,Cyclical,Fast Grower,Growth,B2C,Transaction fee;Interest;Subscription,Network effect,Fintech;Crypto;Retail trading,High
+HPE,US,NYSE,Hewlett Packard Enterprise Company,S&P 500,Information Technology,,Computer hardware,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,Servers;Networking;Hybrid cloud,High
+HPQ,US,NYSE,HP Inc.,S&P 500,Information Technology,,Computer hardware,Midstream,Large,Dividend,Sensitive,Slow Grower,Decline,B2B;B2C,Product sale,Intangibles,PC;Printers,Mid
+HRL,US,NYSE,Hormel Foods Corporation,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+HSIC,US,NASDAQ,Henry Schein Inc.,S&P 500,Health Care,,Healthcare distribution,Midstream,Mid,Quality,Defensive,Stalwart,Mature,B2B,Product sale,Efficient scale,Pharma distribution,Low
+HST,US,NASDAQ,Host Hotels & Resorts Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Travel,Mid
+HSY,US,NYSE,The Hershey Company,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Snacks;Confectionery,Low
+HUBB,US,NYSE,Hubbell Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+HUM,US,NYSE,Humana Inc.,S&P 500,Health Care,,Health insurance,Downstream,Large,Value,Defensive,Stalwart,Mature,B2C;B2B;Government,Subscription,Efficient scale,Managed care;Medicare,Mid
+HWM,US,NYSE,Howmet Aerospace Inc.,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Growth,Sensitive,Fast Grower,Mature,Government;B2B,Product sale,Intangibles,Aerospace;Aircraft engines,Mid
+IBKR,US,NASDAQ,Interactive Brokers Group Inc.,S&P 500,Financials,,Retail brokerage,Midstream,Large,Growth,Cyclical,Fast Grower,Mature,B2B;B2C,Transaction fee;Interest,Cost advantage,Brokerage;Global markets,Mid
+IBM,US,NYSE,International Business Machines Corporation,S&P 500,Information Technology,,IT services,Downstream,Mega,Dividend,Sensitive,Stalwart,Mature,B2B,Product sale,Switching cost,Hybrid cloud;AI;Quantum computing,Mid
+ICE,US,NYSE,Intercontinental Exchange Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Network effect,Exchanges;Mortgage tech;Financial data,Low
+IDXX,US,NASDAQ,IDEXX Laboratories Inc.,S&P 500;Nasdaq-100,Health Care,,Animal health,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Animal health;Diagnostics,Mid
+IEX,US,NYSE,IDEX Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+IFF,US,NYSE,International Flavors & Fragrances Inc.,S&P 500,Materials,,Chemicals,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B,Product sale,Intangibles,Chemicals,Mid
+ILMN,US,NASDAQ,Illumina Inc.,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Turnaround,Mature,B2B,Product sale;Subscription,Switching cost,Genomics;Life sciences,High
+INCY,US,NASDAQ,Incyte Corp.,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech,Mid
+INTC,US,NASDAQ,Intel Corporation,S&P 500;Nasdaq-100,Information Technology,,Semiconductors,Midstream,Mega,Value,Sensitive,Turnaround,Decline,B2B,Product sale,Intangibles,Semiconductors;Foundry;AI,High
+INTU,US,NASDAQ,Intuit Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2C;B2B,Subscription,Switching cost,SaaS;Fintech;Tax software,Mid
+INVH,US,NYSE,Invitation Homes Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+IP,US,NYSE,International Paper Company,S&P 500,Materials,,Packaging,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+IQV,US,NYSE,IQVIA Holdings Inc.,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+IR,US,NYSE,Ingersoll Rand Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+IRM,US,NYSE,Iron Mountain Incorporated,S&P 500,Real Estate,,Information storage,Downstream,Large,Growth,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Data center;Records storage,Mid
+ISRG,US,NASDAQ,Intuitive Surgical Inc.,S&P 500;Nasdaq-100,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Fast Grower,Mature,B2B,Product sale;Subscription,Switching cost,Surgical robotics;Medtech,Mid
+IT,US,NYSE,Gartner Inc.,S&P 500,Information Technology,,Research and advisory,Downstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Subscription,Switching cost,Research;Advisory,Mid
+ITW,US,NYSE,Illinois Tool Works Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+IVZ,US,NYSE,Invesco Ltd,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+J,US,NYSE,Jacobs Solutions Inc.,S&P 500,Industrials,,Building and construction,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B;Government,Product sale,Intangibles,Infrastructure;Data center,High
+JBHT,US,NASDAQ,J.B. Hunt Transport Services Inc.,S&P 500,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Transaction fee,Cost advantage,Logistics;Trucking,Mid
+JBL,US,NYSE,Jabil Inc.,S&P 500,Information Technology,,Electronics manufacturing,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Subscription;Product sale,Switching cost,Electronics;AI,High
+JCI,US,NYSE,Johnson Controls International plc Ordinary Share,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+JKHY,US,NASDAQ,Jack Henry & Associates Inc.,S&P 500,Financials,,Payments,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+JNJ,US,NYSE,Johnson & Johnson,S&P 500,Health Care,,Pharma and biotech,Upstream,Mega,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Pharma;Medtech,Low
+JPM,US,NYSE,JP Morgan Chase & Co.,S&P 500,Financials,,Banking and credit,Downstream,Mega,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+KDP,US,NASDAQ,Keurig Dr Pepper Inc.,S&P 500;Nasdaq-100,Consumer Staples,,Beverages,Midstream,Large,Dividend,Defensive,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands,Low
+KEY,US,NYSE,KeyCorp,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+KEYS,US,NYSE,Keysight Technologies Inc.,S&P 500,Information Technology,,Test and measurement,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Industrial tech,Mid
+KHC,US,NYSE,The Kraft Heinz Company,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+KIM,US,NYSE,Kimco Realty Corporation (HC),S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Retail,Mid
+KKR,US,NYSE,KKR & Co. Inc.,S&P 500,Financials,,Alternative assets,Midstream,Large,Growth,Cyclical,Fast Grower,Mature,B2B;B2C,Transaction fee,Intangibles,Private equity;Private credit;Insurance,High
+KLAC,US,NASDAQ,KLA Corporation,S&P 500;Nasdaq-100,Information Technology,,Semiconductor equipment,Upstream,Large,Growth,Sensitive,Cyclical,Growth,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;AI;Process control,High
+KMB,US,NASDAQ,Kimberly-Clark Corporation,S&P 500,Consumer Staples,,Consumer staples,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+KMI,US,NYSE,Kinder Morgan Inc.,S&P 500,Energy,,Oil and gas,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Transaction fee,Efficient scale,Natural gas;Pipelines;LNG,Low
+KO,US,NYSE,Coca-Cola Company,S&P 500,Consumer Staples,,Beverages,Midstream,Mega,Dividend,Defensive,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands,Low
+KR,US,NYSE,Kroger Company,S&P 500,Consumer Staples,,Retail,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Cost advantage,Grocery,Low
+L,US,NYSE,Loews Corporation,S&P 500,Financials,,Insurance,Downstream,Large,Value,Cyclical,Slow Grower,Mature,B2B;B2C,Subscription,Cost advantage,Insurance,Mid
+LDOS,US,NYSE,Leidos Holdings Inc.,S&P 500,Industrials,,Business services,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Efficient scale,Business services,Low
+LEN,US,NYSE,Lennar Corporation,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Cost advantage,Housing,High
+LH,US,NYSE,Labcorp Holdings Inc.,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Healthcare services,Mid
+LHX,US,NYSE,L3Harris Technologies Inc.,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government,Product sale,Intangibles,Defense;Space,Mid
+LII,US,NYSE,Lennox International Inc.,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+LIN,US,NASDAQ,Linde plc,S&P 500;Nasdaq-100,Materials,,Chemicals,Upstream,Mega,Dividend,Cyclical,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Industrial gases;Hydrogen,Low
+LITE,US,NASDAQ,Lumentum Holdings Inc.,S&P 500;Nasdaq-100,Information Technology,,Optical networking,Upstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale;Subscription,Switching cost,Optical networking;AI;Photonics,High
+LLY,US,NYSE,Eli Lilly and Company,S&P 500,Health Care,,Pharma and biotech,Upstream,Mega,Growth,Defensive,Fast Grower,Growth,B2B,Product sale;Transaction fee,Intangibles,GLP-1;Obesity;Alzheimer,Mid
+LMT,US,NYSE,Lockheed Martin Corporation,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,Government,Product sale,Intangibles,Defense,Mid
+LNT,US,NASDAQ,Alliant Energy Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+LOW,US,NYSE,Lowe's Companies Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Dividend,Cyclical,Stalwart,Mature,B2C;B2B,Product sale,Cost advantage,Housing,Mid
+LRCX,US,NASDAQ,Lam Research Corporation,S&P 500;Nasdaq-100,Information Technology,,Semiconductor equipment,Upstream,Mega,Growth,Sensitive,Cyclical,Growth,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;AI;WFE,High
+LULU,US,NASDAQ,lululemon athletica inc.,S&P 500,Consumer Discretionary,,Apparel and luxury,Downstream,Large,Value,Cyclical,Turnaround,Mature,B2C,Product sale,Brand,Consumer brands,High
+LUV,US,NYSE,Southwest Airlines Company,S&P 500,Industrials,,Airlines,Downstream,Large,Value,Sensitive,Cyclical,Mature,B2C,Product sale,Unclear,Travel,High
+LVS,US,NYSE,Las Vegas Sands Corp.,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Efficient scale,Casino;Macau,High
+LYB,US,NYSE,LyondellBasell Industries NV,S&P 500,Materials,,Chemicals,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B,Product sale,Intangibles,Chemicals,Mid
+LYV,US,NYSE,Live Nation Entertainment Inc.,S&P 500,Communication Services,,Live events,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2C,Transaction fee;Ads,Network effect,Live events;Ticketing,Mid
+MA,US,NYSE,Mastercard Incorporated,S&P 500,Financials,,Payments,Midstream,Mega,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Digital payments,Low
+MAA,US,NYSE,Mid-America Apartment Communities Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+MAR,US,NASDAQ,Marriott International,S&P 500;Nasdaq-100,Consumer Discretionary,,Travel and leisure,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Transaction fee,Brand,Travel,Mid
+MAS,US,NYSE,Masco Corporation,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+MCD,US,NYSE,McDonald's Corporation,S&P 500,Consumer Discretionary,,Restaurants,Downstream,Large,Dividend,Cyclical,Stalwart,Mature,B2C,Transaction fee;Rent;Product sale,Brand,Restaurants,Low
+MCHP,US,NASDAQ,Microchip Technology Incorporated,S&P 500;Nasdaq-100,Information Technology,,Analog chips,Midstream,Large,Growth,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Semiconductors;Industrial,High
+MCK,US,NYSE,McKesson Corporation,S&P 500,Health Care,,Healthcare distribution,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B,Product sale,Efficient scale,Pharma distribution,Low
+MCO,US,NYSE,Moody's Corporation,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Intangibles,Credit ratings;Financial data,Low
+MDLZ,US,NASDAQ,Mondelez International Inc.,S&P 500;Nasdaq-100,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Snacks;Confectionery,Low
+MDT,US,NYSE,Medtronic plc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+MET,US,NYSE,MetLife Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Subscription;Interest,Cost advantage,Insurance;Retirement,Mid
+META,US,NASDAQ,Meta Platforms Inc.,S&P 500;Nasdaq-100,Communication Services,,Digital advertising,Downstream,Mega,Growth,Sensitive,Stalwart,Growth,B2C;B2B,Ads,Network effect,AI;Digital advertising;Social media,High
+MGM,US,NYSE,MGM Resorts International,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Mid,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Efficient scale,Casino;Macau,High
+MKC,US,NYSE,McCormick & Company Incorporated,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+MLM,US,NYSE,Martin Marietta Materials Inc.,S&P 500,Materials,,Building and construction,Upstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;Government,Product sale,Efficient scale,Infrastructure,Mid
+MMM,US,NYSE,3M Company,S&P 500,Industrials,,Industrial conglomerate,Midstream,Large,Value,Sensitive,Turnaround,Mature,B2B,Product sale;Subscription,Intangibles,Industrial,Mid
+MNST,US,NASDAQ,Monster Beverage Corporation,S&P 500;Nasdaq-100,Consumer Staples,,Beverages,Midstream,Large,Growth,Defensive,Fast Grower,Mature,B2C,Product sale,Brand,Energy drinks,Low
+MO,US,NYSE,Altria Group Inc.,S&P 500,Consumer Staples,,Tobacco,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Tobacco;Smoke-free,Low
+MOS,US,NYSE,Mosaic Company,S&P 500,Materials,,Agriculture and food,Upstream,Mid,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Agriculture,High
+MPC,US,NYSE,Marathon Petroleum Corporation,S&P 500,Energy,,Oil and gas,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2B;B2C,Product sale,Efficient scale,Energy,High
+MPWR,US,NASDAQ,Monolithic Power Systems Inc.,S&P 500;Nasdaq-100,Information Technology,,Power semiconductors,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,Semiconductors;AI;Power management,High
+MRK,US,NYSE,Merck & Company Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Mega,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Oncology;Pharma,Low
+MRNA,US,NASDAQ,Moderna Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Value,Defensive,Turnaround,Mature,B2B,Product sale;Transaction fee,Intangibles,mRNA;Vaccines,High
+MRSH,US,NYSE,Marsh McLennan,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+MRVL,US,NASDAQ,Marvell Technology Inc.,S&P 500;Nasdaq-100,Information Technology,,AI chips,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,AI;Semiconductors;Custom ASIC,High
+MS,US,NYSE,Morgan Stanley,S&P 500,Financials,,Capital markets,Midstream,Mega,Dividend,Cyclical,Cyclical,Mature,B2B;B2C,Transaction fee;Interest,Intangibles,Wealth management;Investment banking,Mid
+MSCI,US,NYSE,MSCI Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Subscription,Intangibles,Indices;ESG;Financial data,Low
+MSFT,US,NASDAQ,Microsoft Corporation,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Mega,Growth,Sensitive,Stalwart,Mature,B2B;B2C,Subscription;Transaction fee,Switching cost,AI;Cloud;SaaS,Mid
+MSI,US,NYSE,Motorola Solutions Inc.,S&P 500,Information Technology,,Networking,Midstream,Large,Growth,Sensitive,Stalwart,Mature,Government,Product sale;Subscription,Switching cost,Public safety;Communications,Low
+MTB,US,NYSE,M&T Bank Corporation,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+MTD,US,NYSE,Mettler-Toledo International Inc.,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+MU,US,NASDAQ,Micron Technology Inc.,S&P 500;Nasdaq-100,Information Technology,,Memory chips,Midstream,Mega,Growth,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,AI;Semiconductors;HBM,High
+NCLH,US,NYSE,Norwegian Cruise Line Holdings Ltd.,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Mid,Growth,Cyclical,Turnaround,Mature,B2C,Product sale,Brand,Travel;Cruise,High
+NDAQ,US,NASDAQ,Nasdaq Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Network effect,Exchanges;Fintech;Financial data,Low
+NDSN,US,NASDAQ,Nordson Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+NEE,US,NYSE,NextEra Energy Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Growth,Defensive,Stalwart,Mature,B2C;B2B,Product sale,Efficient scale,Renewables;Utilities;Power demand,Mid
+NEM,US,NYSE,Newmont Corporation,S&P 500,Materials,,Metals and mining,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Gold;Mining,High
+NFLX,US,NASDAQ,Netflix Inc.,S&P 500;Nasdaq-100,Communication Services,,Media and entertainment,Upstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2C,Subscription;Ads,Network effect,Streaming,Mid
+NI,US,NYSE,NiSource Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+NKE,US,NYSE,Nike Inc.,S&P 500,Consumer Discretionary,,Apparel and luxury,Downstream,Large,Value,Cyclical,Turnaround,Mature,B2C,Product sale,Brand,Consumer brands,High
+NOC,US,NYSE,Northrop Grumman Corporation,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government,Product sale,Intangibles,Defense;Space,Mid
+NOW,US,NYSE,ServiceNow Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Subscription,Switching cost,SaaS;AI;Workflow automation,High
+NRG,US,NYSE,NRG Energy Inc.,S&P 500,Utilities,,Electricity,Upstream,Large,Growth,Defensive,Cyclical,Growth,B2B;B2C,Product sale,Cost advantage,Power demand;Retail electricity;Data center,High
+NSC,US,NYSE,Norfolk Southern Corporation,S&P 500,Industrials,,Logistics,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Transaction fee,Efficient scale,Railroad,Low
+NTAP,US,NASDAQ,NetApp Inc.,S&P 500,Information Technology,,Computer hardware,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,Storage;Hybrid cloud,High
+NTRS,US,NASDAQ,Northern Trust Corporation,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+NUE,US,NYSE,Nucor Corporation,S&P 500,Materials,,Metals and mining,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Steel;Infrastructure,High
+NVDA,US,NASDAQ,NVIDIA Corporation,S&P 500;Nasdaq-100,Information Technology,,AI chips,Midstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,AI;Semiconductors,High
+NVR,US,NYSE,NVR Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Cost advantage,Housing,High
+NWS,US,NASDAQ,News Corporation (Class B),S&P 500,Communication Services,,Media and entertainment,Upstream,Large,Value,Sensitive,Slow Grower,Mature,B2C;B2B,Subscription;Ads,Brand,Media,Mid
+NWSA,US,NASDAQ,News Corporation (Class A),S&P 500,Communication Services,,Media and entertainment,Upstream,Large,Value,Sensitive,Slow Grower,Mature,B2C;B2B,Subscription;Ads,Brand,Media,Mid
+NXPI,US,NASDAQ,NXP Semiconductors N.V.,S&P 500;Nasdaq-100,Information Technology,,Analog chips,Midstream,Large,Growth,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Semiconductors;Automotive,High
+O,US,NYSE,Realty Income Corporation,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Monthly dividend;Net lease,Mid
+ODFL,US,NASDAQ,Old Dominion Freight Line Inc.,S&P 500;Nasdaq-100,Industrials,,Logistics,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Transaction fee,Cost advantage,Logistics;LTL trucking,Mid
+OKE,US,NYSE,ONEOK Inc.,S&P 500,Energy,,Oil and gas,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Transaction fee,Efficient scale,Energy;Natural gas,Low
+OKTA,US,NASDAQ,Okta Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Subscription,Switching cost,Cybersecurity;Identity,High
+OMC,US,NYSE,Omnicom Group Inc.,S&P 500,Communication Services,,Digital advertising,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Transaction fee,Intangibles,Advertising agency,Mid
+ON,US,NASDAQ,ON Semiconductor Corporation,S&P 500,Information Technology,,Power semiconductors,Midstream,Large,Growth,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Semiconductors;EV;Automotive,High
+ORCL,US,NYSE,Oracle Corporation,S&P 500,Information Technology,,Software,Downstream,Mega,Growth,Sensitive,Fast Grower,Growth,B2B,Subscription;Transaction fee,Switching cost,AI;Cloud;Database,High
+ORLY,US,NASDAQ,O'Reilly Automotive Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Automotive,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C;B2B,Product sale,Cost advantage,Auto parts,Low
+OTIS,US,NYSE,Otis Worldwide Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+OXY,US,NYSE,Occidental Petroleum Corporation,S&P 500,Energy,,Oil and gas,Upstream,Large,Dividend,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Energy,High
+P,US,NYSE,Everpure Inc.,S&P 500,Information Technology,,Computer hardware,Midstream,Large,Growth,Sensitive,Fast Grower,Mature,B2B;B2C,Product sale,Intangibles,Storage;AI;Data center,High
+PANW,US,NASDAQ,Palo Alto Networks Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Mega,Growth,Sensitive,Stalwart,Growth,B2B,Subscription,Switching cost,Cybersecurity;Cloud;AI,High
+PAYX,US,NASDAQ,Paychex Inc.,S&P 500;Nasdaq-100,Industrials,,HR and payroll,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Subscription,Switching cost,HR tech,Low
+PCAR,US,NASDAQ,PACCAR Inc.,S&P 500;Nasdaq-100,Industrials,,Machinery,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Subscription,Intangibles,Trucks;Transportation,Mid
+PCG,US,NYSE,Pacific Gas & Electric Co.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Turnaround,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Wildfire risk,Mid
+PEG,US,NYSE,Public Service Enterprise Group Incorporated,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+PEP,US,NASDAQ,PepsiCo Inc.,S&P 500;Nasdaq-100,Consumer Staples,,Beverages,Midstream,Large,Dividend,Defensive,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands;Snacks,Low
+PFE,US,NYSE,Pfizer Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Dividend,Defensive,Slow Grower,Mature,B2B,Product sale;Transaction fee,Intangibles,Pharma;Vaccines,Low
+PFG,US,NASDAQ,Principal Financial Group Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Subscription;Interest,Cost advantage,Insurance;Retirement,Mid
+PG,US,NYSE,Procter & Gamble Company,S&P 500,Consumer Staples,,Consumer staples,Midstream,Mega,Dividend,Defensive,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands,Low
+PGR,US,NYSE,Progressive Corporation,S&P 500,Financials,,Insurance,Downstream,Large,Growth,Cyclical,Fast Grower,Mature,B2C;B2B,Subscription,Cost advantage,Auto insurance;Insurtech,Low
+PH,US,NYSE,Parker-Hannifin Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+PHM,US,NYSE,PulteGroup Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Cost advantage,Housing,High
+PKG,US,NYSE,Packaging Corporation of America,S&P 500,Materials,,Packaging,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+PLD,US,NYSE,Prologis Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Logistics;E-commerce,Mid
+PLTR,US,NASDAQ,Palantir Technologies Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Mega,Growth,Sensitive,Fast Grower,Growth,Government;B2B,Subscription,Switching cost,AI;Big data;Defense,High
+PM,US,NYSE,Philip Morris International Inc.,S&P 500,Consumer Staples,,Tobacco,Midstream,Mega,Dividend,Defensive,Stalwart,Mature,B2C,Product sale,Brand,Tobacco;Smoke-free;ZYN,Low
+PNC,US,NYSE,PNC Financial Services Group Inc.,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+PNR,US,NYSE,Pentair plc. Ordinary Share,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+PNW,US,NYSE,Pinnacle West Capital Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+PODD,US,NASDAQ,Insulet Corporation,S&P 500,Health Care,,Medical devices,Midstream,Mid,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Diabetes tech;Medtech,High
+PPG,US,NYSE,PPG Industries Inc.,S&P 500,Materials,,Chemicals,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B,Product sale,Intangibles,Chemicals,Mid
+PPL,US,NYSE,PPL Corporation,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+PRU,US,NYSE,Prudential Financial Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Subscription;Interest,Cost advantage,Insurance;Retirement,Mid
+PSA,US,NYSE,Public Storage,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Self-storage,Mid
+PSX,US,NYSE,Phillips 66,S&P 500,Energy,,Oil and gas,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2B;B2C,Product sale,Efficient scale,Energy,High
+PTC,US,NASDAQ,PTC Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription,Switching cost,SaaS;Industrial software,Mid
+PWR,US,NYSE,Quanta Services Inc.,S&P 500,Industrials,,Building and construction,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B;Government,Product sale,Intangibles,Grid;Electrification;Infrastructure,High
+PYPL,US,NASDAQ,PayPal Holdings Inc.,S&P 500;Nasdaq-100,Financials,,Payments,Midstream,Large,Value,Cyclical,Turnaround,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech,Mid
+Q,US,NYSE,Qnity Electronics Inc.,S&P 500,Information Technology,,Semiconductor materials,Upstream,Large,Growth,Sensitive,Cyclical,Growth,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;Materials,High
+QCOM,US,NASDAQ,QUALCOMM Incorporated,S&P 500;Nasdaq-100,Information Technology,,Semiconductors,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;Mobile;Edge AI,High
+RCL,US,NYSE,Royal Caribbean Cruises Ltd.,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Large,Growth,Cyclical,Cyclical,Mature,B2C,Product sale,Brand,Travel;Cruise,High
+RDDT,US,NYSE,Reddit Inc.,S&P 500,Communication Services,,Digital advertising,Downstream,Large,Growth,Sensitive,Fast Grower,Growth,B2C;B2B,Ads,Network effect,Social media;AI data licensing,High
+REG,US,NASDAQ,Regency Centers Corporation,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Retail,Mid
+REGN,US,NASDAQ,Regeneron Pharmaceuticals Inc.,S&P 500;Nasdaq-100,Health Care,,Pharma and biotech,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech;Immunology,Mid
+RF,US,NYSE,Regions Financial Corporation,S&P 500,Financials,,Banking and credit,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C;B2B,Interest,Cost advantage,Banking,Mid
+RJF,US,NYSE,Raymond James Financial Inc.,S&P 500,Financials,,Capital markets,Midstream,Large,Value,Cyclical,Cyclical,Mature,B2B;B2C,Transaction fee;Interest,Intangibles,Capital markets,Mid
+RL,US,NYSE,Ralph Lauren Corporation,S&P 500,Consumer Discretionary,,Apparel and luxury,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands,High
+RMD,US,NYSE,ResMed Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+ROK,US,NYSE,Rockwell Automation Inc.,S&P 500,Industrials,,Electrification,Midstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Product sale,Intangibles,Electrification;Data center,Mid
+ROL,US,NYSE,Rollins Inc.,S&P 500,Industrials,,Waste and environmental,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B;B2C;Government,Subscription,Efficient scale,Waste management,Low
+ROP,US,NASDAQ,Roper Technologies Inc.,S&P 500;Nasdaq-100,Information Technology,,Test and measurement,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Industrial tech,Mid
+ROST,US,NASDAQ,Ross Stores Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Retail,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Cost advantage,Off-price retail,Mid
+RSG,US,NYSE,Republic Services Inc.,S&P 500,Industrials,,Waste and environmental,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B;B2C;Government,Subscription,Efficient scale,Waste management,Low
+RTX,US,NYSE,RTX Corporation,S&P 500,Industrials,,Aerospace and defense,Midstream,Mega,Quality,Sensitive,Stalwart,Mature,Government;B2B,Product sale,Intangibles,Defense;Aerospace,Mid
+RVTY,US,NYSE,Revvity Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+SBAC,US,NASDAQ,SBA Communications Corporation,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;5G,Mid
+SBUX,US,NASDAQ,Starbucks Corporation,S&P 500;Nasdaq-100,Consumer Discretionary,,Restaurants,Downstream,Large,Value,Cyclical,Turnaround,Mature,B2C,Product sale;Transaction fee,Brand,Restaurants,Mid
+SCHW,US,NYSE,Charles Schwab Corporation,S&P 500,Financials,,Retail brokerage,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Transaction fee;Interest,Intangibles,Brokerage;Wealth management,Mid
+SHW,US,NYSE,Sherwin-Williams Company,S&P 500,Materials,,Paints and coatings,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2B,Product sale,Brand,Housing;Paint,Mid
+SJM,US,NYSE,The J.M. Smucker Company,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+SKYD,US,NYSE,Skydance Corporation,S&P 500,Communication Services,,Media and entertainment,Upstream,Large,Value,Sensitive,Turnaround,Mature,B2C,Subscription;Ads;Transaction fee,Brand,Streaming;Media,Mid
+SLB,US,NYSE,SLB Limited,S&P 500,Energy,,Oil and gas,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Intangibles,Energy;Oilfield services;Digital,High
+SMCI,US,NASDAQ,Super Micro Computer Inc.,S&P 500,Information Technology,,AI servers,Midstream,Large,Quality,Sensitive,Fast Grower,Growth,B2B;B2C,Product sale,Unclear,AI servers;Data center,High
+SNA,US,NYSE,Snap-On Incorporated,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+SNDK,US,NASDAQ,Sandisk Corporation,S&P 500;Nasdaq-100,Information Technology,,Memory chips,Midstream,Mega,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,AI;NAND;Storage,High
+SNPS,US,NASDAQ,Synopsys Inc.,S&P 500;Nasdaq-100,Information Technology,,EDA software,Upstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription;Transaction fee,Switching cost,Semiconductors;EDA;AI,Mid
+SO,US,NYSE,Southern Company,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+SOLV,US,NYSE,Solventum Corporation,S&P 500,Health Care,,Healthcare IT,Midstream,Large,Growth,Defensive,Stalwart,Growth,B2B,Subscription;Product sale,Switching cost,Healthcare IT,Mid
+SPG,US,NYSE,Simon Property Group Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Malls,Mid
+SPGI,US,NYSE,S&P Global Inc.,S&P 500,Financials,,Financial infrastructure,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee;Subscription,Intangibles,Credit ratings;Financial data;Indices,Low
+SRE,US,NYSE,DBA Sempra,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+STE,US,NYSE,STERIS plc (Ireland),S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+STLD,US,NASDAQ,Steel Dynamics Inc.,S&P 500,Materials,,Metals and mining,Upstream,Large,Value,Cyclical,Cyclical,Mature,B2B,Product sale,Cost advantage,Steel;Infrastructure,High
+STT,US,NYSE,State Street Corporation,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+STX,US,NASDAQ,Seagate Technology Holdings PLC,S&P 500;Nasdaq-100,Information Technology,,Data storage,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,AI;Storage;Data center,High
+STZ,US,NYSE,Constellation Brands Inc.,S&P 500,Consumer Staples,,Beverages,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Alcohol,Mid
+SW,US,NYSE,Smurfit WestRock plc,S&P 500,Materials,,Packaging,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Product sale,Efficient scale,Packaging,Mid
+SWK,US,NYSE,Stanley Black & Decker Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+SWKS,US,NASDAQ,Skyworks Solutions Inc.,S&P 500,Information Technology,,RF chips,Midstream,Large,Value,Sensitive,Slow Grower,Mature,B2B,Product sale,Intangibles,Semiconductors;Mobile,High
+SYF,US,NYSE,Synchrony Financial,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2C,Interest;Transaction fee,Network effect,Consumer credit,Mid
+SYK,US,NYSE,Stryker Corporation,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+SYY,US,NYSE,Sysco Corporation,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2B,Product sale,Cost advantage,Foodservice,Low
+T,US,NYSE,AT&T Inc.,S&P 500,Communication Services,,Telecom and broadband,Downstream,Large,Dividend,Sensitive,Slow Grower,Mature,B2C;B2B,Subscription,Efficient scale,5G;Fiber;Telecom,Low
+TDG,US,NYSE,Transdigm Group Incorporated,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Growth,Sensitive,Stalwart,Mature,Government;B2B,Product sale,Intangibles,Aerospace;Aftermarket,Mid
+TDY,US,NYSE,Teledyne Technologies Incorporated,S&P 500,Information Technology,,Test and measurement,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Industrial tech,Mid
+TECH,US,NASDAQ,Bio-Techne Corp,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+TEL,US,NYSE,TE Connectivity plc,S&P 500,Information Technology,,Electronics manufacturing,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Subscription;Product sale,Switching cost,Electronics;AI,High
+TER,US,NASDAQ,Teradyne Inc.,S&P 500;Nasdaq-100,Information Technology,,Semiconductor equipment,Upstream,Large,Growth,Sensitive,Cyclical,Growth,B2B,Product sale;Transaction fee,Intangibles,Semiconductors;AI;Test;Robotics,High
+TFC,US,NYSE,Truist Financial Corporation,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+TGT,US,NYSE,Target Corporation,S&P 500,Consumer Staples,,Retail,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Cost advantage,Retail,Mid
+TJX,US,NYSE,TJX Companies Inc.,S&P 500,Consumer Discretionary,,Retail,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Cost advantage,Off-price retail,Mid
+TKO,US,NYSE,TKO Group Holdings Inc.,S&P 500,Communication Services,,Sports entertainment,Upstream,Large,Growth,Sensitive,Fast Grower,Mature,B2C,Transaction fee,Brand,Sports;Live events,Mid
+TMO,US,NYSE,Thermo Fisher Scientific Inc.,S&P 500,Health Care,,Life science tools,Upstream,Mega,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+TMUS,US,NASDAQ,T-Mobile US Inc.,S&P 500;Nasdaq-100,Communication Services,,Telecom and broadband,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2C;B2B,Subscription,Efficient scale,5G;Telecom,Low
+TPL,US,NYSE,Texas Pacific Land Corporation,S&P 500,Energy,,Oil and gas land,Upstream,Large,Growth,Cyclical,Asset Play,Mature,B2B,Transaction fee;Rent,Intangibles,Permian;Royalties;Water,High
+TPR,US,NYSE,Tapestry Inc.,S&P 500,Consumer Discretionary,,Apparel and luxury,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C,Product sale,Brand,Consumer brands,High
+TRGP,US,NYSE,Targa Resources Inc.,S&P 500,Energy,,Oil and gas,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Transaction fee,Efficient scale,Energy;Natural gas,Low
+TRMB,US,NASDAQ,Trimble Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription,Switching cost,Construction tech;Geospatial,Mid
+TROW,US,NASDAQ,T. Rowe Price Group Inc.,S&P 500,Financials,,Asset management,Midstream,Large,Quality,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Intangibles,Asset management,Mid
+TRV,US,NYSE,The Travelers Companies Inc.,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+TSCO,US,NASDAQ,Tractor Supply Company,S&P 500,Consumer Discretionary,,Retail,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Cost advantage,Specialty retail,Mid
+TSLA,US,NASDAQ,Tesla Inc.,S&P 500;Nasdaq-100,Consumer Discretionary,,Automotive,Midstream,Mega,Growth,Cyclical,Fast Grower,Growth,B2C,Product sale;Transaction fee,Brand,EV;Autonomous driving;Robotics;Energy storage,High
+TSN,US,NYSE,Tyson Foods Inc.,S&P 500,Consumer Staples,,Agriculture and food,Midstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C,Product sale,Brand,Consumer brands,Low
+TT,US,NYSE,Trane Technologies plc,S&P 500,Industrials,,Building and construction,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale,Intangibles,Housing;HVAC,Mid
+TTWO,US,NASDAQ,Take-Two Interactive Software Inc.,S&P 500;Nasdaq-100,Communication Services,,Gaming,Upstream,Large,Growth,Sensitive,Fast Grower,Growth,B2C,Product sale;Transaction fee,Brand,Gaming;GTA,Mid
+TWLO,US,NYSE,Twilio Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Value,Sensitive,Turnaround,Growth,B2B,Transaction fee,Switching cost,Cloud communications;CPaaS,High
+TXN,US,NASDAQ,Texas Instruments Incorporated,S&P 500;Nasdaq-100,Information Technology,,Analog chips,Midstream,Mega,Dividend,Sensitive,Stalwart,Mature,B2B,Product sale,Cost advantage,Semiconductors;Industrial;Automotive,High
+TXT,US,NYSE,Textron Inc.,S&P 500,Industrials,,Aerospace and defense,Midstream,Large,Quality,Sensitive,Stalwart,Mature,Government;B2B,Product sale,Intangibles,Defense;Aerospace,Mid
+TYL,US,NYSE,Tyler Technologies Inc.,S&P 500,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,Government,Subscription,Switching cost,SaaS;GovTech,Mid
+UAL,US,NASDAQ,United Airlines Holdings Inc.,S&P 500,Industrials,,Airlines,Downstream,Large,Value,Sensitive,Cyclical,Mature,B2C,Product sale,Unclear,Travel,High
+UBER,US,NYSE,Uber Technologies Inc.,S&P 500,Industrials,,Mobility,Downstream,Large,Growth,Sensitive,Fast Grower,Growth,B2C;B2B,Transaction fee,Network effect,Mobility;Delivery;Autonomous driving,Mid
+UDR,US,NYSE,UDR Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+UHS,US,NYSE,Universal Health Services Inc.,S&P 500,Health Care,,Healthcare services,Downstream,Large,Value,Defensive,Stalwart,Mature,B2C;B2B,Product sale,Efficient scale,Hospitals,Mid
+ULTA,US,NASDAQ,Ulta Beauty Inc.,S&P 500,Consumer Discretionary,,Retail,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Cost advantage,Specialty retail,Mid
+UNH,US,NYSE,UnitedHealth Group Incorporated,S&P 500,Health Care,,Health insurance,Downstream,Mega,Value,Defensive,Turnaround,Mature,B2C;B2B;Government,Subscription,Efficient scale,Managed care;Medicare,Mid
+UNP,US,NYSE,Union Pacific Corporation,S&P 500,Industrials,,Logistics,Midstream,Large,Dividend,Sensitive,Stalwart,Mature,B2B,Transaction fee,Efficient scale,Railroad,Low
+UPS,US,NYSE,United Parcel Service Inc.,S&P 500,Industrials,,Logistics,Midstream,Large,Dividend,Sensitive,Turnaround,Mature,B2B;B2C,Transaction fee,Efficient scale,Logistics,Mid
+URI,US,NYSE,United Rentals Inc.,S&P 500,Industrials,,Industrial distribution,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Rent,Cost advantage,Equipment rental;Infrastructure,Mid
+USB,US,NYSE,U.S. Bancorp,S&P 500,Financials,,Banking and credit,Downstream,Large,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+V,US,NYSE,Visa Inc.,S&P 500,Financials,,Payments,Midstream,Mega,Growth,Cyclical,Stalwart,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Digital payments,Low
+VEEV,US,NYSE,Veeva Systems Inc.,S&P 500,Health Care,,Healthcare IT,Midstream,Large,Growth,Defensive,Stalwart,Growth,B2B,Subscription,Switching cost,Healthcare IT;SaaS;Life sciences,Mid
+VICI,US,NYSE,VICI Properties Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Casino;Net lease,Mid
+VLO,US,NYSE,Valero Energy Corporation,S&P 500,Energy,,Oil and gas,Downstream,Large,Value,Cyclical,Cyclical,Mature,B2B;B2C,Product sale,Efficient scale,Energy,High
+VLTO,US,NYSE,Veralto Corp,S&P 500,Industrials,,Waste and environmental,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B;B2C;Government,Subscription,Efficient scale,Waste management,Low
+VMC,US,NYSE,Vulcan Materials Company (Holding Company),S&P 500,Materials,,Building and construction,Upstream,Large,Growth,Cyclical,Stalwart,Mature,B2B;Government,Product sale,Efficient scale,Infrastructure,Mid
+VMRK,US,NYSE,Vivmark Residential,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2C,Rent,Efficient scale,REIT;Housing,Mid
+VRSK,US,NASDAQ,Verisk Analytics Inc.,S&P 500,Industrials,,Data and analytics,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Subscription,Intangibles,Data analytics,Low
+VRSN,US,NASDAQ,VeriSign Inc.,S&P 500,Information Technology,,Internet infrastructure,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B;B2C,Subscription,Efficient scale,Internet infrastructure;Domain registry,Low
+VRT,US,NYSE,Vertiv Holdings LLC,S&P 500,Industrials,,Data center infrastructure,Midstream,Large,Growth,Sensitive,Fast Grower,Growth,B2B,Product sale,Intangibles,AI;Data center;Cooling,High
+VRTX,US,NASDAQ,Vertex Pharmaceuticals Incorporated,S&P 500;Nasdaq-100,Health Care,,Pharma and biotech,Upstream,Large,Growth,Defensive,Fast Grower,Mature,B2B,Product sale;Transaction fee,Intangibles,Biotech;Cystic fibrosis,Mid
+VST,US,NYSE,Vistra Corp.,S&P 500,Utilities,,Electricity,Downstream,Large,Growth,Defensive,Fast Grower,Mature,B2C;B2B,Product sale,Efficient scale,Nuclear;AI;Power demand;Data center,Low
+VTR,US,NYSE,Ventas Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Senior housing,Mid
+VTRS,US,NASDAQ,Viatris Inc.,S&P 500,Health Care,,Pharma and biotech,Upstream,Large,Value,Defensive,Slow Grower,Mature,B2B,Product sale;Transaction fee,Intangibles,Generics,Low
+VYLR,US,NYSE,Vylor Inc.,S&P 500,Consumer Staples,,Agriculture and food,Upstream,Large,Value,Defensive,Cyclical,Mature,B2B,Product sale,Efficient scale,Agriculture,Mid
+VZ,US,NYSE,Verizon Communications Inc.,S&P 500,Communication Services,,Telecom and broadband,Downstream,Large,Dividend,Sensitive,Slow Grower,Mature,B2C;B2B,Subscription,Efficient scale,5G;Fiber;Telecom,Low
+WAB,US,NYSE,Westinghouse Air Brake Technologies Corporation,S&P 500,Industrials,,Machinery,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B,Product sale;Subscription,Intangibles,Infrastructure,Mid
+WAT,US,NYSE,Waters Corporation,S&P 500,Health Care,,Life science tools,Upstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Life sciences,Mid
+WDAY,US,NASDAQ,Workday Inc.,S&P 500;Nasdaq-100,Information Technology,,Software,Downstream,Large,Growth,Sensitive,Stalwart,Growth,B2B,Subscription,Switching cost,SaaS;HR tech;AI,Mid
+WDC,US,NASDAQ,Western Digital Corporation,S&P 500;Nasdaq-100,Information Technology,,Data storage,Midstream,Large,Value,Sensitive,Cyclical,Mature,B2B;B2C,Product sale,Intangibles,AI;Storage;Data center,High
+WEC,US,NYSE,WEC Energy Group Inc.,S&P 500,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+WELL,US,NYSE,Welltower Inc.,S&P 500,Real Estate,,Real estate,Downstream,Large,Growth,Cyclical,Fast Grower,Mature,B2B,Rent,Efficient scale,REIT;Senior housing;Aging population,Mid
+WFC,US,NYSE,Wells Fargo & Company,S&P 500,Financials,,Banking and credit,Downstream,Mega,Value,Cyclical,Stalwart,Mature,B2C;B2B,Interest;Transaction fee,Cost advantage,Banking,Mid
+WM,US,NYSE,Waste Management Inc.,S&P 500,Industrials,,Waste and environmental,Downstream,Large,Growth,Sensitive,Stalwart,Mature,B2B;B2C;Government,Subscription,Efficient scale,Waste management,Low
+WMB,US,NYSE,Williams Companies Inc.,S&P 500,Energy,,Oil and gas,Midstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Transaction fee,Efficient scale,Natural gas;Pipelines;Power demand,Low
+WMT,US,NASDAQ,Walmart Inc.,S&P 500;Nasdaq-100,Consumer Staples,,Retail,Downstream,Mega,Growth,Defensive,Stalwart,Mature,B2C,Product sale,Cost advantage,Retail;E-commerce;Advertising,Low
+WRB,US,NYSE,W.R. Berkley Corporation,S&P 500,Financials,,Insurance,Downstream,Large,Quality,Cyclical,Stalwart,Mature,B2C;B2B,Subscription,Cost advantage,Insurance,Low
+WSM,US,NYSE,Williams-Sonoma Inc.,S&P 500,Consumer Discretionary,,Housing,Downstream,Large,Growth,Cyclical,Stalwart,Mature,B2C,Product sale,Brand,Housing,High
+WST,US,NYSE,West Pharmaceutical Services Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Quality,Defensive,Stalwart,Mature,B2B;B2C,Product sale,Intangibles,Medtech,High
+WTW,US,NASDAQ,Willis Towers Watson Public Limited Company,S&P 500,Financials,,Insurance,Midstream,Large,Growth,Cyclical,Stalwart,Mature,B2B,Transaction fee,Switching cost,Insurance,Low
+WY,US,NYSE,Weyerhaeuser Company,S&P 500,Real Estate,,Real estate,Downstream,Large,Dividend,Cyclical,Slow Grower,Mature,B2B,Rent,Efficient scale,REIT;Timber,Mid
+WYNN,US,NASDAQ,Wynn Resorts Limited,S&P 500,Consumer Discretionary,,Travel and leisure,Downstream,Mid,Value,Cyclical,Cyclical,Mature,B2C,Product sale,Efficient scale,Casino;Macau,High
+XEL,US,NASDAQ,Xcel Energy Inc.,S&P 500;Nasdaq-100,Utilities,,Electricity,Downstream,Large,Dividend,Defensive,Slow Grower,Mature,B2C;B2B,Product sale,Efficient scale,Utilities;Power demand,Low
+XOM,US,NYSE,ExxonMobil Holdings Corporation,S&P 500,Energy,,Oil and gas,Upstream,Mega,Dividend,Cyclical,Stalwart,Mature,B2B,Product sale,Cost advantage,Energy,Mid
+XYL,US,NYSE,Xylem Inc.,S&P 500,Industrials,,Machinery,Midstream,Large,Quality,Sensitive,Stalwart,Mature,B2B,Product sale,Intangibles,Industrial;Automation,Mid
+XYZ,US,NYSE,Block Inc.,S&P 500,Financials,,Payments,Midstream,Large,Value,Cyclical,Turnaround,Mature,B2B;B2C,Transaction fee,Network effect,Payments;Fintech;Bitcoin,High
+YUM,US,NYSE,Yum! Brands Inc.,S&P 500,Consumer Discretionary,,Restaurants,Downstream,Large,Dividend,Cyclical,Stalwart,Mature,B2C,Transaction fee,Brand,Restaurants,Mid
+ZBH,US,NYSE,Zimmer Biomet Holdings Inc.,S&P 500,Health Care,,Medical devices,Midstream,Large,Growth,Defensive,Stalwart,Mature,B2B,Product sale;Subscription,Switching cost,Medtech,Mid
+ZBRA,US,NASDAQ,Zebra Technologies Corporation,S&P 500,Information Technology,,Test and measurement,Midstream,Large,Growth,Sensitive,Stalwart,Mature,B2B,Product sale;Subscription,Intangibles,Industrial tech,Mid
+ZTS,US,NYSE,Zoetis Inc.,S&P 500,Health Care,,Animal health,Upstream,Large,Dividend,Defensive,Stalwart,Mature,B2B,Product sale;Transaction fee,Intangibles,Animal health,Low
