@@ -255,7 +255,7 @@ describe('concentration page', () => {
       'All stocks (8)', 'Held stocks (5)', 'Core holdings (3)', 'Empty list (0)',
     ])
     await userEvent.click(screen.getByRole('option', { name: 'Core holdings (3)' }))
-    expect(screen.getByRole('table', { name: /list Core holdings/ })).toBeInTheDocument()
+    expect(await screen.findByRole('table', { name: /list Core holdings/ })).toBeInTheDocument()
   })
 
   it('TC-C-413: Group by lists the sixteen lenses in FR-006 order', async () => {
