@@ -200,7 +200,7 @@ unit:
   `db:stop` hook note).
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -332,7 +332,7 @@ fails if someone re-enables sign-up in `config.toml` without updating the requir
   needs it).
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004]
-- status: backlog
+- status: doing
 - size: M
 ```
 
