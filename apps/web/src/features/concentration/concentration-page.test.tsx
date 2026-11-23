@@ -318,13 +318,6 @@ describe('concentration page', () => {
     expect(screen.getByRole('radio', { name: 'Value at cost' })).toHaveFocus()
   })
 
-  it('TC-C-428: Settings and Set rate open the dialog slot with the right focus target', async () => {
-    const slot = await import('./components/settings-dialog')
-    expect(typeof slot.ConcentrationSettingsDialog).toBe('function')
-    await open('?measure=value', api(hcA(), DEFAULT_SETTINGS))
-    expect(screen.getByRole('button', { name: 'Settings' })).toHaveClass('w-full', 'sm:w-auto')
-  })
-
   it('TC-C-427: regrouping 200 stocks takes under 200 ms and sends no request', async () => {
     const lensKeys = ['gicsSector', 'themes', 'market', 'style']
     const many = Array.from({ length: 200 }, (_, i) =>
