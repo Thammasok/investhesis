@@ -487,7 +487,7 @@ unit:
   Mark as held after Stop holding. Covers FR-001, FR-002, FR-004.
 - agent: react-vite-developer
 - depends_on: [T-005]
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -551,7 +551,7 @@ unit:
   FR-010, FR-012 to FR-014, NFR-001, NFR-006, NFR-007.
 - agent: react-vite-developer
 - depends_on: [T-002, T-005]
-- status: backlog
+- status: doing
 - size: L
 ```
 
