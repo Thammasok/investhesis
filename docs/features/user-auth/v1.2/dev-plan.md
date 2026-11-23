@@ -50,7 +50,7 @@ Each task leaves `main` green on its own. New test ids use the 3xx range (`TC-U-
   and T-003.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: review
 - size: S
 ```
 
@@ -301,7 +301,7 @@ fails if someone re-enables sign-up in `config.toml` without updating the requir
   docs/features/user-auth/v1.2/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: review
 - size: S
 ```
 
