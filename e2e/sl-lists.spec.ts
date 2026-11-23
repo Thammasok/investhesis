@@ -155,7 +155,7 @@ test.describe('lists', () => {
     await page.goto(`/stocks/${stock.id}`)
     await settled(page)
 
-    // Assert: tab order Edit -> More -> list remove -> Add to list
+    // Assert: tab order Edit -> More -> Mark as held (Holding card) -> list link -> list remove -> Add to list
     await page.getByRole('link', { name: 'Edit' }).focus()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('button', { name: 'More actions' })).toBeFocused()
@@ -167,6 +167,8 @@ test.describe('lists', () => {
     await expect(page.getByRole('alertdialog').getByRole('button', { name: 'Cancel' })).toBeFocused()
     await page.keyboard.press('Enter')
     await expect(page.getByRole('button', { name: 'More actions' })).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(page.getByRole('button', { name: 'Mark as held' })).toBeFocused()
     await page.keyboard.press('Tab')
     await expect(page.getByRole('link', { name: 'Core holdings' })).toBeFocused()
     await page.keyboard.press('Tab')
