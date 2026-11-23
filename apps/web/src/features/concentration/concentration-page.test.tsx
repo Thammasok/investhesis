@@ -351,6 +351,8 @@ describe('concentration page', () => {
     expect(p95).toBeLessThan(200)
     expect(stub.callsTo('GET /stocks')).toHaveLength(1)
     expect(stub.callsTo('GET /settings')).toHaveLength(1)
+    // The signed-in area's own read (the account menu) must not repeat on a regroup either.
+    expect(stub.callsTo('GET /me').length).toBeLessThanOrEqual(1)
   })
 })
 

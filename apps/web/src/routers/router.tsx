@@ -70,6 +70,10 @@ export function createRoutes(
       // loader from calling the API before the visitor is known to be signed in.
       middleware: [requireSession],
       loader: () => loadCurrentUser(apiClient, authClient),
+      // The menu's email changes only with the session, so a navigation within one page (a regroup on
+      // /concentration changes only the query) does not read /me again; forms and page changes still do.
+      shouldRevalidate: ({ currentUrl, nextUrl, formMethod, defaultShouldRevalidate }) =>
+        !formMethod && currentUrl.pathname === nextUrl.pathname ? false : defaultShouldRevalidate,
       Component: AppShell,
       // The first paint, while this loader and the page's own run in parallel (ux-design.md: Loading).
       HydrateFallback: PageSkeleton,
