@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -18,6 +19,7 @@ import {
   PASSWORD,
   psql,
   publishableKey,
+  serviceKey,
   signedIn,
   tokenHashIn,
   unconfirmedUser,
@@ -365,5 +367,212 @@ describe('static checks of the project files (TC-A-310, TC-A-032)', () => {
     for (const name of Object.keys({ ...api.dependencies, ...web.dependencies })) {
       expect(name, name).not.toMatch(/^(@auth0|auth0|firebase|@clerk|next-auth|passport|@auth\/)/)
     }
+  })
+})
+
+// ---- user-auth v1.2 T-005: admin-created accounts at the provider, in the API and in the repo files ----
+
+/** The API in supabase mode, verifying tokens against the local JWKS (as TC-A-019 does). */
+async function localApi() {
+  const config = loadConfig(supabaseEnv)
+  return buildApp({
+    config,
+    resolveIdentity: supabaseIdentityResolver({
+      issuer: config.supabaseAuth?.issuer ?? '',
+      audience: 'authenticated',
+      keys: createRemoteJWKSet(new URL(config.supabaseAuth?.jwksUrl ?? '')),
+    }),
+    logStream: { write() {} },
+  })
+}
+
+describe('admin-created user and the API (TC-A-304, TC-A-316)', () => {
+  it('TC-A-304: an admin-created user signs in with no mail and the API answers /me with the same id and email', async () => {
+    // Arrange
+    const email = newEmail('admin-made')
+    const user = await adminCreateUser(email)
+    const app = await localApi()
+
+    // Act
+    const { session } = await signedIn(email)
+    const res = await app.inject({ method: 'GET', url: '/me', headers: { authorization: `Bearer ${session.access_token}` } })
+    await app.close()
+
+    // Assert
+    expect(await messagesTo(email)).toHaveLength(0)
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toMatchObject({ id: user.id, email })
+    expect(psql(`select id from auth.users where email = '${email}';`).out).toBe(user.id)
+  })
+
+  it('TC-A-316: /me accepts a valid token, rejects a tampered payload and a missing token', async () => {
+    // Arrange
+    const user = await adminCreateUser(newEmail('bad-token'))
+    const { session } = await signedIn(user.email)
+    const [head, payload, signature] = session.access_token.split('.') as [string, string, string]
+    const mid = Math.floor(payload.length / 2)
+    const tampered = `${head}.${payload.slice(0, mid)}${payload[mid] === 'A' ? 'B' : 'A'}${payload.slice(mid + 1)}.${signature}`
+    const app = await localApi()
+    const get = (token?: string) =>
+      app.inject({ method: 'GET', url: '/me', headers: token ? { authorization: `Bearer ${token}` } : {} })
+
+    // Act
+    const [valid, bad, none] = [await get(session.access_token), await get(tampered), await get()]
+    await app.close()
+
+    // Assert
+    expect(valid.statusCode).toBe(200)
+    expect(bad.statusCode).toBe(401)
+    expect(bad.json()).toMatchObject({ code: 'unauthenticated' })
+    expect(bad.headers['www-authenticate']).toMatch(/^Bearer/)
+    expect(none.statusCode).toBe(401)
+  })
+})
+
+describe('recovery, refresh, sign-out and resend for admin-created users (TC-A-306, 307, 308, 314)', () => {
+  it('TC-A-306: recovery answers the same for a known and an unknown address; only the known one gets mail', async () => {
+    // Arrange
+    const known = await adminCreateUser(newEmail('rec-known'))
+    const unknown = newEmail('rec-ghost')
+    const recover = async (email: string) => {
+      const res = await fetch(`${API}/auth/v1/recover`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', apikey: publishableKey() },
+        body: JSON.stringify({ email }),
+      })
+      return { status: res.status, body: await res.text() }
+    }
+
+    // Act
+    const a = await recover(known.email)
+    const b = await recover(unknown)
+
+    // Assert
+    expect(a).toEqual(b)
+    expect(a.status).toBe(200)
+    expect(await mailFor(known.email)).toHaveLength(1)
+    expect(await mailFor(unknown, { timeoutMs: 2000 })).toHaveLength(0)
+    expect(userCount(unknown)).toBe(0)
+  })
+
+  it('TC-A-307: refresh tokens rotate; a stale one is rejected and a reuse inside 10 s is tolerated (D-1: no family revocation locally)', async () => {
+    // Arrange: R1 -> R2 -> R3, so R1 is no longer the direct parent of the live token.
+    // Same deviation as TC-A-030 (v1.0 test report D-1): local Auth 3.2.0 rejects the stale ancestor with
+    // `refresh_token_already_used` but does not revoke the session family, so that part is not asserted.
+    const user = await adminCreateUser(newEmail('rot'))
+    const { sb, session } = await signedIn(user.email)
+    const r1 = session.refresh_token
+    const r2 = (await sb.auth.refreshSession({ refresh_token: r1 })).data.session!.refresh_token
+    const quick = await client().auth.refreshSession({ refresh_token: r1 })
+    const r3 = (await sb.auth.refreshSession({ refresh_token: r2 })).data.session!.refresh_token
+    expect(new Set([r1, r2, r3]).size).toBe(3)
+
+    // Act
+    await sleep(11_000)
+    const stale = await client().auth.refreshSession({ refresh_token: r1 })
+
+    // Assert
+    expect(quick.error).toBeNull()
+    expect(stale.error?.code).toBe('refresh_token_already_used')
+    expect(stale.data.session).toBeNull()
+  }, 40_000)
+
+  it('TC-A-308: sign-out revokes the refresh token; the access token verifies only until it expires', async () => {
+    // Arrange
+    const user = await adminCreateUser(newEmail('out'))
+    const { sb, session } = await signedIn(user.email)
+    const app = await localApi()
+
+    // Act
+    const out = await sb.auth.signOut()
+    const refresh = await client().auth.refreshSession({ refresh_token: session.refresh_token })
+    const stillValid = await app.inject({ method: 'GET', url: '/me', headers: { authorization: `Bearer ${session.access_token}` } })
+    await app.close()
+
+    // Assert
+    expect(out.error).toBeNull()
+    expect(refresh.error).not.toBeNull()
+    expect(refresh.data.session).toBeNull()
+    // Unchanged v1.0 behaviour: the JWT is verified statelessly, so it works until `exp` (at most 1 hour).
+    expect(stillValid.statusCode).toBe(200)
+  })
+
+  it('TC-A-314: a second resend inside 60 s is refused and sends nothing; one after the window is sent', async () => {
+    // Arrange
+    const email = newEmail('resend')
+    const sb = await unconfirmedUser(email)
+    await mailFor(email)
+
+    // Act
+    const inside = await sb.auth.resend({ type: 'signup', email })
+    const afterInside = await messagesTo(email)
+    await sleep(61_000)
+    const later = await sb.auth.resend({ type: 'signup', email })
+    const mails = await mailFor(email, { count: 2 })
+
+    // Assert
+    expect(inside.error?.code).toBe('over_email_send_rate_limit')
+    expect(afterInside).toHaveLength(1)
+    expect(later.error).toBeNull()
+    expect(mails).toHaveLength(2)
+  }, 90_000)
+})
+
+describe('no admin credential in the repository, and the README (TC-A-312, TC-A-318)', () => {
+  const tracked = () =>
+    execFileSync('git', ['ls-files'], { cwd: ROOT, encoding: 'utf8' })
+      .split('\n')
+      .filter((f) => f && existsSync(resolve(ROOT, f)) && !/pnpm-lock\.yaml$|\.(png|ico|jpg|woff2?)$/.test(f))
+  const read = (f: string) => readFileSync(resolve(ROOT, f), 'utf8')
+
+  it('TC-A-312: no tracked file holds the live service key or any JWT or secret-key literal, and only the README and the test helper name it', () => {
+    // Arrange
+    const key = serviceKey()
+    const jwt = /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/
+    const secretKey = /sb_secret_[A-Za-z0-9_-]{8,}/
+    const named = /service_role|SERVICE_ROLE_KEY/i
+    const allowedToName = new Set(['supabase/README.md', 'scripts/lib/stack.ts', 'supabase/config.toml', 'scripts/auth-integration.test.ts'])
+
+    // Act
+    const files = tracked()
+    const holdsKey: string[] = []
+    const holdsLiteral: string[] = []
+    const names: string[] = []
+    for (const f of files) {
+      if (f.startsWith('docs/')) continue
+      const text = read(f)
+      if (text.includes(key)) holdsKey.push(f)
+      if (jwt.test(text) || secretKey.test(text)) holdsLiteral.push(f)
+      if (named.test(text) && !allowedToName.has(f)) names.push(f)
+    }
+
+    // Assert
+    expect(holdsKey).toEqual([])
+    expect(holdsLiteral).toEqual([])
+    expect(names).toEqual([])
+    for (const f of files.filter((f) => /\.env(\.example)?$/.test(f))) expect(read(f), f).not.toMatch(named)
+  })
+
+  it('TC-A-312: the README curl uses placeholders for the key and the temporary password', () => {
+    const readme = read('supabase/README.md')
+    expect(readme).toContain('$SERVICE_ROLE_KEY')
+    expect(readme).toContain('<temporary-password>')
+    expect(readme).not.toMatch(/Authorization: Bearer (?!\$SERVICE_ROLE_KEY)[A-Za-z0-9._-]{20,}/)
+  })
+
+  it('TC-A-318: the README documents creating accounts, the hand-over, re-opening and the rollout order', () => {
+    const readme = read('supabase/README.md')
+    const section = readme.slice(readme.indexOf('## Creating accounts'), readme.indexOf('## Production email'))
+    expect(readme).toMatch(/^## Creating accounts$/m)
+    expect(readme).not.toMatch(/^#+ .*allowlist/im)
+    expect(section).toMatch(/Add user/)
+    expect(section).toMatch(/Auto Confirm User/)
+    expect(section).toMatch(/\/auth\/v1\/admin\/users/)
+    expect(section).toMatch(/Hand-over/)
+    expect(section).toMatch(/change the password/i)
+    expect(section).toMatch(/Re-opening sign-up/)
+    expect(section).toMatch(/enable_signup = true/)
+    expect(section).toMatch(/Allow new users to sign up/)
+    expect(readme).toMatch(/\(1\)[^\n]*disable Before User Created[^\n]*\(2\)[^\n]*sign up[^\n]*off[^\n]*\(3\)[^\n]*supabase db push/)
   })
 })
