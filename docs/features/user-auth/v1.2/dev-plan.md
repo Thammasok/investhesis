@@ -50,7 +50,7 @@ Each task leaves `main` green on its own. New test ids use the 3xx range (`TC-U-
   and T-003.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: S
 ```
 
@@ -108,7 +108,7 @@ uses `resend` for an unconfirmed user, so copy that pattern.
   `apps/web` auth paragraph in CLAUDE.md.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -301,7 +301,7 @@ fails if someone re-enables sign-up in `config.toml` without updating the requir
   docs/features/user-auth/v1.2/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: review
+- status: done
 - size: S
 ```
 
