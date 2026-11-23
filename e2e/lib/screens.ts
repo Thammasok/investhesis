@@ -47,6 +47,26 @@ export const SCREENS: Screen[] = [
     },
   },
   {
+    name: 'link-expired-email',
+    submit: 'Send a new link',
+    visit: async (page) => {
+      await page.goto('/auth/confirm?token_hash=garbage&type=email')
+      await expect(page).toHaveURL(/\/auth\/link-expired/)
+      await expect(h1(page)).toHaveText('This link has expired or was already used')
+      await page.getByLabel('Email').fill(newEmail('screen-nobody'))
+    },
+  },
+  {
+    name: 'link-expired-recovery',
+    submit: 'Send a new link',
+    visit: async (page) => {
+      await page.goto('/auth/confirm?token_hash=garbage&type=recovery')
+      await expect(page).toHaveURL(/\/auth\/link-expired/)
+      await expect(h1(page)).toHaveText('This link has expired or was already used')
+      await page.getByLabel('Email').fill(newEmail('screen-nobody'))
+    },
+  },
+  {
     name: 'forgot-password',
     submit: 'Send reset link',
     visit: async (page) => {

@@ -6,9 +6,10 @@ import { SCREENS, signedInScreens, signedOutScreens, type Screen } from './lib/s
 const noHorizontalScroll = (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)
 
-async function checkLayout(page: Page, screen: Screen, width: number, height: number) {
-  const where = `${screen.name} @ ${width}x${height}`
+async function checkLayout(page: Page, screen: Screen, width: number, height: number, scheme: 'light' | 'dark') {
+  const where = `${screen.name} @ ${width}x${height} ${scheme}`
   await screen.visit(page)
+  await page.evaluate((dark) => document.documentElement.classList.toggle('dark', dark), scheme === 'dark')
   expect(await noHorizontalScroll(page), `${where}: no sideways scroll`).toBe(true)
   const panel = page.locator('div[aria-hidden="true"].bg-muted')
   await expect(panel, `${where}: decorative panel hidden`).toBeHidden()
@@ -50,12 +51,15 @@ test.describe('360 px layout', () => {
     [320, 568],
     [360, 360],
   ] as const) {
-    test(`TC-E-026: every auth screen fits at ${width}x${height}`, async ({ page }) => {
-      await page.setViewportSize({ width, height })
-      for (const screen of signedOutScreens) await checkLayout(page, screen, width, height)
-      await openSignedIn(page, await makeUser('e2e-26'))
-      for (const screen of signedInScreens) await checkLayout(page, screen, width, height)
-    })
+    for (const scheme of ['light', 'dark'] as const) {
+      test(`TC-E-026 / TC-E-313: every auth screen fits at ${width}x${height} in ${scheme} mode`, async ({ page }) => {
+        await page.setViewportSize({ width, height })
+        await page.emulateMedia({ colorScheme: scheme })
+        for (const screen of signedOutScreens) await checkLayout(page, screen, width, height, scheme)
+        await openSignedIn(page, await makeUser('e2e-26'))
+        for (const screen of signedInScreens) await checkLayout(page, screen, width, height, scheme)
+      })
+    }
   }
 
   test('TC-E-026: the Account card is full width and its submit fills it at 360 px', async ({ page }) => {
@@ -93,7 +97,7 @@ test.describe('360 px layout', () => {
 
 test.describe('accessibility (axe)', () => {
   for (const scheme of ['light', 'dark'] as const) {
-    test(`TC-E-027: no axe violations on any auth screen in ${scheme} mode`, async ({ page }) => {
+    test(`TC-E-027 / TC-E-313: no axe violations on any auth screen in ${scheme} mode`, async ({ page }) => {
       // The app has no theme switch yet: dark tokens apply through the `.dark` class, so set it as
       // well as the media preference.
       await page.emulateMedia({ colorScheme: scheme })
@@ -112,8 +116,8 @@ test.describe('accessibility (axe)', () => {
       for (const screen of signedInScreens) await scan(screen)
 
       expect(findings).toEqual([])
-      // Eight screens since sign-up was removed (v1.2); none of them is a registration screen.
-      expect(SCREENS.map((screen) => screen.name)).toHaveLength(8)
+      // Ten screens since sign-up was removed (v1.2); none of them is a registration screen.
+      expect(SCREENS.map((screen) => screen.name)).toHaveLength(10)
       expect(SCREENS.some((screen) => /sign-?up/i.test(screen.name))).toBe(false)
     })
   }
