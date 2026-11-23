@@ -50,7 +50,10 @@ export class StubApi {
   }
 }
 
+/** What `GET /settings` answers for a user with no settings row (design.md §Settings). */
+export const DEFAULT_SETTINGS = { concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null }
+
 /** An API where the user has no stocks and no lists: enough for tests that only need a page to land on. */
 export function emptyApi(): StubApi {
-  return new StubApi({ 'GET /stocks': { items: [] }, 'GET /lists': { items: [] } })
+  return new StubApi({ 'GET /stocks': { items: [] }, 'GET /lists': { items: [] }, 'GET /settings': DEFAULT_SETTINGS })
 }

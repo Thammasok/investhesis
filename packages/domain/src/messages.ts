@@ -29,8 +29,8 @@ export const MESSAGES = {
 export const LENS_LABELS = {
   gicsSector: 'Sector (GICS)',
   setIndustryGroup: 'SET industry group',
-  valueChain: 'Value chain',
   valueChainPosition: 'Value chain position',
+  valueChain: 'Value chain name',
   size: 'Size',
   style: 'Style',
   economicCycle: 'Economic cycle',

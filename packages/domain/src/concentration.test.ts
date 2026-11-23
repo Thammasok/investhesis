@@ -35,7 +35,7 @@ const find = (r: ReturnType<typeof groupConcentration>, label: string) => r.grou
 describe('CONCENTRATION_LENSES', () => {
   it('TC-U-420: lists the sixteen lenses of FR-006 in order with their kind', () => {
     expect(CONCENTRATION_LENSES.map((l) => l.key)).toEqual([
-      'gicsSector', 'setIndustryGroup', 'valueChain', 'valueChainPosition', 'size', 'style',
+      'gicsSector', 'setIndustryGroup', 'valueChainPosition', 'valueChain', 'size', 'style',
       'economicCycle', 'lynchType', 'lifeCycle', 'customers', 'revenueTypes', 'moat', 'themes',
       'volatility', 'market', 'indexMembership',
     ])
@@ -54,7 +54,7 @@ describe('CONCENTRATION_LENSES', () => {
     })
     const got = CONCENTRATION_LENSES.map((l) => l.get(s))
     expect(got).toEqual([
-      'Energy', 'sig', 'vc', 'Upstream', 'Large', 'Growth', 'Cyclical', 'Stalwart', 'Mature',
+      'Energy', 'sig', 'Upstream', 'vc', 'Large', 'Growth', 'Cyclical', 'Stalwart', 'Mature',
       ['B2B'], ['Recurring'], 'Wide', ['AI'], 'Low', 'TH', ['SET50'],
     ])
   })

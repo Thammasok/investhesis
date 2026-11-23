@@ -7,6 +7,7 @@ import { AuthClientProvider } from '@/features/auth/auth-client-provider'
 import { loadCurrentUser } from '@/features/auth/current-user'
 import { createGuards, sessionEndedHandler } from '@/features/auth/guards'
 import { createAuthLoaders } from '@/features/auth/loaders'
+import { concentrationRoute } from '@/features/concentration/concentration-routes'
 import { importExportRoute } from '@/features/imports/imports-routes'
 import { listsRoutes } from '@/features/lists/lists-routes'
 import { stocksRoutes } from '@/features/stocks/stocks-routes'
@@ -81,11 +82,7 @@ export function createRoutes(
           handle: { crumb: 'Account' } satisfies RouteHandle,
           lazy: () => import('@/views/account'),
         },
-        {
-          path: 'concentration',
-          handle: { crumb: 'Concentration' } satisfies RouteHandle,
-          lazy: () => import('@/views/concentration'),
-        },
+        concentrationRoute(apiClient),
         {
           path: 'chains',
           handle: { crumb: 'Value chains' } satisfies RouteHandle,

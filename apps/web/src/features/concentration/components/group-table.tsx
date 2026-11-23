@@ -1,0 +1,123 @@
+import { ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
+import { Fragment, useId, useState } from 'react'
+import { Link } from 'react-router'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { countLabel } from '@/features/stocks/format'
+import type { Stock } from '@/features/stocks/types'
+import { scopeName, thb, type Plan, type Settings, type View } from '../concentration-model'
+
+const num = 'text-right tabular-nums'
+
+function FlagBadge({ threshold }: { threshold: number }) {
+  return (
+    <Badge variant="outline" className="text-foreground">
+      <TriangleAlertIcon aria-hidden="true" className="text-destructive" />
+      Over {threshold}%
+    </Badge>
+  )
+}
+
+/** The only figure on the page: a table whose Share cells carry a decorative bar (NFR-006). */
+export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view: View; stocks: readonly Stock[]; settings: Settings }) {
+  const idBase = useId()
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set())
+  const byId = new Map(stocks.map((s) => [s.id, s]))
+  const isValue = plan.measure === 'value'
+  const threshold = settings.concentrationThreshold
+  const toggle = (label: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(label)) next.add(label)
+      return next
+    })
+
+  return (
+    <div className="rounded-lg border">
+      <Table>
+        <TableCaption className="sr-only">
+          {`Stocks grouped by ${view.lens.label}, ${isValue ? 'by value at cost' : 'by number of stocks'}, ${scopeName(view)}`}
+        </TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col">Group</TableHead>
+            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Value (THB)</TableHead> : null}
+            {isValue ? null : <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Stocks</TableHead>}
+            <TableHead scope="col" className={num}>Share</TableHead>
+            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Stocks</TableHead> : <TableHead scope="col">Flag</TableHead>}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {plan.groups.map((group, index) => {
+            const share = isValue ? group.valueShare : group.countShare
+            const flagged = isValue ? group.valueFlag : group.countFlag
+            const expanded = open.has(group.label)
+            const subId = `${idBase}-group-${index}`
+            const stockLabel = countLabel(group.count, 'stock')
+            return (
+              <Fragment key={group.label}>
+                <TableRow>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="-ml-2 h-auto min-h-8 max-w-full justify-start whitespace-normal text-left"
+                      aria-expanded={expanded}
+                      aria-controls={subId}
+                      aria-label={`Show stocks in ${group.label}`}
+                      onClick={() => toggle(group.label)}
+                    >
+                      <ChevronRightIcon
+                        aria-hidden="true"
+                        data-state={expanded ? 'open' : 'closed'}
+                        className="transition-transform data-[state=open]:rotate-90 motion-reduce:transition-none"
+                      />
+                      {group.label}
+                    </Button>
+                    <div className="pl-6 text-xs text-muted-foreground sm:hidden">
+                      {isValue ? `${thb(group.value)} · ${stockLabel}` : stockLabel}
+                    </div>
+                  </TableCell>
+                  {isValue ? <TableCell className={`hidden sm:table-cell ${num}`}>{thb(group.value)}</TableCell> : <TableCell className={`hidden sm:table-cell ${num}`}>{group.count}</TableCell>}
+                  <TableCell className={num}>
+                    <div className="flex flex-col items-end gap-1 sm:flex-row sm:items-center sm:justify-end sm:gap-2">
+                      <div aria-hidden="true" className="hidden h-1.5 w-24 rounded-full bg-muted sm:block">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${share ?? 0}%`, maxWidth: "100%" }} />
+                      </div>
+                      <span>{share === null ? '—' : `${share}%`}</span>
+                      {isValue && flagged ? <FlagBadge threshold={threshold} /> : null}
+                    </div>
+                  </TableCell>
+                  {isValue ? (
+                    <TableCell className={`hidden sm:table-cell ${num}`}>{group.count}</TableCell>
+                  ) : (
+                    <TableCell>{flagged ? <FlagBadge threshold={threshold} /> : null}</TableCell>
+                  )}
+                </TableRow>
+                {expanded ? (
+                  <TableRow id={subId} className="bg-background hover:bg-background">
+                    <TableCell colSpan={4}>
+                      <ul className="flex flex-wrap gap-x-3 gap-y-1 pl-6 text-sm">
+                        {group.stockIds.map((id) => {
+                          const stock = byId.get(id)
+                          return stock ? (
+                            <li key={id}>
+                              <Link to={`/stocks/${stock.id}`} className="underline underline-offset-4">
+                                {stock.ticker}
+                              </Link>
+                            </li>
+                          ) : null
+                        })}
+                      </ul>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </Fragment>
+            )
+          })}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}

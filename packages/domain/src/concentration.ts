@@ -49,8 +49,8 @@ const multi = (key: ConcentrationLens['key'], get: (s: GroupableStock) => Pick):
 export const CONCENTRATION_LENSES: readonly ConcentrationLens[] = [
   single('gicsSector', (s) => s.gicsSector),
   single('setIndustryGroup', (s) => s.setIndustryGroup),
-  single('valueChain', (s) => s.valueChain),
   single('valueChainPosition', (s) => s.valueChainPosition),
+  single('valueChain', (s) => s.valueChain),
   single('size', (s) => s.size),
   single('style', (s) => s.style),
   single('economicCycle', (s) => s.economicCycle),
