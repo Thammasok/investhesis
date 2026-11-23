@@ -38,18 +38,18 @@ test.describe('direct sign-up call', () => {
 
     // Act: the public anon key is in every browser bundle, so call the endpoint as a page would
     const results = await page.evaluate(
-      async ([api, apikey, emails]) =>
+      async ({ api, apikey, emails }) =>
         Promise.all(
-          (emails as string[]).map(async (email) => {
+          emails.map(async (email) => {
             const res = await fetch(`${api}/auth/v1/signup`, {
               method: 'POST',
-              headers: { 'content-type': 'application/json', apikey: apikey as string },
+              headers: { 'content-type': 'application/json', apikey },
               body: JSON.stringify({ email, password: 'Different123' }),
             })
             return { status: res.status, body: (await res.json()) as { error_code: string } }
           }),
         ),
-      [API, key, [fresh, gmail, existing.email]] as const,
+      { api: API, apikey: key, emails: [fresh, gmail, existing.email] },
     )
 
     // Assert
