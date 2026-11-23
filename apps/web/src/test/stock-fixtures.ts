@@ -27,6 +27,7 @@ export function makeStock(overrides: Partial<Stock> = {}): Stock {
     moat: null,
     themes: [],
     volatility: null,
+    holding: null,
     lensSources: {},
     listIds: [],
     createdAt: stamp,

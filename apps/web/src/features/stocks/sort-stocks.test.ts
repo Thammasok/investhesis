@@ -38,7 +38,23 @@ describe('sortStocks', () => {
     expect(stocks).toEqual(copy)
   })
 
-  it('TC-U-133: only ticker, name, market and sector are sortable', () => {
-    expect(SORTABLE_COLUMNS).toEqual(['ticker', 'name', 'market', 'sector'])
+  it('TC-U-133: only ticker, name, market, sector and held are sortable', () => {
+    expect(SORTABLE_COLUMNS).toEqual(['ticker', 'name', 'market', 'sector', 'held'])
+  })
+
+  it('TC-C-411: held sort is held first, shares descending (exact), held without shares, then not held; ties by ticker', () => {
+    const h = (ticker: string, shares: string | null) => makeStock({ ticker, holding: { shares, averageCost: null, costCurrency: 'USD' } })
+    const list = [
+      makeStock({ ticker: 'AAPL' }),
+      h('PTTEP', null),
+      h('TSLA', '9.0000'),
+      h('MSFT', '10.0000'),
+      h('BIG2', '99999999999999.9998'),
+      h('NVDA', '120.5000'),
+      h('BIG1', '99999999999999.9999'),
+      h('ZZZ', '10.0000'),
+    ]
+    expect(tickers(sortStocks(list, 'held', 'desc'))).toEqual(['BIG1', 'BIG2', 'NVDA', 'MSFT', 'ZZZ', 'TSLA', 'PTTEP', 'AAPL'])
+    expect(tickers(sortStocks(list, 'held', 'asc'))).toEqual(['AAPL', 'PTTEP', 'TSLA', 'MSFT', 'ZZZ', 'NVDA', 'BIG2', 'BIG1'])
   })
 })

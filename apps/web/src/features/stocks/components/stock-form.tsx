@@ -16,10 +16,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import type { StockFormResult } from '../stocks-data'
 import {
   checkValues,
+  costCurrencyOf,
   createBody,
   defaultCycle,
   emptyValues,
@@ -114,6 +116,7 @@ export function StockForm(props: StockFormProps) {
   const set = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
     setValues((v) => ({ ...v, [key]: value }))
     if (key in errors) setErrors(({ [key as FieldName]: _gone, ...rest }) => rest)
+    if (key === 'held' && value === false) setErrors(({ holdingShares: _s, holdingAverageCost: _c, ...rest }) => rest)
   }
 
   const setMarket = (next: Market) => {
@@ -143,7 +146,9 @@ export function StockForm(props: StockFormProps) {
       return
     }
     setErrors({})
-    const body = stock ? patchBody(checked.input, values, stock) : createBody(checked.input, values, values.economicCycle !== '')
+    const body = stock
+      ? patchBody(checked.input, values, stock, checked.holding)
+      : createBody(checked.input, values, values.economicCycle !== '', checked.holding)
     if (stock && Object.keys(body).length === 0) {
       toast('No changes to save')
       return
@@ -157,6 +162,7 @@ export function StockForm(props: StockFormProps) {
   const chainNamed = values.valueChain.trim() !== ''
   const cycleDefault = values.economicCycle === '' ? defaultCycle(values.gicsSector) : ''
   const lists = props.mode === 'create' ? props.lists : []
+  const costCurrency = costCurrencyOf(values)
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate className={props.inDialog ? 'space-y-6' : 'max-w-4xl space-y-6'}>
@@ -409,6 +415,93 @@ export function StockForm(props: StockFormProps) {
               />
               <FieldMessage name="themes" error={errors.themes} />
             </Field>
+          </FieldGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h2>Holding</h2>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <FieldGroup className="grid gap-4 md:grid-cols-2">
+            <Field orientation="horizontal" className={half}>
+              <Checkbox
+                id="stock-held"
+                data-field="held"
+                checked={values.held}
+                disabled={pending}
+                onCheckedChange={(on) => set('held', on === true)}
+              />
+              <FieldLabel htmlFor="stock-held" className="font-normal">
+                I hold this stock
+              </FieldLabel>
+            </Field>
+            {values.held ? (
+              <>
+                <Field data-invalid={errors.holdingShares ? true : undefined}>
+                  <FieldLabel htmlFor="stock-holdingShares">Shares (optional)</FieldLabel>
+                  <Input
+                    id="stock-holdingShares"
+                    data-field="holdingShares"
+                    type="text"
+                    inputMode="decimal"
+                    autoComplete="off"
+                    value={values.holdingShares}
+                    disabled={pending}
+                    onChange={(e) => set('holdingShares', e.target.value)}
+                    className="tabular-nums"
+                    {...errorProps('holdingShares', errors.holdingShares)}
+                  />
+                  <FieldMessage name="holdingShares" error={errors.holdingShares} />
+                </Field>
+                <Field data-invalid={errors.holdingAverageCost ? true : undefined}>
+                  <FieldLabel htmlFor="stock-holdingAverageCost">Average cost per share (optional)</FieldLabel>
+                  <InputGroup>
+                    <InputGroupAddon>
+                      <span aria-hidden="true">{costCurrency === 'THB' ? '฿' : '$'}</span>
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id="stock-holdingAverageCost"
+                      data-field="holdingAverageCost"
+                      type="text"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      value={values.holdingAverageCost}
+                      disabled={pending}
+                      onChange={(e) => set('holdingAverageCost', e.target.value)}
+                      className="tabular-nums"
+                      {...errorProps('holdingAverageCost', errors.holdingAverageCost)}
+                    />
+                  </InputGroup>
+                  <FieldMessage name="holdingAverageCost" error={errors.holdingAverageCost} />
+                </Field>
+                <FieldSet className={half}>
+                  <FieldLegend variant="label" id="stock-costCurrency-legend">
+                    Cost currency
+                  </FieldLegend>
+                  <RadioGroup
+                    value={costCurrency}
+                    onValueChange={(next) => set('costCurrency', next as 'USD' | 'THB')}
+                    aria-labelledby="stock-costCurrency-legend"
+                    disabled={pending}
+                    className="flex gap-4"
+                  >
+                    {(['USD', 'THB'] as const).map((c) => (
+                      <Field key={c} orientation="horizontal" className="w-auto">
+                        <RadioGroupItem value={c} id={`stock-costCurrency-${c}`} />
+                        <FieldLabel htmlFor={`stock-costCurrency-${c}`} className="font-normal">
+                          {c}
+                        </FieldLabel>
+                      </Field>
+                    ))}
+                  </RadioGroup>
+                </FieldSet>
+                <FieldDescription className={half}>Leave shares or cost empty if you don&apos;t want to track the amount.</FieldDescription>
+              </>
+            ) : null}
           </FieldGroup>
         </CardContent>
       </Card>

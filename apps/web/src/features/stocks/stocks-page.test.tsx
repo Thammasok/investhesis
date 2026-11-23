@@ -60,7 +60,7 @@ describe('stocks page', () => {
     expect(within(row).getByText('Resources')).toBeInTheDocument()
   })
 
-  it('TC-C-110: has the columns in order, sortable headers only on four, and an updating caption', async () => {
+  it('TC-C-110: has the columns in order, sortable headers only on five, and an updating caption', async () => {
     renderApp('/stocks', stocksApi())
     const table = await screen.findByRole('table')
     const heads = within(table).getAllByRole('columnheader')
@@ -70,6 +70,7 @@ describe('stocks page', () => {
       'Market',
       'Exchange',
       'Sector',
+      'Held',
       'Size',
       'Style',
       'Lists',
@@ -77,7 +78,7 @@ describe('stocks page', () => {
     const sortable = within(table)
       .getAllByRole('button')
       .map((b) => b.getAttribute('aria-label') ?? b.textContent)
-    expect(sortable).toEqual(['Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector'])
+    expect(sortable).toEqual(['Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held'])
     expect(heads.filter((h) => h.getAttribute('aria-sort') && h.getAttribute('aria-sort') !== 'none')).toHaveLength(1)
     expect(within(table).getByText('Saved stocks, sorted by Ticker ascending', { selector: 'caption' })).toBeInTheDocument()
 
@@ -143,9 +144,9 @@ describe('stocks page', () => {
       .map((l) => l.textContent)
     const buttons = within(main).getAllByRole('button')
     expect(stops).toEqual(['Import', 'Add stock', 'AAPL', 'MSFT', 'PTTEP'])
-    expect(buttons).toHaveLength(4)
+    expect(buttons).toHaveLength(5)
     const all = Array.from(main.querySelectorAll<HTMLElement>('a[href], button')).map((e) => e.getAttribute('aria-label') ?? e.textContent)
-    expect(all).toEqual(['Import', 'Add stock', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'AAPL', 'MSFT', 'PTTEP'])
+    expect(all).toEqual(['Import', 'Add stock', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
   })
 
   it('TC-C-113: shows the count text with singular and plural, and links in the header', async () => {
@@ -233,5 +234,46 @@ describe('stock table performance', () => {
     }
     expect(median(renders)).toBeLessThan(200)
     expect(median(sorts)).toBeLessThan(200)
+  })
+})
+
+describe('stocks page: Held column', () => {
+  const held = (ticker: string, shares: string | null) =>
+    makeStock({ ticker, name: `${ticker} Co`, holding: { shares, averageCost: '1.0000', costCurrency: 'USD' } })
+  const items = [
+    held('NVDA', '120.5000'),
+    held('TSLA', '9.0000'),
+    held('MSFT', '10.0000'),
+    held('BIG1', '99999999999999.9999'),
+    held('BIG2', '99999999999999.9998'),
+    held('PTTEP', null),
+    makeStock({ ticker: 'AAPL' }),
+  ]
+  const rowOf = (ticker: string) => screen.getByRole('link', { name: ticker }).closest('tr') as HTMLElement
+
+  it('TC-U-455: shows Held with shares, Held alone, and a dash with "Not held"', async () => {
+    renderApp('/stocks', stocksApi(items))
+    await screen.findByRole('table')
+    expect(within(rowOf('NVDA')).getByText('Held')).toHaveAttribute('data-slot', 'badge')
+    expect(within(rowOf('NVDA')).getByText('120.5')).toHaveClass('tabular-nums')
+    expect(within(rowOf('TSLA')).getByText('9')).toBeInTheDocument()
+    expect(within(rowOf('PTTEP')).getByText('Held')).toBeInTheDocument()
+    expect(within(rowOf('PTTEP')).queryByText(/\d/)).not.toBeInTheDocument()
+    expect(within(rowOf('AAPL')).getByText('Not held')).toHaveClass('sr-only')
+    expect(within(rowOf('AAPL')).getAllByText('—')).toHaveLength(5)
+  })
+
+  it('TC-C-411: sorts held first, exact shares descending, then the other direction; caption names Held', async () => {
+    renderApp('/stocks', stocksApi(items))
+    await screen.findByRole('table')
+    const head = screen.getByRole('columnheader', { name: /Held/ })
+    expect(head).toHaveAttribute('aria-sort', 'none')
+    await userEvent.click(screen.getByRole('button', { name: 'Sort by Held' }))
+    expect(head).toHaveAttribute('aria-sort', 'descending')
+    expect(tickerOrder()).toEqual(['BIG1', 'BIG2', 'NVDA', 'MSFT', 'TSLA', 'PTTEP', 'AAPL'])
+    expect(screen.getByText('Saved stocks, sorted by Held descending', { selector: 'caption' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Sort by Held' }))
+    expect(head).toHaveAttribute('aria-sort', 'ascending')
+    expect(tickerOrder()).toEqual(['AAPL', 'PTTEP', 'TSLA', 'MSFT', 'NVDA', 'BIG2', 'BIG1'])
   })
 })

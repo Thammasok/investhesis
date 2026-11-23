@@ -4,11 +4,12 @@ import { Link, useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { formatShares } from '@/lib/number-format'
 import { cn } from '@/lib/utils'
 import { sortStocks, type SortColumn, type SortDirection } from '../sort-stocks'
 import type { ListSummary, Stock } from '../types'
 
-const COLUMN_LABEL: Record<SortColumn, string> = { ticker: 'Ticker', name: 'Name', market: 'Market', sector: 'Sector' }
+const COLUMN_LABEL: Record<SortColumn, string> = { ticker: 'Ticker', name: 'Name', market: 'Market', sector: 'Sector', held: 'Held' }
 
 type StockTableProps = {
   stocks: readonly Stock[]
@@ -39,6 +40,25 @@ function ListBadges({ names }: { names: string[] }) {
         </Badge>
       ))}
       {names.length > 2 ? <span className="text-xs">+{names.length - 2}</span> : null}
+    </span>
+  )
+}
+
+/** The Held cell: a badge and the shares when known; a dash with a screen-reader label when not held. */
+function HeldCell({ stock }: { stock: Stock }) {
+  if (!stock.holding) {
+    return (
+      <span className="text-muted-foreground">
+        <span aria-hidden="true">—</span>
+        <span className="sr-only">Not held</span>
+      </span>
+    )
+  }
+  const shares = formatShares(stock.holding.shares)
+  return (
+    <span className="flex items-center gap-1.5">
+      <Badge variant="secondary">Held</Badge>
+      {shares ? <span className="tabular-nums text-muted-foreground">{shares}</span> : null}
     </span>
   )
 }
@@ -91,7 +111,9 @@ export function StockTable({ stocks, lists = [], showLists = true, renderRowActi
 
   const onSort = (column: SortColumn) =>
     setSort((s) =>
-      s.column === column ? { column, direction: s.direction === 'asc' ? 'desc' : 'asc' } : { column, direction: 'asc' },
+      s.column === column
+        ? { column, direction: s.direction === 'asc' ? 'desc' : 'asc' }
+        : { column, direction: column === 'held' ? 'desc' : 'asc' },
     )
 
   return (
@@ -107,6 +129,7 @@ export function StockTable({ stocks, lists = [], showLists = true, renderRowActi
             <SortHead column="market" sort={sort} onSort={onSort} />
             <TableHead className="bg-background">Exchange</TableHead>
             <SortHead column="sector" sort={sort} onSort={onSort} />
+            <SortHead column="held" sort={sort} onSort={onSort} />
             <TableHead className="bg-background">Size</TableHead>
             <TableHead className="bg-background">Style</TableHead>
             {showLists ? <TableHead className="bg-background">Lists</TableHead> : null}
@@ -145,6 +168,9 @@ export function StockTable({ stocks, lists = [], showLists = true, renderRowActi
                 {stock.market === 'TH' && stock.setIndustryGroup ? (
                   <span className="block text-muted-foreground">{stock.setIndustryGroup}</span>
                 ) : null}
+              </TableCell>
+              <TableCell>
+                <HeldCell stock={stock} />
               </TableCell>
               <TableCell>{stock.size ?? '—'}</TableCell>
               <TableCell>{stock.style ?? '—'}</TableCell>

@@ -1,5 +1,6 @@
-import { MESSAGES, resolveEconomicCycle, StockInput, type GicsSector } from '@investhesis/domain'
-import type { Stock } from './types'
+import { CURRENCY_BY_MARKET, HoldingInput, MESSAGES, resolveEconomicCycle, StockInput, type GicsSector } from '@investhesis/domain'
+import { decimalForInput } from '@/lib/number-format'
+import type { Holding, Stock } from './types'
 
 /** Form state. Text and single-choice fields use `''` for "not set"; the rest are lists. */
 export type FormValues = {
@@ -24,9 +25,16 @@ export type FormValues = {
   revenueTypes: string[]
   themes: string[]
   listIds: string[]
+  /** The "I hold this stock" box. */
+  held: boolean
+  /** Typed text, `''` while empty (held, amount unknown). Sent as strings, never parsed to numbers. */
+  holdingShares: string
+  holdingAverageCost: string
+  /** `''` until the investor picks one; then the cost currency follows the market (`costCurrencyOf`). */
+  costCurrency: '' | 'USD' | 'THB'
 }
 
-export type FieldName = Exclude<keyof FormValues, 'listIds'>
+export type FieldName = Exclude<keyof FormValues, 'listIds' | 'held' | 'costCurrency'>
 
 /** DOM order of the form: the first invalid field in this order gets focus. */
 export const FIELD_ORDER: readonly FieldName[] = [
@@ -49,6 +57,8 @@ export const FIELD_ORDER: readonly FieldName[] = [
   'customers',
   'revenueTypes',
   'themes',
+  'holdingShares',
+  'holdingAverageCost',
 ]
 
 export const FIELD_LABELS: Record<FieldName, string> = {
@@ -71,6 +81,8 @@ export const FIELD_LABELS: Record<FieldName, string> = {
   customers: 'Customers',
   revenueTypes: 'Revenue types',
   themes: 'Themes',
+  holdingShares: 'Shares',
+  holdingAverageCost: 'Average cost',
 }
 
 export type FieldErrors = Partial<Record<FieldName, string>>
@@ -96,6 +108,10 @@ export const emptyValues = (): FormValues => ({
   revenueTypes: [],
   themes: [],
   listIds: [],
+  held: false,
+  holdingShares: '',
+  holdingAverageCost: '',
+  costCurrency: '',
 })
 
 /** True while the stored cycle is the sector's default rather than the user's choice. */
@@ -123,6 +139,24 @@ export function valuesFromStock(stock: Stock): FormValues {
     revenueTypes: stock.revenueTypes,
     themes: stock.themes,
     listIds: [],
+    held: stock.holding !== null,
+    holdingShares: decimalForInput(stock.holding?.shares ?? null),
+    holdingAverageCost: decimalForInput(stock.holding?.averageCost ?? null),
+    costCurrency: stock.holding?.costCurrency ?? '',
+  }
+}
+
+/** The cost currency in effect: the investor's pick, else the trading currency of the market (USD before a market is chosen). */
+export function costCurrencyOf(values: Pick<FormValues, 'costCurrency' | 'market'>): 'USD' | 'THB' {
+  return values.costCurrency || (values.market ? CURRENCY_BY_MARKET[values.market] : 'USD')
+}
+
+/** The holding the form describes, trimmed; empty fields are `null` ("held, amount unknown"). */
+function holdingCandidate(v: FormValues) {
+  return {
+    shares: v.holdingShares.trim() || null,
+    averageCost: v.holdingAverageCost.trim() || null,
+    costCurrency: costCurrencyOf(v),
   }
 }
 
@@ -160,20 +194,31 @@ function candidate(v: FormValues) {
   }
 }
 
+/** API and schema names of the holding's parts, to the form's field names. */
+const HOLDING_FIELD: Record<string, FieldName | undefined> = { shares: 'holdingShares', averageCost: 'holdingAverageCost' }
+
 const isField = (key: unknown): key is FieldName => typeof key === 'string' && (FIELD_ORDER as readonly string[]).includes(key)
 
 export const describeProblem = (field: FieldName, message: string) => `${FIELD_LABELS[field]} ${message}`
 
-export type Checked = { ok: true; input: StockInput } | { ok: false; errors: FieldErrors }
+/** `holding` is `null` while the box is unticked. */
+export type Checked = { ok: true; input: StockInput; holding: Holding | null } | { ok: false; errors: FieldErrors }
 
 /** Validates the whole form with the domain schema. In edit mode this is the stored stock merged with the edits (market and ticker come from the stock). */
 export function checkValues(values: FormValues): Checked {
   const result = StockInput.safeParse(candidate(values))
-  if (result.success) return { ok: true, input: result.data }
+  const held = values.held ? HoldingInput.safeParse(holdingCandidate(values)) : null
+  if (result.success && (!held || held.success)) {
+    return { ok: true, input: result.data, holding: held?.success ? { shares: held.data.shares ?? null, averageCost: held.data.averageCost ?? null, costCurrency: held.data.costCurrency ?? costCurrencyOf(values) } : null }
+  }
   const errors: FieldErrors = {}
-  for (const issue of result.error.issues) {
+  for (const issue of result.error?.issues ?? []) {
     const key = issue.path[0]
     if (isField(key) && !errors[key]) errors[key] = describeProblem(key, issue.message)
+  }
+  for (const issue of held?.error?.issues ?? []) {
+    const key = HOLDING_FIELD[String(issue.path[0])]
+    if (key && !errors[key]) errors[key] = describeProblem(key, issue.message)
   }
   // A blank choice reads "is required", not the enum's "must be one of".
   for (const key of ['market', 'exchange'] as const) {
@@ -185,13 +230,14 @@ export function checkValues(values: FormValues): Checked {
 export const firstInvalid = (errors: FieldErrors): FieldName | undefined => FIELD_ORDER.find((f) => errors[f])
 
 /** The POST body: the validated input without `currency`, unset values left out, plus the ticked lists. */
-export function createBody(input: StockInput, values: FormValues, economicCycleChosen: boolean): Record<string, unknown> {
+export function createBody(input: StockInput, values: FormValues, economicCycleChosen: boolean, holding: Holding | null = null): Record<string, unknown> {
   const { currency: _currency, ...rest } = input
   const body: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(rest)) if (value !== null) body[key] = value
   // A default shown in the select is never sent: the API derives it from the sector.
   if (!economicCycleChosen) delete body.economicCycle
   body.listIds = values.listIds
+  if (holding) body.holding = holding
   return body
 }
 
@@ -214,8 +260,15 @@ const PATCHABLE = [
   'volatility',
 ] as const
 
+/** A stored holding in the shape the form produces, so the two compare. */
+const holdingForInput = (h: Holding): Holding => ({
+  shares: decimalForInput(h.shares) || null,
+  averageCost: decimalForInput(h.averageCost) || null,
+  costCurrency: h.costCurrency,
+})
+
 /** The PATCH body: only what differs from the stored stock, `null` for a cleared field. `{}` means nothing changed. */
-export function patchBody(input: StockInput, values: FormValues, stock: Stock): Record<string, unknown> {
+export function patchBody(input: StockInput, values: FormValues, stock: Stock, holding: Holding | null = null): Record<string, unknown> {
   const patch: Record<string, unknown> = {}
   for (const key of PATCHABLE) {
     const next = input[key]
@@ -228,6 +281,12 @@ export function patchBody(input: StockInput, values: FormValues, stock: Stock): 
   } else if (manualBefore) {
     patch.economicCycle = null
   }
+  // The API replaces the whole holding, so a change sends all of it; unticking sends null.
+  if (!holding) {
+    if (stock.holding) patch.holding = null
+  } else if (!stock.holding || JSON.stringify(holding) !== JSON.stringify(holdingForInput(stock.holding))) {
+    patch.holding = holding
+  }
   return patch
 }
 
@@ -236,7 +295,8 @@ export function splitServerErrors(problems: { path: string; message: string }[])
   const fields: FieldErrors = {}
   const rest: string[] = []
   for (const { path, message } of problems) {
-    const key = path.split('.')[0]
+    const [head, part] = path.split('.')
+    const key = head === 'holding' ? HOLDING_FIELD[part ?? ''] : head
     if (isField(key)) {
       if (!fields[key]) fields[key] = describeProblem(key, message)
     } else rest.push(`${path || 'Request'} ${message}`)
