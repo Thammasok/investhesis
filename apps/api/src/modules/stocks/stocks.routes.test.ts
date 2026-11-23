@@ -66,6 +66,7 @@ describe('POST /stocks', () => {
       volatility: null,
       lensSources: {},
       listIds: [],
+      holding: null,
       createdAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT.*Z$/),
       updatedAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT.*Z$/),
     })

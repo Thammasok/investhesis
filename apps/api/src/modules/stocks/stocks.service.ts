@@ -1,4 +1,4 @@
-import { StockInput, resolveEconomicCycle, type StockPatch } from '@investhesis/domain'
+import { StockInput, resolveEconomicCycle, type HoldingInput, type StockPatch } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import type { LensSource } from '../../db/schema/index.ts'
 import { AppError, type FieldError } from '../../lib/app-error.ts'
@@ -30,7 +30,8 @@ export const LENS_KEYS = [
 
 const isSet = (v: unknown) => (Array.isArray(v) ? v.length > 0 : v !== null && v !== undefined)
 
-export type StockView = Omit<repo.StockRow, 'createdAt' | 'updatedAt' | 'lensSources' | 'market' | 'currency'> & {
+export type StockView = Omit<repo.StockRow, 'createdAt' | 'updatedAt' | 'lensSources' | 'market' | 'currency' | 'holding'> & {
+  holding: repo.HoldingRow | null
   market: Market
   currency: 'USD' | 'THB'
   lensSources: Record<string, LensSource>
@@ -64,7 +65,7 @@ export function sourcesFor(input: Parsed, cycleSource: LensSource | null, previo
 }
 
 function toInput(row: repo.StockRow): Record<string, unknown> {
-  const { id: _id, currency: _currency, lensSources: _sources, listIds: _lists, createdAt: _c, updatedAt: _u, ...rest } = row
+  const { id: _id, currency: _currency, lensSources: _sources, listIds: _lists, holding: _holding, createdAt: _c, updatedAt: _u, ...rest } = row
   return rest
 }
 
@@ -88,7 +89,14 @@ export function toNewStock(input: Parsed): repo.NewStock {
   }
 }
 
-export async function createStock(db: Db, userId: string, input: Parsed, listIds: readonly string[]): Promise<StockView> {
+/** `costCurrency` defaults to the stock's currency here, not in the database (design: Data Model). */
+const holdingRow = (h: HoldingInput, currency: 'USD' | 'THB'): repo.HoldingRow => ({
+  shares: h.shares ?? null,
+  averageCost: h.averageCost ?? null,
+  costCurrency: h.costCurrency ?? currency,
+})
+
+export async function createStock(db: Db, userId: string, input: Parsed, listIds: readonly string[], holding?: HoldingInput | null): Promise<StockView> {
   const row = toNewStock(input)
   const id = row.id
   const wanted = [...new Set(listIds)]
@@ -97,6 +105,7 @@ export async function createStock(db: Db, userId: string, input: Parsed, listIds
       for (const listId of wanted) if (!(await findOwnedList(tx, userId, listId))) throw notFound()
       await repo.insertStock(tx, userId, row)
       for (const listId of wanted) await addMemberships(tx, userId, listId, [id])
+      if (holding) await repo.upsertHolding(tx, userId, id, holdingRow(holding, row.currency as 'USD' | 'THB'))
     })
   } catch (e) {
     if (pgError(e)?.constraint === repo.STOCK_UNIQUE) {
@@ -108,7 +117,8 @@ export async function createStock(db: Db, userId: string, input: Parsed, listIds
   return view(await owned(db, userId, id))
 }
 
-export async function updateStock(db: Db, userId: string, id: string, patch: StockPatch): Promise<StockView> {
+/** `holding`: undefined = unchanged, null = not held, object = replace. */
+export async function updateStock(db: Db, userId: string, id: string, patch: StockPatch, holding?: HoldingInput | null): Promise<StockView> {
   const current = await owned(db, userId, id)
   const touched = new Set(Object.keys(patch).filter((k) => patch[k as keyof StockPatch] !== undefined))
 
@@ -127,9 +137,20 @@ export async function updateStock(db: Db, userId: string, id: string, patch: Sto
   })
   const next = { ...parsed.data, economicCycle: cycle.economicCycle }
   const { ticker: _t, market: _m, currency: _c, ...changes } = next
-  const saved = await repo.updateStock(db, userId, id, {
-    ...changes,
-    lensSources: sourcesFor(next, cycle.source, current.lensSources, touched),
+  const saved = await db.transaction(async (tx) => {
+    const updated = await repo.updateStock(tx, userId, id, {
+      ...changes,
+      lensSources: sourcesFor(next, cycle.source, current.lensSources, touched),
+    })
+    if (!updated || holding === undefined) return updated
+    try {
+      if (holding === null) await repo.deleteHolding(tx, userId, id)
+      else await repo.upsertHolding(tx, userId, id, holdingRow(holding, current.currency as 'USD' | 'THB'))
+    } catch (e) {
+      if (pgError(e)?.code === '23503') throw notFound()
+      throw e
+    }
+    return repo.findOwnedStock(tx, userId, id)
   })
   if (!saved) throw notFound()
   return view(saved)

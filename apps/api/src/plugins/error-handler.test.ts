@@ -36,6 +36,19 @@ describe('error handler', () => {
     expect(res.body).not.toContain('db exploded')
   })
 
+  it('a plain error is logged with its message and stack', async () => {
+    const lines: string[] = []
+    app = await buildApp({ config: loadConfig(baseEnv), logStream: { write: (l: string) => void lines.push(l) } })
+    app.get('/boom', () => {
+      throw new Error('db exploded')
+    })
+    await app.ready()
+    await app.inject('/boom')
+    const failed = lines.map((l) => JSON.parse(l)).find((l) => l.msg === 'request failed')
+    expect(failed.err.message).toBe('db exploded')
+    expect(failed.err.stack).toContain('db exploded')
+  })
+
   it('validation error lists fields', async () => {
     const res = await (await appWithRoutes()).inject({
       method: 'POST',

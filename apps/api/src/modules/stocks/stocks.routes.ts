@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
-import { StockInput, StockPatch } from '@investhesis/domain'
+import { HoldingInput, StockInput, StockPatch } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
@@ -17,23 +17,38 @@ function rejectNul(value: Record<string, unknown>, ctx: z.RefinementCtx) {
   }
 }
 
-/** A StockInput plus `listIds`; StockInput's own strictness rejects every other unknown key. */
+/** A StockInput plus `listIds` and `holding`; StockInput's own strictness rejects every other unknown key. */
 const CreateBody = z
-  .looseObject({ listIds: z.array(z.uuid()).max(100).default([]) })
+  .looseObject({ listIds: z.array(z.uuid()).max(100).default([]), holding: HoldingInput.nullish() })
   .transform((body, ctx) => {
-    const { listIds, ...rest } = body
+    const { listIds, holding, ...rest } = body
     const parsed = StockInput.safeParse(rest)
     if (!parsed.success) {
       for (const issue of parsed.error.issues) ctx.issues.push({ code: 'custom', message: issue.message, path: issue.path, input: body })
       return z.NEVER
     }
     rejectNul(parsed.data, ctx)
-    return { input: parsed.data, listIds }
+    return { input: parsed.data, listIds, holding }
   })
 
-const PatchBody = StockPatch.superRefine(rejectNul)
+/** StockPatch plus `holding` (omitted = unchanged, null = not held, object = replace). */
+const PatchBody = z
+  .looseObject({ holding: HoldingInput.nullish() })
+  .transform((body, ctx) => {
+    const { holding, ...rest } = body
+    const parsed = StockPatch.safeParse(rest)
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) ctx.issues.push({ code: 'custom', message: issue.message, path: issue.path, input: body })
+      return z.NEVER
+    }
+    rejectNul(parsed.data, ctx)
+    return { patch: parsed.data, holding }
+  })
 
 const Lens = z.string().nullable()
+const HoldingOut = z
+  .object({ shares: z.string().nullable(), averageCost: z.string().nullable(), costCurrency: z.enum(['USD', 'THB']) })
+  .nullable()
 const StockOut = z.object({
   id: z.uuid(),
   market: z.enum(['US', 'TH']),
@@ -58,6 +73,7 @@ const StockOut = z.object({
   volatility: Lens,
   lensSources: z.record(z.string(), z.enum(['manual', 'default'])),
   listIds: z.array(z.uuid()),
+  holding: HoldingOut,
   createdAt: z.string(),
   updatedAt: z.string(),
 })
@@ -103,8 +119,8 @@ export const stocksRoutes: FastifyPluginAsync<{ db: Db | undefined }> = async (a
       },
     },
     async (req, reply) => {
-      const { input, listIds } = req.body
-      const created = await service.createStock(need(), requireIdentity(req).userId, input, listIds)
+      const { input, listIds, holding } = req.body
+      const created = await service.createStock(need(), requireIdentity(req).userId, input, listIds, holding)
       return reply.code(201).header('location', `/stocks/${created.id}`).send(created)
     },
   )
@@ -125,7 +141,7 @@ export const stocksRoutes: FastifyPluginAsync<{ db: Db | undefined }> = async (a
         response: { 200: StockOut, 400: ProblemOut, 401: ProblemOut, 404: ProblemOut },
       },
     },
-    async (req) => service.updateStock(need(), requireIdentity(req).userId, req.params.id, req.body),
+    async (req) => service.updateStock(need(), requireIdentity(req).userId, req.params.id, req.body.patch, req.body.holding),
   )
 
   r.delete(

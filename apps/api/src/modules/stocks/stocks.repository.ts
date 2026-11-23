@@ -1,10 +1,11 @@
 import { and, eq, getTableColumns, inArray, or, sql, type SQL } from 'drizzle-orm'
 import type { DbOrTx } from '../../db/client.ts'
-import { stocks, type LensSource } from '../../db/schema/index.ts'
+import { holdings, stocks, type CostCurrency, type LensSource } from '../../db/schema/index.ts'
 
 export const STOCK_UNIQUE = 'stocks_user_market_ticker'
 
-export type StockRow = Omit<typeof stocks.$inferSelect, 'userId'> & { listIds: string[] }
+export type HoldingRow = { shares: string | null; averageCost: string | null; costCurrency: CostCurrency }
+export type StockRow = Omit<typeof stocks.$inferSelect, 'userId'> & { listIds: string[]; holding: HoldingRow | null }
 export type NewStock = Omit<typeof stocks.$inferInsert, 'userId' | 'createdAt' | 'updatedAt'>
 export type StockChanges = Partial<Omit<typeof stocks.$inferInsert, 'id' | 'userId' | 'market' | 'ticker' | 'currency' | 'createdAt'>> & {
   lensSources?: Record<string, LensSource>
@@ -12,8 +13,11 @@ export type StockChanges = Partial<Omit<typeof stocks.$inferInsert, 'id' | 'user
 
 const listIds = sql<string[]>`coalesce((select array_agg(ls.list_id::text order by ls.list_id) from app.list_stocks ls where ls.stock_id = ${stocks.id} and ls.user_id = ${stocks.userId}), '{}')`
 
+// numeric goes through ::text so the JSON carries exact decimal strings, never a float.
+const holding = sql<HoldingRow | null>`(select json_build_object('shares', h.shares::text, 'averageCost', h.average_cost::text, 'costCurrency', h.cost_currency) from app.holdings h where h.stock_id = ${stocks.id} and h.user_id = ${stocks.userId})`
+
 const { userId: _userId, ...stockColumns } = getTableColumns(stocks)
-const columns = { ...stockColumns, listIds }
+const columns = { ...stockColumns, listIds, holding }
 
 const byTicker = sql`${stocks.ticker} collate "C"`
 
@@ -92,3 +96,16 @@ export async function deleteStock(db: DbOrTx, userId: string, id: string): Promi
   return rows.length > 0
 }
 
+
+/** One row per stock: a second write replaces the first. A stock gone since the caller read it is a 23503 pg error. */
+export async function upsertHolding(db: DbOrTx, userId: string, stockId: string, value: HoldingRow): Promise<void> {
+  const now = new Date()
+  await db
+    .insert(holdings)
+    .values({ stockId, userId, ...value })
+    .onConflictDoUpdate({ target: holdings.stockId, set: { ...value, updatedAt: now }, setWhere: eq(holdings.userId, userId) })
+}
+
+export async function deleteHolding(db: DbOrTx, userId: string, stockId: string): Promise<void> {
+  await db.delete(holdings).where(and(eq(holdings.stockId, stockId), eq(holdings.userId, userId)))
+}
