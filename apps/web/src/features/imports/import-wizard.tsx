@@ -27,13 +27,15 @@ type ImportWizardProps = {
   lists: readonly ListSummary[]
   /** `?listId=`: the list to pre-select. */
   initialListId?: string
+  /** Inside a dialog: no card of its own (the dialog supplies the title) and the steps fill its width. */
+  inDialog?: boolean
 }
 
 /**
  * The import wizard (ux-design.md §Import). The chosen `File` lives in state because confirm re-sends it
  * (design.md §Web); the calls go through the api client rather than a route action.
  */
-export function ImportWizard({ api, lists, initialListId }: ImportWizardProps) {
+export function ImportWizard({ api, lists, initialListId, inDialog = false }: ImportWizardProps) {
   const revalidator = useRevalidator()
   const [step, setStep] = useState<WizardStep>('file')
   const [file, setFile] = useState<File | null>(null)
@@ -143,104 +145,116 @@ export function ImportWizard({ api, lists, initialListId }: ImportWizardProps) {
     }
   }
 
+  const content = (
+    <>
+      {/* Announced politely: "Checking file…" and "Importing…". */}
+      <div aria-live="polite" className="sr-only">
+        {busy === 'checking' ? 'Checking file…' : busy === 'importing' ? 'Importing…' : ''}
+      </div>
+      <h2 ref={headingRef} tabIndex={-1} className="font-heading text-lg font-semibold outline-none">
+        {STEP_HEADINGS[step]}
+      </h2>
+
+      {step === 'file' ? (
+        <div className="space-y-4">
+          <TemplateLinks api={api} />
+          <DropZone loading={busy === 'checking'} onFile={check} />
+          {fileError ? (
+            <Alert variant="destructive">
+              <TriangleAlertIcon aria-hidden="true" />
+              <AlertDescription>{fileError}</AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+      ) : null}
+
+      {step === 'review' && preview ? (
+        <form onSubmit={confirm} noValidate className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="break-all font-medium">{`${preview.fileName} · ${countLabel(preview.rows.length, 'row')}`}</p>
+            <Button type="button" variant="outline" size="sm" onClick={restart}>
+              Choose another
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary" className="tabular-nums">{`${preview.counts.new} new`}</Badge>
+            <Badge variant="outline" className="tabular-nums">{`${preview.counts.duplicate} duplicate`}</Badge>
+            <Badge variant="destructive" className="tabular-nums text-foreground">{`${preview.counts.error} error`}</Badge>
+          </div>
+          {preview.headerWarnings.length > 0 ? (
+            <Alert role="status">
+              <TriangleAlertIcon aria-hidden="true" />
+              <AlertDescription>
+                {preview.headerWarnings.map((w) => (
+                  <p key={w}>{w}</p>
+                ))}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <PreviewTable fileName={preview.fileName} rows={preview.rows} />
+          <div className="space-y-4">
+            <TargetList
+              lists={lists}
+              value={chosen}
+              onChange={(value) => {
+                setTarget(value)
+                setNameError(undefined)
+              }}
+              newName={newName}
+              onNewName={(value) => {
+                setNewName(value)
+                setNameError(undefined)
+              }}
+              nameError={nameError}
+            />
+            {preview.counts.duplicate > 0 ? <DuplicateModeGroup value={duplicateMode} onChange={setDuplicateMode} /> : null}
+            <p className="text-sm">
+              {importable === 0 ? 'Nothing to import — fix the file and choose it again' : 'Error rows are not imported.'}
+            </p>
+          </div>
+          {confirmError ? (
+            <Alert variant="destructive">
+              <TriangleAlertIcon aria-hidden="true" />
+              <AlertDescription>{confirmError}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" onClick={restart}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!canSubmit}>
+              {busy === 'importing' ? (
+                <>
+                  <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                  Importing…
+                </>
+              ) : (
+                `Import ${countLabel(importable, 'stock')}`
+              )}
+            </Button>
+          </div>
+        </form>
+      ) : null}
+
+      {step === 'done' && summary ? <SummaryPanel summary={summary} onAnother={restart} /> : null}
+    </>
+  )
+
+  if (inDialog) {
+    return (
+      <div className="space-y-4">
+        <StepIndicator current={step} />
+        {content}
+      </div>
+    )
+  }
   return (
     <Card className="max-w-5xl">
       <CardHeader className="space-y-3">
         <CardTitle>Import stocks</CardTitle>
         <StepIndicator current={step} />
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Announced politely: "Checking file…" and "Importing…". */}
-        <div aria-live="polite" className="sr-only">
-          {busy === 'checking' ? 'Checking file…' : busy === 'importing' ? 'Importing…' : ''}
-        </div>
-        <h2 ref={headingRef} tabIndex={-1} className="font-heading text-lg font-semibold outline-none">
-          {STEP_HEADINGS[step]}
-        </h2>
-
-        {step === 'file' ? (
-          <div className="space-y-4">
-            <TemplateLinks api={api} />
-            <DropZone loading={busy === 'checking'} onFile={check} />
-            {fileError ? (
-              <Alert variant="destructive">
-                <TriangleAlertIcon aria-hidden="true" />
-                <AlertDescription>{fileError}</AlertDescription>
-              </Alert>
-            ) : null}
-          </div>
-        ) : null}
-
-        {step === 'review' && preview ? (
-          <form onSubmit={confirm} noValidate className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="break-all font-medium">{`${preview.fileName} · ${countLabel(preview.rows.length, 'row')}`}</p>
-              <Button type="button" variant="outline" size="sm" onClick={restart}>
-                Choose another
-              </Button>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="tabular-nums">{`${preview.counts.new} new`}</Badge>
-              <Badge variant="outline" className="tabular-nums">{`${preview.counts.duplicate} duplicate`}</Badge>
-              <Badge variant="destructive" className="tabular-nums text-foreground">{`${preview.counts.error} error`}</Badge>
-            </div>
-            {preview.headerWarnings.length > 0 ? (
-              <Alert role="status">
-                <TriangleAlertIcon aria-hidden="true" />
-                <AlertDescription>
-                  {preview.headerWarnings.map((w) => (
-                    <p key={w}>{w}</p>
-                  ))}
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            <PreviewTable fileName={preview.fileName} rows={preview.rows} />
-            <div className="space-y-4">
-              <TargetList
-                lists={lists}
-                value={chosen}
-                onChange={(value) => {
-                  setTarget(value)
-                  setNameError(undefined)
-                }}
-                newName={newName}
-                onNewName={(value) => {
-                  setNewName(value)
-                  setNameError(undefined)
-                }}
-                nameError={nameError}
-              />
-              {preview.counts.duplicate > 0 ? <DuplicateModeGroup value={duplicateMode} onChange={setDuplicateMode} /> : null}
-              <p className="text-sm">
-                {importable === 0 ? 'Nothing to import — fix the file and choose it again' : 'Error rows are not imported.'}
-              </p>
-            </div>
-            {confirmError ? (
-              <Alert variant="destructive">
-                <TriangleAlertIcon aria-hidden="true" />
-                <AlertDescription>{confirmError}</AlertDescription>
-              </Alert>
-            ) : null}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" onClick={restart}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={!canSubmit}>
-                {busy === 'importing' ? (
-                  <>
-                    <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                    Importing…
-                  </>
-                ) : (
-                  `Import ${countLabel(importable, 'stock')}`
-                )}
-              </Button>
-            </div>
-          </form>
-        ) : null}
-
-        {step === 'done' && summary ? <SummaryPanel summary={summary} onAnother={restart} /> : null}
-      </CardContent>
+      <CardContent className="space-y-4">{content}</CardContent>
     </Card>
   )
 }

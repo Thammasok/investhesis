@@ -48,7 +48,7 @@ test.describe('360 px layout', () => {
 
     // Act + Assert: the 320 px smoke
     await page.setViewportSize({ width: 320, height: 568 })
-    for (const path of ['/stocks', '/stocks/new', `/stocks/${ctx.nvda.id}`, '/lists', '/import-export']) {
+    for (const path of ['/stocks', '/stocks/new', `/stocks/${ctx.nvda.id}`, '/lists', '/import-export/import']) {
       await page.goto(path)
       await settled(page)
       if (!(await noHorizontalScroll(page))) wide.push(`320:${path}`)
@@ -75,12 +75,13 @@ test.describe('360 px layout', () => {
     expect(exchange!.y).toBeGreaterThan(ticker!.y)
     const save = saveStock(page)
     await save.scrollIntoViewIfNeeded()
-    expect((await save.boundingBox())!.width).toBeGreaterThan(300)
-    const order = await page.locator('form button[type="submit"], form a:has-text("Cancel")').evaluateAll((els) => els.map((e) => e.textContent?.trim()))
+    const formWidth = (await page.locator('form').first().boundingBox())!.width
+    expect((await save.boundingBox())!.width).toBeGreaterThanOrEqual(formWidth - 1)
+    const order = await page.locator('form button[type="submit"], form a:has-text("Cancel"), form button:has-text("Cancel")').evaluateAll((els) => els.map((e) => e.textContent?.trim()))
     expect(order).toEqual(['Cancel', 'Save stock'])
 
     // Import preview: Row, Ticker and Status columns only; the rest under the ticker
-    await page.goto('/import-export')
+    await page.goto('/import-export/import')
     await pickFile(page, 'mixed.csv', csv(['ticker', 'market', 'exchange', 'name'], [['NEWA', 'US', 'NYSE', 'New A'], ['BAD', 'JP', 'XXX', '']]), 'text/csv')
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible()
     const visibleHeaders = await page.locator('thead th').evaluateAll((els) => els.filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.textContent?.trim()))
@@ -105,7 +106,7 @@ test.describe('360 px layout', () => {
 
   test('TC-E-118: the 100-row preview with all three statuses has no page-level scroll and scrolls inside its table', async ({ page }) => {
     // Arrange: 20 duplicates, 20 error rows and 60 new rows
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     for (let i = 0; i < 20; i++) await api.stock(us(`D${String(i).padStart(3, '0')}`))
     const rows = [
       ...Array.from({ length: 20 }, (_, i) => [`D${String(i).padStart(3, '0')}`, 'US', 'NASDAQ', `Dup ${i}`]),
@@ -133,7 +134,7 @@ test.describe('360 px layout', () => {
     await page.reload()
     await settled(page)
     await tap('Add stock', 'link')
-    await expect(h1(page)).toHaveText('Add stock')
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
     await tap('US', 'radio')
     await page.locator('#stock-ticker').fill('PHN')
     await page.locator('#stock-exchange').tap()
@@ -167,7 +168,7 @@ test.describe('360 px layout', () => {
     await expect(page.getByRole('link', { name: 'Second' })).toBeVisible()
 
     // Act 3: import a CSV into the list and read the summary
-    await page.goto('/import-export')
+    await page.goto('/import-export/import')
     await pickFile(page, 'phone.csv', csv(['ticker', 'market', 'exchange', 'name', 'sector'], [['TAP1', 'US', 'NYSE', 'Tap 1', 'Energy'], ['BADROW', 'JP', 'NYSE', 'x', '']]), 'text/csv')
     await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible()
     await page.locator('#import-target').tap()

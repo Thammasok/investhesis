@@ -2,6 +2,32 @@ import { expect, test } from '@playwright/test'
 import { apiAs, choose, codePoints, fillStockForm, h1, lens, newUser, openSignedIn, saveStock, signedInUser, settled, th, toast, us } from './lib/sl.ts'
 
 test.describe('stocks', () => {
+  test('TC-E-101: Add stock is a dialog; Esc and Back return to Stocks, a typed URL falls back to Stocks', async ({ page }) => {
+    // Arrange
+    await signedInUser(page, '/stocks')
+
+    // Act + Assert: opened from the page, Esc closes it and Back does not reopen it
+    await page.getByRole('link', { name: 'Add stock' }).first().click()
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('/stocks')
+
+    // Act + Assert: browser Back closes it
+    await page.getByRole('link', { name: 'Add stock' }).first().click()
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
+    await page.goBack()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('/stocks')
+
+    // Act + Assert: a typed URL has nothing to go back to
+    await page.goto('/stocks/new')
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL('/stocks')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+  })
+
   test('TC-E-101: add a US stock with lenses into a list', async ({ page }) => {
     // Arrange
     const { api } = await signedInUser(page, '/stocks')
@@ -11,7 +37,8 @@ test.describe('stocks', () => {
 
     // Act
     await page.getByRole('link', { name: 'Add stock' }).first().click()
-    await expect(h1(page)).toHaveText('Add stock')
+    await expect(page).toHaveURL('/stocks/new')
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
     await fillStockForm(page, {
       market: 'US',
       ticker: 'nvda',
@@ -229,7 +256,7 @@ test.describe('stocks', () => {
     const fresh = await signedInUser(page, '/stocks')
     await expect(page.getByRole('heading', { name: 'No stocks yet' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Add stock' })).toHaveAttribute('href', '/stocks/new')
-    await expect(page.getByRole('link', { name: 'Import from file' })).toHaveAttribute('href', '/import-export')
+    await expect(page.getByRole('link', { name: 'Import from file' })).toHaveAttribute('href', '/import-export/import')
     await page.goto('/lists')
     await expect(page.getByRole('heading', { name: 'No lists yet' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'New list' })).toBeVisible()

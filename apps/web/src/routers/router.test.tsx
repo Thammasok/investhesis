@@ -25,8 +25,9 @@ function renderAt(path: string, authClient: AuthClient = FakeAuthClient.signedIn
 }
 
 const heading = (name: string | RegExp) => screen.findByRole('heading', { level: 1, name })
-const breadcrumb = () => screen.getByRole('navigation', { name: 'breadcrumb' })
-const mainNav = () => within(screen.getByRole('navigation', { name: 'Main' }))
+// `hidden`: behind a route-backed dialog (/stocks/new, /import-export/import) the page is aria-hidden.
+const breadcrumb = () => screen.getByRole('navigation', { name: 'breadcrumb', hidden: true })
+const mainNav = () => within(screen.getByRole('navigation', { name: 'Main', hidden: true }))
 
 describe('router', () => {
   it('redirects / to /stocks', async () => {
@@ -36,12 +37,19 @@ describe('router', () => {
   })
 
   it.each([
+    ['/stocks/new', 'Add stock'],
+    ['/import-export/import', 'Import stocks'],
+  ])('renders %s as a dialog over its page', async (path, name) => {
+    renderAt(path)
+    expect(await screen.findByRole('dialog', { name })).toBeInTheDocument()
+  })
+
+  it.each([
     ['/concentration', 'Concentration'],
     ['/chains', 'Value chains'],
     ['/lists', 'Lists'],
     ['/import-export', 'Import / export'],
     ['/stocks/AAPL', /^AAPL/],
-    ['/stocks/new', 'Add stock'],
     ['/stocks/AAPL/edit', 'Edit AAPL'],
     ['/lists/L1', 'Core holdings'],
   ])('renders %s', async (path, name) => {
@@ -85,11 +93,11 @@ describe('app layout', () => {
     ['/lists/L1', ['Lists', 'Core holdings']],
   ])('shows the trail for %s in the breadcrumb', async (path, labels) => {
     renderAt(path)
-    await screen.findByRole('heading', { level: 1 })
+    await screen.findByRole('heading', { level: 1, hidden: true })
     const trail = within(breadcrumb())
     for (const label of labels) expect(trail.getByText(label)).toBeInTheDocument()
     expect(trail.getByText(labels.at(-1) as string)).toHaveAttribute('aria-current', 'page')
-    expect(mainNav().getByRole('link', { name: path.startsWith('/lists') ? 'Lists' : 'Stocks' })).toHaveAttribute(
+    expect(mainNav().getByRole('link', { name: path.startsWith('/lists') ? 'Lists' : 'Stocks', hidden: true })).toHaveAttribute(
       'data-active',
       'true',
     )
@@ -102,9 +110,9 @@ describe('app layout', () => {
     ['/import-export', 'Import / export'],
   ])('TC-C-103: %s marks only %s as active in the main navigation', async (path, active) => {
     renderAt(path)
-    await screen.findByRole('heading', { level: 1 })
+    await screen.findByRole('heading', { level: 1, hidden: true })
 
-    const links = mainNav().getAllByRole('link')
+    const links = mainNav().getAllByRole('link', { hidden: true })
 
     const current = links.filter((l) => l.getAttribute('data-active') === 'true').map((l) => l.textContent)
     expect(current).toEqual([active])

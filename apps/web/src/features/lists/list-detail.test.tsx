@@ -43,7 +43,7 @@ describe('list detail: page', () => {
     expect(screen.getByRole('button', { name: /Add stock/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'More actions' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Import into it/ })).toHaveAttribute('href', '/import-export?listId=core')
+    expect(screen.getByRole('link', { name: /Import into it/ })).toHaveAttribute('href', '/import-export/import?listId=core')
   })
 
   it('TC-C-154: the breadcrumb shows the list name and the tab title follows', async () => {
@@ -80,7 +80,7 @@ describe('list detail: empty', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Add stock/ })).toHaveLength(1)
     expect(screen.getAllByRole('link', { name: /Import into it/ })).toHaveLength(1)
-    expect(screen.getByRole('link', { name: /Import into it/ })).toHaveAttribute('href', '/import-export?listId=core')
+    expect(screen.getByRole('link', { name: /Import into it/ })).toHaveAttribute('href', '/import-export/import?listId=core')
     expect(screen.getByText('0 stocks')).toBeInTheDocument()
   })
 })

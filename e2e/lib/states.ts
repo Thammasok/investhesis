@@ -42,7 +42,7 @@ const mixedFile = () =>
   )
 
 async function toReview(page: Page) {
-  await page.goto('/import-export')
+  await page.goto('/import-export/import')
   await pickFile(page, 'mixed.csv', mixedFile(), 'text/csv')
   await expect(page.getByRole('heading', { name: 'Review' })).toBeVisible()
 }
@@ -108,14 +108,15 @@ export const STATES: State[] = [
       await expect(page.getByPlaceholder('Search ticker or name')).toBeVisible()
     },
   },
+  { name: 'import-export-page', run: goto('/import-export') },
   {
     name: 'import-step1-clean',
-    run: goto('/import-export'),
+    run: goto('/import-export/import'),
   },
   {
     name: 'import-step1-file-error',
     run: async (page) => {
-      await page.goto('/import-export')
+      await page.goto('/import-export/import')
       await pickFile(page, 'report.txt', F.reportTxt())
       await expect(page.getByRole('alert')).toBeVisible()
     },

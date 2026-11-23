@@ -29,7 +29,7 @@ function newApi(listItems = lists, post: unknown = created) {
 async function openNew(api = newApi()) {
   const user = userEvent.setup()
   const view = renderApp('/stocks/new', api)
-  await screen.findByRole('heading', { level: 1, name: 'Add stock' })
+  await screen.findByRole('dialog', { name: 'Add stock' })
   return { user, api, ...view }
 }
 
@@ -410,9 +410,9 @@ describe('stock form: controls', () => {
     expect(screen.getByRole('checkbox', { name: 'หุ้นหลัก' })).toBeInTheDocument()
   })
 
-  it('TC-C-141: Cancel goes back to the stocks page', async () => {
+  it('TC-C-141: Cancel closes the dialog back to the stocks page', async () => {
     const { user, router } = await openNew()
-    await user.click(screen.getByRole('link', { name: 'Cancel' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/stocks'))
   })
 })

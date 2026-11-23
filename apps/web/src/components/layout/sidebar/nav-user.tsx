@@ -29,8 +29,8 @@ function initials(name: string) {
 function UserSummary({ user }: { user: SidebarUser }) {
   return (
     <>
-      <Avatar className="size-8 rounded-lg">
-        <AvatarFallback className="rounded-lg">{initials(user.name)}</AvatarFallback>
+      <Avatar className="size-8 rounded-full">
+        <AvatarFallback className="rounded-full">{initials(user.name)}</AvatarFallback>
       </Avatar>
       <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{user.name}</span>

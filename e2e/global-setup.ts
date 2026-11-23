@@ -38,7 +38,7 @@ async function warmUpVite() {
   try {
     const page = await browser.newPage()
     const unknown = '00000000-0000-7000-8000-000000000000'
-    for (const path of ['/stocks', '/stocks/new', `/stocks/${unknown}`, `/stocks/${unknown}/edit`, '/lists', `/lists/${unknown}`, '/import-export', '/concentration', '/chains', '/account']) {
+    for (const path of ['/stocks', '/stocks/new', `/stocks/${unknown}`, `/stocks/${unknown}/edit`, '/lists', `/lists/${unknown}`, '/import-export', '/import-export/import', '/concentration', '/chains', '/account']) {
       await page.goto(`${origin}${path}`)
       await page.waitForLoadState('networkidle')
     }

@@ -36,7 +36,9 @@ import { CheckGroup, FieldMessage, Required, SelectField } from './form-controls
 import { errorProps } from './form-field-props'
 import { TagInput } from './tag-input'
 
-type StockFormProps = { mode: 'create'; lists: ListSummary[] } | { mode: 'edit'; stock: Stock }
+type StockFormProps =
+  | { mode: 'create'; lists: ListSummary[]; inDialog?: boolean; onCancel?: () => void }
+  | { mode: 'edit'; stock: Stock; inDialog?: never; onCancel?: never }
 
 type FormAlert = { kind: 'exists'; existingStockId: string } | { kind: 'missing' } | { kind: 'message'; text: string }
 type Focus = { target: FieldName | 'alert'; n: number }
@@ -157,7 +159,7 @@ export function StockForm(props: StockFormProps) {
   const lists = props.mode === 'create' ? props.lists : []
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="max-w-4xl space-y-6">
+    <form ref={formRef} onSubmit={onSubmit} noValidate className={props.inDialog ? 'space-y-6' : 'max-w-4xl space-y-6'}>
       {alert ? (
         <Alert ref={alertRef} variant="destructive" tabIndex={-1} className="outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
           <TriangleAlertIcon aria-hidden="true" />
@@ -454,10 +456,22 @@ export function StockForm(props: StockFormProps) {
         </Card>
       ) : null}
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button variant="outline" asChild className="w-full sm:w-auto">
-          <Link to={stock ? `/stocks/${stock.id}` : '/stocks'}>Cancel</Link>
-        </Button>
+      <div
+        className={
+          props.inDialog
+            ? 'sticky bottom-0 -mx-4 flex flex-col-reverse gap-2 border-t bg-popover px-4 py-3 sm:flex-row sm:justify-end'
+            : 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+        }
+      >
+        {props.onCancel ? (
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={props.onCancel}>
+            Cancel
+          </Button>
+        ) : (
+          <Button variant="outline" asChild className="w-full sm:w-auto">
+            <Link to={stock ? `/stocks/${stock.id}` : '/stocks'}>Cancel</Link>
+          </Button>
+        )}
         <Button type="submit" disabled={pending} className="w-full sm:w-auto">
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
           {pending ? 'Saving…' : stock ? 'Save changes' : 'Save stock'}

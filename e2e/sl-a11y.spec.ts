@@ -35,6 +35,9 @@ test.describe('axe on every screen and state', () => {
       const findings: string[] = []
       const unresolved: string[] = []
       for (const state of STATES) {
+        // The Add stock and import dialogs scroll inside; axe cannot decide contrast for text clipped by that
+        // scroll area, so those states are taken in a viewport tall enough to show the whole dialog.
+        await page.setViewportSize(/^(stock-new-|import-step)/.test(state.name) ? { width: 1280, height: 2600 } : { width: 1280, height: 720 })
         await enter(page, state, ctx)
         await applyScheme(page, scheme)
         const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
@@ -44,7 +47,7 @@ test.describe('axe on every screen and state', () => {
         }
         // A contrast result axe could not decide must not hide a tinted control. Behind a dialog scrim axe cannot
         // decide for the page, so for overlay states only the overlay itself is checked (and must be decided).
-        const overlay = /dialog|popover/.test(state.name)
+        const overlay = /dialog|popover|^stock-new-|^import-step/.test(state.name)
         const undecided = overlay
           ? (await new AxeBuilder({ page }).withTags(['wcag2aa']).include('[data-slot="alert-dialog-content"], [data-slot="dialog-content"], [data-slot="popover-content"]').analyze()).incomplete
           : result.incomplete
@@ -59,8 +62,11 @@ test.describe('axe on every screen and state', () => {
   }
 
   // Findings F-2 (light) and F-3 (dark); the matching TC-E-125 cases hold the measured ratios.
+  // F-3 is fixed for the resting and focused buttons by the dark theme tokens (their pins are gone); only
+  // the hover state is still pinned, in TC-E-125 below.
   for (const scheme of SCHEMES) {
-    test.fail(`TC-E-124 [${scheme === 'light' ? 'F-2' : 'F-3'}]: the delete confirm buttons have no axe contrast violation in ${scheme} mode`, async ({ page }) => {
+    const run = scheme === 'light' ? test.fail : test
+    run(`TC-E-124 [${scheme === 'light' ? 'F-2' : 'F-3'}]: the delete confirm buttons have no axe contrast violation in ${scheme} mode`, async ({ page }) => {
       const violations: string[] = []
       for (const name of ['stock-delete-dialog', 'list-delete-dialog']) {
         await enter(page, stateNamed(name), ctx)
@@ -92,23 +98,23 @@ const focusVisible = async (page: Page, target: Locator) => {
 }
 
 const PROBES: Probe[] = [
-  { label: 'delete-stock confirm button (rest)', state: 'stock-delete-dialog', find: dialogDelete, known: { light: 'F-2: 1.25:1', dark: 'F-3: 4.26:1' } },
+  { label: 'delete-stock confirm button (rest)', state: 'stock-delete-dialog', find: dialogDelete, known: { light: 'F-2: 1.25:1' } },
   { label: 'delete-stock confirm button (hover)', state: 'stock-delete-dialog', find: dialogDelete, act: hover, known: { dark: 'F-3: 3.55:1' } },
   {
     label: 'delete-stock confirm button (focus-visible)',
     state: 'stock-delete-dialog',
     find: dialogDelete,
     act: focusVisible,
-    known: { light: 'F-2: 1.25:1', dark: 'F-3: 4.26:1' },
+    known: { light: 'F-2: 1.25:1' },
   },
-  { label: 'delete-list confirm button (rest)', state: 'list-delete-dialog', find: dialogDelete, known: { light: 'F-2: 1.25:1', dark: 'F-3: 4.26:1' } },
+  { label: 'delete-list confirm button (rest)', state: 'list-delete-dialog', find: dialogDelete, known: { light: 'F-2: 1.25:1' } },
   { label: 'delete-list confirm button (hover)', state: 'list-delete-dialog', find: dialogDelete, act: hover, known: { dark: 'F-3: 3.55:1' } },
   {
     label: 'delete-list confirm button (focus-visible)',
     state: 'list-delete-dialog',
     find: dialogDelete,
     act: focusVisible,
-    known: { light: 'F-2: 1.25:1', dark: 'F-3: 4.26:1' },
+    known: { light: 'F-2: 1.25:1' },
   },
   {
     label: 'destructive menu item (highlighted)',

@@ -1,5 +1,5 @@
 import { LineChartIcon, PlusIcon, UploadIcon } from 'lucide-react'
-import { Link, useLoaderData } from 'react-router'
+import { Link, Outlet, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -26,13 +26,14 @@ export function Component() {
               </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/import-export">
+              <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
                 Import from file
               </Link>
             </Button>
           </div>
         </Card>
+        <Outlet />
       </section>
     )
   }
@@ -45,7 +46,7 @@ export function Component() {
         actions={
           <>
             <Button variant="outline" className="w-full sm:w-auto" asChild>
-              <Link to="/import-export">
+              <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
                 Import
               </Link>
@@ -60,6 +61,7 @@ export function Component() {
         }
       />
       <StockTable stocks={stocks} lists={lists} />
+      <Outlet />
     </section>
   )
 }

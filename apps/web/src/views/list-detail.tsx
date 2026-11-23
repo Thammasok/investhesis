@@ -28,7 +28,7 @@ export function Component() {
   const empty = members.length === 0
   const importLink = (
     <Button variant="outline" className="w-full sm:w-auto" asChild>
-      <Link to={`/import-export?listId=${encodeURIComponent(list.id)}`}>
+      <Link to={`/import-export/import?listId=${encodeURIComponent(list.id)}`}>
         <ImportIcon aria-hidden="true" />
         Import into it
       </Link>

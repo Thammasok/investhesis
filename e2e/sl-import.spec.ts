@@ -33,7 +33,7 @@ const row = (fields: Record<string, string>) => HEADERS.map((h) => fields[h] ?? 
 test.describe('import', () => {
   test('TC-E-109: import a CSV edited from the downloaded template into a new list', async ({ page }) => {
     // Arrange: download the template through the button
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'CSV template' }).click()])
     const template = readFileSync((await download.path())!)
     expect([...template.subarray(0, 3)]).toEqual(BOM)
@@ -81,7 +81,7 @@ test.describe('import', () => {
 
   test('TC-E-110: import an XLSX with duplicates in update mode', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     await api.stock(us('NVDA', { style: 'Value', gicsSector: 'Information Technology' }))
     await api.stock(us('AAPL'))
     const core = await api.list('Core holdings')
@@ -121,7 +121,7 @@ test.describe('import', () => {
 
   test('TC-E-111: error rows in the preview, the filter and the downloaded report', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     const file = csv(
       ['ticker', 'market', 'exchange', 'name'],
       [
@@ -166,7 +166,7 @@ test.describe('import', () => {
 
   test('TC-E-112: file-level problems keep the page on step 1 and a valid file recovers', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     const alert = page.getByRole('alert')
     const cases: [string, Buffer, string][] = [
       ['size-1.1mb.csv', F.ofSize(1_153_434), 'File is larger than 1 MB'],
@@ -196,12 +196,12 @@ test.describe('import', () => {
 
   test('TC-E-113: skip keeps a saved stock but still lists it; update changes it', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     await api.stock(us('AAPL', { style: 'Quality' }))
     const first = csv(['ticker', 'market', 'exchange', 'name'], [['NVDA', 'US', 'NASDAQ', 'NVIDIA'], ['AAPL', 'US', 'NASDAQ', 'Apple']])
     const second = csv(['ticker', 'market', 'exchange', 'name', 'style'], [['AAPL', 'US', 'NASDAQ', 'Apple', 'Growth']])
     const run = async (file: Buffer, listOption: string, mode?: 'Skip' | 'Update', newName?: string) => {
-      await page.goto('/import-export')
+      await page.goto('/import-export/import')
       await pickFile(page, 'f.csv', file, 'text/csv')
       await chooseTarget(page, listOption)
       if (newName) await page.getByLabel('New list name').fill(newName)
@@ -226,9 +226,37 @@ test.describe('import', () => {
     expect((await api.stocks()).find((s) => s.ticker === 'AAPL')).toMatchObject({ style: 'Growth' })
   })
 
-  test('TC-E-113: the Duplicates group is absent when the file has no duplicates', async ({ page }) => {
+  test('TC-E-109: Import is a dialog over /import-export; Esc and Back close it, an outside click does not', async ({ page }) => {
     // Arrange
     await signedInUser(page, '/import-export')
+
+    // Act + Assert: opened from the page, Esc closes it
+    await page.getByRole('link', { name: 'Import stocks' }).click()
+    await expect(page).toHaveURL('/import-export/import')
+    await expect(page.getByRole('dialog', { name: 'Import stocks' })).toBeVisible()
+    await page.mouse.click(5, 5)
+    await expect(page.getByRole('dialog', { name: 'Import stocks' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('/import-export')
+
+    // Act + Assert: Back closes it
+    await page.getByRole('link', { name: 'Import stocks' }).click()
+    await expect(page.getByRole('dialog', { name: 'Import stocks' })).toBeVisible()
+    await page.goBack()
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    await expect(page).toHaveURL('/import-export')
+
+    // Act + Assert: a typed URL falls back to the page
+    await page.goto('/import-export/import')
+    await expect(page.getByRole('dialog', { name: 'Import stocks' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page).toHaveURL('/import-export')
+  })
+
+  test('TC-E-113: the Duplicates group is absent when the file has no duplicates', async ({ page }) => {
+    // Arrange
+    await signedInUser(page, '/import-export/import')
 
     // Act
     await pickFile(page, 'new.csv', csv(['ticker', 'market', 'exchange', 'name'], [['NVDA', 'US', 'NASDAQ', 'NVIDIA']]), 'text/csv')
@@ -251,7 +279,7 @@ test.describe('import', () => {
     await page.getByRole('link', { name: 'Import into it' }).click()
 
     // Assert: the URL, then the pre-selected list after choosing a file
-    await expect(page).toHaveURL(`/import-export?listId=${list.id}`)
+    await expect(page).toHaveURL(`/import-export/import?listId=${list.id}`)
     await pickFile(page, 'a.csv', F.noBom(), 'text/csv')
     await expect(page.locator('#import-target')).toContainText('Empty one')
     await importButton(page).click()
@@ -259,7 +287,7 @@ test.describe('import', () => {
     expect((await api.lists())[0]!.stockCount).toBe(3)
 
     // Act: someone else's list id
-    await page.goto(`/import-export?listId=${foreign.id}`)
+    await page.goto(`/import-export/import?listId=${foreign.id}`)
     await pickFile(page, 'b.csv', F.noBom(), 'text/csv')
 
     // Assert: nothing selected, no error page, and the foreign list's name is nowhere
@@ -270,7 +298,7 @@ test.describe('import', () => {
 
   test('TC-E-115: template downloads work with a real sign-in (buttons that send the bearer token)', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     const statuses: number[] = []
     page.on('response', (r) => {
       if (r.url().includes('/api/imports/template.')) statuses.push(r.status())
@@ -300,7 +328,7 @@ test.describe('import', () => {
 
   test('TC-E-122: keyboard only, import', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     await api.stock(us('AAPL', { name: 'Apple Inc' }))
     const file = csv(
       ['ticker', 'market', 'exchange', 'name'],
@@ -365,7 +393,7 @@ test.describe('import', () => {
 
   test('TC-E-127: a 1,000-row import through the UI', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
 
     // Act: F-07 first, then F-06
     await pickFile(page, 'rows-1001.csv', F.rows1001(), 'text/csv')
@@ -400,7 +428,7 @@ test.describe('import', () => {
     // Arrange: the same data as CSV for user A and as XLSX for user B
     const rowsData = JSON.parse(JSON.stringify(F.thaiNames().toString('utf8').slice(1).split('\n').slice(1, 6))) as string[]
     expect(rowsData).toHaveLength(5)
-    const { api: apiA } = await signedInUser(page, '/import-export')
+    const { api: apiA } = await signedInUser(page, '/import-export/import')
     const cells = (line: string) => line.split(',')
     const thaiXlsx = await xlsx([{ rows: [HEADERS, ...rowsData.map(cells)] }])
 
@@ -414,7 +442,7 @@ test.describe('import', () => {
     // Act: B imports the XLSX
     const userB = await newUser()
     const apiB = await apiAs(userB)
-    await openSignedIn(page, userB, '/import-export')
+    await openSignedIn(page, userB, '/import-export/import')
     await pickFile(page, 'thai.xlsx', thaiXlsx)
     await chooseTarget(page, 'New list…')
     await page.getByLabel('New list name').fill('ไทย')
@@ -438,7 +466,7 @@ test.describe('import', () => {
     expect(codePoints(await page.locator('#stock-name').inputValue())).toEqual(codePoints('บมจ. ปตท.'))
 
     // Assert: no mojibake in the template round trip
-    await page.goto('/import-export')
+    await page.goto('/import-export/import')
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'CSV template' }).click()])
     const template = readFileSync((await download.path())!).toString('utf8')
     expect(template).toContain('บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)')
@@ -446,7 +474,7 @@ test.describe('import', () => {
 
   test('TC-E-130: import data never leaves the app', async ({ page, context }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     const marker = `CELLVALUE${Date.now()}`
     const file = csv(['ticker', 'market', 'exchange', 'name'], [['PRIV', 'US', 'NYSE', marker]])
     const requests: { url: string; method: string; body: Buffer | null }[] = []
@@ -468,7 +496,7 @@ test.describe('import', () => {
 
     // Act 2: abandon a second import at step 2 (close the page)
     const second = await context.newPage()
-    await second.goto('/import-export')
+    await second.goto('/import-export/import')
     await pickFile(second, 'abandon.csv', csv(['ticker', 'market', 'exchange', 'name'], [['GONE', 'US', 'NYSE', `${marker}-abandoned`]]), 'text/csv')
     await expect(second.getByRole('heading', { name: 'Review' })).toBeVisible()
     await second.close()
@@ -489,7 +517,7 @@ test.describe('import', () => {
 
   test('TC-E-117: an expired token during import is refreshed once and the same file is re-sent', async ({ page }) => {
     // Arrange
-    const { api } = await signedInUser(page, '/import-export')
+    const { api } = await signedInUser(page, '/import-export/import')
     await pickFile(page, 'a.csv', F.noBom(), 'text/csv')
     await chooseTarget(page, 'New list…')
     await page.getByLabel('New list name').fill('Refresh')

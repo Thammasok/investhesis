@@ -49,7 +49,7 @@ describe('stocks page', () => {
     renderApp('/stocks', stocksApi([]))
     expect(await screen.findByText('No stocks yet')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Add stock/ })).toHaveAttribute('href', '/stocks/new')
-    expect(screen.getByRole('link', { name: /Import from file/ })).toHaveAttribute('href', '/import-export')
+    expect(screen.getByRole('link', { name: /Import from file/ })).toHaveAttribute('href', '/import-export/import')
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 
@@ -151,7 +151,7 @@ describe('stocks page', () => {
   it('TC-C-113: shows the count text with singular and plural, and links in the header', async () => {
     const { unmount } = renderApp('/stocks', stocksApi([aapl]))
     expect(await screen.findByText('1 stock')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Import' })).toHaveAttribute('href', '/import-export')
+    expect(screen.getByRole('link', { name: 'Import' })).toHaveAttribute('href', '/import-export/import')
     expect(screen.getByRole('link', { name: 'Add stock' })).toHaveAttribute('href', '/stocks/new')
     unmount()
     renderApp('/stocks', stocksApi())

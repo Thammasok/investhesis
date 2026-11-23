@@ -53,13 +53,13 @@ const fileInput = () => screen.getByLabelText('Choose file') as HTMLInputElement
 const live = () => document.querySelector('[aria-live="polite"]') as HTMLElement
 const bodyOf = (stub: StubApi, route: string) => stub.callsTo(route)[0]?.body as FormData
 
-async function openWizard(stub: StubApi, path = '/import-export') {
+async function openWizard(stub: StubApi, path = '/import-export/import') {
   const view = renderApp(path, stub)
-  await screen.findByRole('heading', { level: 1, name: 'Import / export' })
+  await screen.findByRole('dialog', { name: 'Import stocks' })
   return view
 }
 
-async function reachReview(stub: StubApi, path = '/import-export', file = csv()) {
+async function reachReview(stub: StubApi, path = '/import-export/import', file = csv()) {
   const view = await openWizard(stub, path)
   await userEvent.upload(fileInput(), file)
   await screen.findByRole('heading', { level: 2, name: 'Review' })
@@ -350,13 +350,13 @@ describe('import wizard: step 2', () => {
   })
 
   it('TC-U-116: ?listId= pre-selects the target list; an unknown id selects nothing', async () => {
-    await reachReview(api(), '/import-export?listId=L1')
+    await reachReview(api(), '/import-export/import?listId=L1')
     expect(combo(/Add to list/)).toHaveTextContent('Core holdings')
     expect(importButton()).toBeEnabled()
   })
 
   it('TC-C-168: an unknown ?listId= leaves nothing selected, without an error', async () => {
-    await reachReview(api(), '/import-export?listId=nope')
+    await reachReview(api(), '/import-export/import?listId=nope')
     expect(combo(/Add to list/)).not.toHaveTextContent('Core holdings')
     expect(importButton()).toBeDisabled()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

@@ -15,19 +15,22 @@ export function stocksRoutes(api: ApiClient): RouteObject {
     handle: { crumb: 'Stocks' } satisfies RouteHandle,
     children: [
       {
-        index: true,
+        // Pathless layout: the Stocks page, with Add stock as a dialog in its outlet.
         lazy: async () => {
           const [{ createStocksLoader }, view] = await Promise.all([data(), import('@/views/stocks')])
           return { Component: view.Component, loader: createStocksLoader(api) }
         },
-      },
-      {
-        path: 'new',
-        handle: { crumb: 'New stock' } satisfies RouteHandle,
-        lazy: async () => {
-          const [{ createStockNewLoader, createStockCreateAction }, view] = await Promise.all([data(), import('@/views/stock-new')])
-          return { Component: view.Component, loader: createStockNewLoader(api), action: createStockCreateAction(api) }
-        },
+        children: [
+          { index: true },
+          {
+            path: 'new',
+            handle: { crumb: 'New stock' } satisfies RouteHandle,
+            lazy: async () => {
+              const [{ createStockNewLoader, createStockCreateAction }, view] = await Promise.all([data(), import('@/views/stock-new')])
+              return { Component: view.Component, loader: createStockNewLoader(api), action: createStockCreateAction(api) }
+            },
+          },
+        ],
       },
       {
         path: ':id',

@@ -66,7 +66,7 @@ test.describe('isolation, session and resilience', () => {
     await expect(pageB.getByRole('link', { name: 'Core holdings' })).toBeVisible()
     await expect(pageB.getByRole('dialog')).toHaveCount(0)
     await b.stock(us('MSFT'))
-    await pageB.goto('/import-export')
+    await pageB.goto('/import-export/import')
     await pickFile(pageB, 'x.csv', csv(['ticker', 'market', 'exchange', 'name'], [['AMZN', 'US', 'NASDAQ', 'Amazon']]), 'text/csv')
     expect(await previewCounts(pageB)).toEqual(['1 new', '0 duplicate', '0 error'])
 
@@ -80,7 +80,7 @@ test.describe('isolation, session and resilience', () => {
 
   test('TC-E-117: signed-out deep links return after sign-in', async ({ browser }) => {
     const user = await newUser()
-    for (const path of ['/stocks/new', '/lists/x', '/import-export']) {
+    for (const path of ['/stocks/new', '/lists/x', '/import-export/import']) {
       // Arrange: a signed-out visitor
       const context = await browser.newContext()
       const page = await context.newPage()
@@ -127,7 +127,7 @@ test.describe('isolation, session and resilience', () => {
       await expect(page.getByRole('link', { name: listName })).toBeVisible()
 
       // Act: import a file once
-      await page.goto(`${MOCK_WEB}/import-export`)
+      await page.goto(`${MOCK_WEB}/import-export/import`)
       const rows = [1, 2, 3].map((n) => [`IM${run}${n}`, 'US', 'NYSE', `Import ${n}`])
       await pickFile(page, 'f.csv', csv(['ticker', 'market', 'exchange', 'name'], rows), 'text/csv')
       await chooseTarget(page, listName)
@@ -178,7 +178,7 @@ test.describe('isolation, session and resilience', () => {
     expect(await page.locator('#stock-ticker').inputValue().catch(() => '')).toBe('')
 
     // Act: double-click Import
-    await page.goto('/import-export')
+    await page.goto('/import-export/import')
     await pickFile(page, 'f.csv', F.noBom(), 'text/csv')
     await chooseTarget(page, 'Core holdings')
     const confirms: string[] = []
@@ -244,7 +244,7 @@ test.describe('isolation, session and resilience', () => {
 
     // Arrange: an import that fails once by abort, once by 500
     await api.list('Target')
-    await page.goto('/import-export')
+    await page.goto('/import-export/import')
     await pickFile(page, 'f.csv', F.noBom(), 'text/csv')
     await chooseTarget(page, 'Target')
     const failures: ('abort' | '500' | undefined)[] = ['abort', '500']
@@ -287,8 +287,9 @@ test.describe('isolation, session and resilience', () => {
       if (m.type() === 'error') errors.push(m.text())
     })
     page.on('pageerror', (e) => errors.push(e.message))
-    const main = page.getByRole('navigation', { name: 'Main' })
-    const crumbs = page.getByRole('navigation', { name: 'breadcrumb' })
+    // includeHidden: behind a modal dialog Radix marks the rest of the page aria-hidden, but it is still rendered
+    const main = page.getByRole('navigation', { name: 'Main', includeHidden: true })
+    const crumbs = page.getByRole('navigation', { name: 'breadcrumb', includeHidden: true })
     const visit = async (nav: () => Promise<unknown>, title: string, active: string, trail: string[], focusH1 = true) => {
       await nav()
       await expect(page).toHaveTitle(`${title} · Investhesis`)
@@ -303,19 +304,22 @@ test.describe('isolation, session and resilience', () => {
     await visit(() => main.getByRole('link', { name: 'Stocks' }).click(), 'Stocks', 'Stocks', ['Stocks'])
 
     // Act + Assert: new, detail, edit, list detail
-    await visit(() => page.getByRole('link', { name: 'Add stock' }).first().click(), 'Add stock', 'Stocks', ['Stocks', 'New stock'])
+    await visit(() => page.getByRole('link', { name: 'Add stock' }).first().click(), 'Stocks', 'Stocks', ['Stocks', 'New stock'], false)
+    // Add stock is a dialog over the Stocks page: the page keeps its title, the dialog holds focus
+    await expect(page.getByRole('dialog', { name: 'Add stock' })).toBeVisible()
+    await expect(page.getByRole('dialog').locator(':focus')).toHaveCount(1)
     await visit(() => page.goto(`/stocks/${stock.id}`), 'NVDA', 'Stocks', ['Stocks', 'NVDA'])
     await visit(() => page.getByRole('link', { name: 'Edit' }).click(), 'Edit NVDA', 'Stocks', ['Stocks', 'NVDA', 'Edit'])
     await visit(() => page.goto(`/lists/${list.id}`), 'Core holdings', 'Lists', ['Lists', 'Core holdings'])
     expect(errors).toEqual([])
   })
 
-  // Finding F-1: the import wizard's focus effect runs twice under StrictMode (dev server), so on arrival
-  // focus ends on the wizard's step heading instead of the page h1. Pinned as an expected failure; the
-  // production build is not what this suite runs against.
-  test.fail('TC-E-134 [F-1]: the h1 of /import-export holds focus on arrival', async ({ page }) => {
-    await signedInUser(page, '/import-export')
+  // F-1 (the wizard stole focus from the page h1) is retired: the wizard is now a dialog, which takes
+  // focus on arrival by design, so the check is that focus is inside the dialog.
+  test('TC-E-134 [F-1]: the import dialog holds focus on arrival', async ({ page }) => {
+    await signedInUser(page, '/import-export/import')
 
-    await expect(h1(page)).toBeFocused({ timeout: 3000 })
+    await expect(page.getByRole('dialog', { name: 'Import stocks' })).toBeVisible()
+    await expect(page.getByRole('dialog').locator(':focus')).toHaveCount(1)
   })
 })
