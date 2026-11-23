@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   adminCreateUser,
   API,
@@ -13,7 +13,10 @@ import {
   newEmail,
   PASSWORD,
   psql,
+  serviceKey,
+  tokenHashIn,
   unconfirmedUser,
+  userCount,
 } from './lib/stack.ts'
 
 describe('signing key script', () => {
@@ -54,13 +57,17 @@ describe('local Supabase Auth settings', () => {
     expect(body.keys[0]).not.toHaveProperty('d')
   })
 
-  it('TC-U-002 enforces the 8 character minimum', async () => {
-    const sb = client()
-    const short = await sb.auth.signUp({ email: newEmail(), password: 'Abc1234' })
-    expect(short.error?.code).toBe('weak_password')
-    const ok = await sb.auth.signUp({ email: newEmail(), password: PASSWORD })
-    expect(ok.error).toBeNull()
-    expect(ok.data.user?.email_confirmed_at).toBeFalsy()
+  it('TC-A-305 the Admin API enforces the 8 character minimum (successor of TC-U-002)', async () => {
+    const create = (password: string) =>
+      fetch(`${API}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', apikey: serviceKey(), authorization: `Bearer ${serviceKey()}` },
+        body: JSON.stringify({ email: newEmail('pw'), password, email_confirm: false }),
+      })
+    const short = await create('Abc1234')
+    expect(short.status).toBe(422)
+    expect(((await short.json()) as { error_code: string }).error_code).toBe('weak_password')
+    expect((await create(PASSWORD)).ok).toBe(true)
   })
 
   it('TC-U-003 sends token_hash links for confirmation and recovery', async () => {
@@ -112,81 +119,131 @@ describe('local Supabase Auth settings', () => {
 
 const sqlState = (err: string) => /ERROR:\s+([0-9A-Z]{5}):/.exec(err)?.[1]
 
-describe('sign-up allowlist (T-009)', () => {
+/** Parsed `[section] key = value` lines of config.toml (enough for the two settings checked here). */
+function readConfig(): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {}
+  let section = ''
+  for (const raw of readFileSync(new URL('../supabase/config.toml', import.meta.url), 'utf8').split('\n')) {
+    const line = raw.replace(/\s+#.*$/, '').trim()
+    if (!line || line.startsWith('#')) continue
+    const header = /^\[([^\]]+)\]$/.exec(line)
+    if (header) {
+      section = header[1]!
+      out[section] = {}
+      continue
+    }
+    const kv = /^([A-Za-z0-9_.]+)\s*=\s*(.+)$/.exec(line)
+    if (kv && out[section]) out[section][kv[1]!] = kv[2]!.replace(/^"|"$/g, '')
+  }
+  return out
+}
+
+describe('closed sign-up (user-auth v1.2 T-003)', () => {
   const tag = randomUUID().slice(0, 8)
-  const rows = [`owner-${tag}@mail.com`, `@dom-${tag}.test`]
 
-  beforeAll(() => {
-    const r = psql(`insert into app.signup_allowlist (pattern) values ('${rows[0]}'), ('${rows[1]}');`)
-    expect(r.err).toBe('')
-  })
-  afterAll(() => {
-    psql(`delete from app.signup_allowlist where pattern in ('${rows[0]}', '${rows[1]}');`)
-  })
+  it('TC-U-309 spike: admin create, public resend, mail link and sign-in all work with sign-up closed', async () => {
+    const email = `spike-${tag}@example.test`
+    const created = await adminCreateUser(email, { confirmed: false })
+    expect(created.id).toBeTruthy()
 
-  const decision = (email: string) =>
-    psql(
-      `select app.hook_before_user_created(jsonb_build_object('user', jsonb_build_object('email', '${email}')));`,
-    ).out
+    const sb = client()
+    const resend = await sb.auth.resend({ type: 'signup', email })
+    expect(resend.error).toBeNull()
+    const mails = await mailFor(email)
+    expect(mails).toHaveLength(1)
 
-  it('TC-U-039 decides by exact address or @domain, case-insensitively, sub-domains excluded', () => {
-    const allow = '{}'
-    const deny = '{"error": {"message": "signup_not_allowed", "http_code": 403}}'
-    const cases: [string, string][] = [
-      [rows[0], allow],
-      [rows[0].toUpperCase().replace('@MAIL.COM', '@Mail.com'), allow],
-      [`a@dom-${tag}.test`, allow],
-      [`a@sub.dom-${tag}.test`, deny],
-      [`other-${tag}@mail.com`, deny],
-      [`a@dom-${tag}.test.evil.io`, deny],
-    ]
-    for (const [email, expected] of cases) {
-      expect(JSON.parse(decision(email)), email).toEqual(JSON.parse(expected))
-    }
-  })
-
-  it('TC-U-040 refuses a stranger with 403 signup_not_allowed, no user row and no mail', async () => {
-    const email = `stranger-${tag}@gmail.com`
-    const { error } = await client().auth.signUp({ email, password: PASSWORD })
-    expect(error?.status).toBe(403)
-    expect(error?.message).toContain('signup_not_allowed')
-    expect(psql(`select count(*) from auth.users where email = '${email}';`).out).toBe('0')
-    expect(await mailFor(email, { timeoutMs: 2000 })).toHaveLength(0)
-  })
-
-  it('accepts new@example.test style sign-ups from the seed', async () => {
-    const { error } = await client().auth.signUp({ email: newEmail(), password: PASSWORD })
+    const verified = await sb.auth.verifyOtp({ token_hash: tokenHashIn(mails[0]!), type: 'email' })
+    expect(verified.error).toBeNull()
+    const { data, error } = await client().auth.signInWithPassword({ email, password: PASSWORD })
     expect(error).toBeNull()
+    expect(data.session).toBeTruthy()
   })
 
-  it('TC-U-041 keeps the allowlist and hook away from anon and authenticated', () => {
-    for (const role of ['anon', 'authenticated']) {
-      const select = psql(`set role ${role}; select * from app.signup_allowlist;`)
-      expect(sqlState(select.err), `${role} select`).toBe('42501')
-      const exec = psql(`set role ${role}; select app.hook_before_user_created('{}'::jsonb);`)
-      expect(sqlState(exec.err), `${role} execute`).toBe('42501')
+  it('TC-U-310 public sign-up is refused with 422 signup_disabled and nothing is created', async () => {
+    for (const email of [`a-${tag}@example.test`, `a-${tag}@gmail.com`]) {
+      const { error } = await client().auth.signUp({ email, password: PASSWORD })
+      expect(error?.status, email).toBe(422)
+      expect(error?.code, email).toBe('signup_disabled')
+      expect(userCount(email), email).toBe(0)
+      expect(await mailFor(email, { timeoutMs: 1500 }), email).toHaveLength(0)
     }
   })
 
-  it('TC-U-042 rejects upper-case and @-less patterns, accepts a domain pattern', () => {
-    expect(sqlState(psql(`insert into app.signup_allowlist (pattern) values ('Owner@Mail.com');`).err)).toBe('23514')
-    expect(sqlState(psql(`insert into app.signup_allowlist (pattern) values ('mail.com');`).err)).toBe('23514')
-    const ok = psql(`insert into app.signup_allowlist (pattern) values ('@mail-${tag}.com') returning pattern;`)
-    expect(ok.err).toBe('')
-    expect(ok.out).toContain(`@mail-${tag}.com`)
-    psql(`delete from app.signup_allowlist where pattern = '@mail-${tag}.com';`)
+  it('TC-U-311 the allowlist table and the hook function are gone', () => {
+    const r = psql(
+      `select to_regprocedure('app.hook_before_user_created(jsonb)') is null, to_regclass('app.signup_allowlist') is null;`,
+    )
+    expect(r.err).toBe('')
+    expect(r.out).toBe('t|t')
   })
 
-  it('re-applying the migration is harmless (order independence with other slices)', () => {
-    const file = readFileSync(new URL('../supabase/migrations/', import.meta.url).pathname + migrationName(), 'utf8')
-    const r = psql(file)
+  it('TC-U-312 config.toml closes sign-up and has no Before User Created hook', () => {
+    const config = readConfig()
+    expect(config.auth?.enable_signup).toBe('false')
+    const hook = config['auth.hook.before_user_created']
+    expect(hook === undefined || hook.enabled === 'false').toBe(true)
+  })
+
+  it('TC-U-313 an admin-created user resets the password through the mail link and signs in with it', async () => {
+    const user = await adminCreateUser(newEmail('reset'))
+    const sb = client()
+    const sent = await sb.auth.resetPasswordForEmail(user.email, { redirectTo: 'http://localhost:5173/auth/confirm' })
+    expect(sent.error).toBeNull()
+    const [mail] = await mailFor(user.email, { accept: (m) => /type=recovery/.test(m.html.replace(/&amp;/g, '&')) })
+    expect(mail).toBeTruthy()
+
+    const verified = await sb.auth.verifyOtp({ token_hash: tokenHashIn(mail!), type: 'recovery' })
+    expect(verified.error).toBeNull()
+    const changed = await sb.auth.updateUser({ password: 'correct-horse-2' })
+    expect(changed.error).toBeNull()
+    await sb.auth.signOut()
+
+    const again = await client().auth.signInWithPassword({ email: user.email, password: 'correct-horse-2' })
+    expect(again.error).toBeNull()
+    expect(again.data.session).toBeTruthy()
+    const old = await client().auth.signInWithPassword({ email: user.email, password: PASSWORD })
+    expect(old.error?.code).toBe('invalid_credentials')
+  })
+
+  it('TC-U-314 public resend sends a mail only for an admin-created unconfirmed address and creates no user', async () => {
+    const unknown = `nobody-${tag}@example.test`
+    const unconfirmed = `unconf-${tag}@example.test`
+    await adminCreateUser(unconfirmed, { confirmed: false })
+
+    const a = await client().auth.resend({ type: 'signup', email: unknown })
+    const b = await client().auth.resend({ type: 'signup', email: unconfirmed })
+
+    expect(userCount(unknown)).toBe(0)
+    expect(await mailFor(unknown, { timeoutMs: 2000 })).toHaveLength(0)
+    expect(await mailFor(unconfirmed)).toHaveLength(1)
+    // Pinned in supabase/README.md: both calls succeed with the same body, so the response shows nothing
+    // about whether an address exists or is unconfirmed (no finding).
+    expect(a.error).toBeNull()
+    expect(b.error).toBeNull()
+    expect(a.data).toEqual(b.data)
+  })
+
+  it('TC-U-315 anon and authenticated cannot read the app schema', () => {
+    for (const role of ['anon', 'authenticated']) {
+      for (const table of ['stocks', 'lists']) {
+        expect(sqlState(psql(`set role ${role}; select * from app.${table};`).err), `${role} ${table}`).toBe('42501')
+      }
+    }
+  })
+
+  it('TC-A-311 the close_signup migration sorts after stock_lists and can run twice', () => {
+    const dir = new URL('../supabase/migrations/', import.meta.url)
+    const names = readdirSync(dir).sort()
+    const close = names.find((f) => f.endsWith('_close_signup.sql'))
+    expect(close).toBeTruthy()
+    expect(names.findIndex((f) => f === close)).toBeGreaterThan(names.findIndex((f) => f.endsWith('_stock_lists.sql')))
+    expect(names.some((f) => f.endsWith('_signup_allowlist.sql'))).toBe(true)
+    const r = psql(readFileSync(new URL(close!, dir), 'utf8'))
     expect(r.status).toBe(0)
     expect(sqlState(r.err)).toBeUndefined()
   })
-})
 
-function migrationName(): string {
-  const name = readdirSync(new URL('../supabase/migrations/', import.meta.url)).find((f) => f.endsWith('_signup_allowlist.sql'))
-  if (!name) throw new Error('signup_allowlist migration missing')
-  return name
-}
+  it('TC-A-313 seed.sql no longer mentions the allowlist', () => {
+    expect(readFileSync(new URL('../supabase/seed.sql', import.meta.url), 'utf8')).not.toMatch(/signup_allowlist/)
+  })
+})

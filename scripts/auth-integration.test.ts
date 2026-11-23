@@ -17,6 +17,7 @@ import {
   newEmail,
   PASSWORD,
   psql,
+  publishableKey,
   signedIn,
   tokenHashIn,
   unconfirmedUser,
@@ -81,37 +82,47 @@ describe('access tokens from local Auth (TC-A-018..020)', () => {
   })
 })
 
-describe('password and account rules at the provider (TC-A-021..023)', () => {
-  it('TC-A-021: a 72-character password is accepted', async () => {
+describe('password and account rules at the provider (TC-A-023, TC-A-305, TC-A-309)', () => {
+  it('TC-A-305: a 72-character password is accepted by the Admin API', async () => {
     const email = newEmail()
-    const { error } = await client().auth.signUp({ email, password: 'a'.repeat(72) })
-    expect(error).toBeNull()
+    await adminCreateUser(email, { password: 'a'.repeat(72) })
     expect(userCount(email)).toBe(1)
+    const { error } = await client().auth.signInWithPassword({ email, password: 'a'.repeat(72) })
+    expect(error).toBeNull()
   })
 
-  it('TC-A-021: a 73-character password is rejected and creates no user', async () => {
+  it('TC-A-305: a 73-character password is rejected and creates no user', async () => {
     const email = newEmail()
-    const { error } = await client().auth.signUp({ email, password: 'a'.repeat(73) })
-    expect(error).not.toBeNull()
-    expect(['weak_password', 'validation_failed']).toContain(error?.code)
+    await expect(adminCreateUser(email, { password: 'a'.repeat(73) })).rejects.toThrow(/400.*validation_failed/)
     expect(userCount(email)).toBe(0)
   })
 
-  it('TC-A-022: signing up again with an existing email gives no signal and keeps the original password', async () => {
-    // Arrange
+  it('TC-A-309: creating the same address twice (any case) is refused and leaves one user', async () => {
     const user = await adminCreateUser(newEmail('taken'))
-
-    // Act
-    const again = await client().auth.signUp({ email: user.email, password: 'Different123' })
-
-    // Assert
-    // Auth answers either an obfuscated user or `user_already_exists`; the web adapter maps both to success.
-    if (again.error) expect(again.error.code).toBe('user_already_exists')
+    await expect(adminCreateUser(user.email, { password: 'Different123' })).rejects.toThrow(/email_exists/)
+    await expect(adminCreateUser(user.email.toUpperCase(), { password: 'Different123' })).rejects.toThrow(/email_exists/)
     expect(userCount(user.email)).toBe(1)
     const old = await client().auth.signInWithPassword({ email: user.email, password: PASSWORD })
     expect(old.error).toBeNull()
-    const impostor = await client().auth.signInWithPassword({ email: user.email, password: 'Different123' })
-    expect(impostor.error?.code).toBe('invalid_credentials')
+  })
+
+  it('TC-A-302: public sign-up answers the same 422 for a known, an unconfirmed, an unknown and a mixed-case address', async () => {
+    const known = await adminCreateUser(newEmail('known'))
+    const unconfirmed = newEmail('unconf')
+    await adminCreateUser(unconfirmed, { confirmed: false })
+    const addresses = [known.email, unconfirmed, newEmail('unknown'), known.email.replace(/^k/, 'K')]
+    const before = psql(`select count(*) from auth.users;`).out
+
+    const results = await Promise.all(addresses.map((email) => client().auth.signUp({ email, password: 'Different123' })))
+
+    for (const r of results) {
+      expect(r.error?.status).toBe(422)
+      expect(r.error?.code).toBe('signup_disabled')
+    }
+    expect(new Set(results.map((r) => r.error?.message)).size).toBe(1)
+    expect(psql(`select count(*) from auth.users;`).out).toBe(before)
+    const old = await client().auth.signInWithPassword({ email: known.email, password: PASSWORD })
+    expect(old.error).toBeNull()
   })
 
   it('TC-A-023: wrong password and unknown email fail identically', async () => {
@@ -130,7 +141,7 @@ describe('password and account rules at the provider (TC-A-021..023)', () => {
   })
 })
 
-describe('emails and links (TC-A-024..029)', () => {
+describe('emails and links (TC-A-024..028, TC-A-301, TC-A-315)', () => {
   it('TC-A-024: a reset for an unregistered email is silent', async () => {
     const email = newEmail('nobody')
     const { error } = await client().auth.resetPasswordForEmail(email, { redirectTo: 'http://localhost:5173/auth/confirm' })
@@ -196,17 +207,18 @@ describe('emails and links (TC-A-024..029)', () => {
     expect(await messagesTo(email)).toHaveLength(1)
   })
 
-  it('TC-A-029: a foreign redirect URL never reaches an email link', async () => {
+  it('TC-A-315: a foreign redirect URL never reaches a resend or recovery link', async () => {
     // Arrange
-    const signUpEmail = newEmail()
+    const unconfirmed = newEmail('unconf')
+    await adminCreateUser(unconfirmed, { confirmed: false })
     const user = await adminCreateUser()
 
     // Act
-    await client().auth.signUp({ email: signUpEmail, password: PASSWORD, options: { emailRedirectTo: 'https://evil.example/auth/confirm' } })
+    await client().auth.resend({ type: 'signup', email: unconfirmed, options: { emailRedirectTo: 'https://evil.example/auth/confirm' } })
     const reset = await client().auth.resetPasswordForEmail(user.email, { redirectTo: 'https://evil.example/' })
 
     // Assert: each link points at the site URL, or the call was rejected
-    const confirmation = await mailFor(signUpEmail, { timeoutMs: 3000 })
+    const confirmation = await mailFor(unconfirmed, { timeoutMs: 3000 })
     for (const mail of confirmation) {
       expect(mail.html).not.toContain('evil.example')
       expect(linkIn(mail).host).toBe('localhost:5173')
@@ -216,6 +228,25 @@ describe('emails and links (TC-A-024..029)', () => {
       expect(recovery!.html).not.toContain('evil.example')
       expect(linkIn(recovery!).host).toBe('localhost:5173')
     }
+  })
+
+  it('TC-A-301/TC-A-303: a raw sign-up request and empty or anonymous variants create nothing', async () => {
+    const headers = { 'content-type': 'application/json', apikey: publishableKey() }
+    const email = newEmail('raw')
+    const before = psql(`select count(*) from auth.users;`).out
+    const post = (body: unknown) => fetch(`${API}/auth/v1/signup`, { method: 'POST', headers, body: JSON.stringify(body) })
+
+    const raw = await post({ email, password: PASSWORD })
+    expect(raw.status).toBe(422)
+    expect(await raw.json()).toMatchObject({ code: 422, error_code: 'signup_disabled' })
+    expect(await mailFor(email, { timeoutMs: 1500 })).toHaveLength(0)
+    for (const body of [{}, { data: {} }, { phone: '+66812345678', password: PASSWORD }]) {
+      const res = await post(body)
+      expect(res.status, JSON.stringify(body)).toBeGreaterThanOrEqual(400)
+      expect(res.status, JSON.stringify(body)).toBeLessThan(500)
+    }
+    expect(psql(`select count(*) from auth.users;`).out).toBe(before)
+    expect(psql(`select count(*) from auth.users where is_anonymous;`).out).toBe('0')
   })
 })
 
@@ -271,17 +302,17 @@ function parseToml(text: string): Record<string, Record<string, string>> {
   return out
 }
 
-describe('static checks of the project files (TC-A-031, TC-A-032)', () => {
+describe('static checks of the project files (TC-A-310, TC-A-032)', () => {
   const config = parseToml(readFileSync(resolve(ROOT, 'supabase/config.toml'), 'utf8'))
 
-  it('TC-A-031: auth settings match design.md', () => {
+  it('TC-A-310: auth settings match design.md (sign-up closed, no hook)', () => {
     expect(config.auth).toMatchObject({
       site_url: 'http://localhost:5173',
       additional_redirect_urls: '["http://localhost:5173/**"]',
       jwt_expiry: '3600',
       enable_refresh_token_rotation: 'true',
       refresh_token_reuse_interval: '10',
-      enable_signup: 'true',
+      enable_signup: 'false',
       enable_anonymous_sign_ins: 'false',
       minimum_password_length: '8',
       signing_keys_path: './signing_keys.json',
@@ -293,13 +324,11 @@ describe('static checks of the project files (TC-A-031, TC-A-032)', () => {
       max_frequency: '60s',
       otp_expiry: '3600',
     })
-    expect(config['auth.hook.before_user_created']).toMatchObject({
-      enabled: 'true',
-      uri: 'pg-functions://postgres/app/hook_before_user_created',
-    })
+    const hook = config['auth.hook.before_user_created']
+    expect(hook === undefined || hook.enabled === 'false').toBe(true)
   })
 
-  it('TC-A-031: the email templates named in config.toml exist', () => {
+  it('TC-A-310: the email templates named in config.toml exist', () => {
     for (const section of ['auth.email.template.confirmation', 'auth.email.template.recovery']) {
       const path = config[section]?.content_path
       expect(path, section).toBeTruthy()
@@ -307,7 +336,7 @@ describe('static checks of the project files (TC-A-031, TC-A-032)', () => {
     }
   })
 
-  it('TC-A-031: auth rate limits are not loosened beyond the CLI defaults', () => {
+  it('TC-A-310: auth rate limits are not loosened beyond the CLI defaults', () => {
     const limits = config['auth.rate_limit'] ?? {}
     const ceiling: Record<string, number> = { email_sent: 2, sign_in_sign_ups: 30, token_refresh: 150, token_verifications: 30, anonymous_users: 30 }
     for (const [key, max] of Object.entries(ceiling)) {
