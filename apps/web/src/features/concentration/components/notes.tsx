@@ -20,7 +20,7 @@ function Tickers({ ids, stocks }: { ids: readonly string[]; stocks: ReadonlyMap<
       {found.map((s, i) => (
         <Fragment key={s.id}>
           {i > 0 ? ', ' : null}
-          <Link to={`/stocks/${s.id}`} className="underline underline-offset-4">
+          <Link to={`/stocks/${s.id}`} className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
             {s.ticker}
           </Link>
         </Fragment>
@@ -54,7 +54,7 @@ export function LeftOutNote({ plan, stocks, onSetRate }: { plan: Plan; stocks: r
     )
   if (notHeld.length > 0)
     parts.push(
-      <Link key="held" to="/stocks" className="underline underline-offset-4">
+      <Link key="held" to="/stocks" className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
         {`${countLabel(notHeld.length, 'stock')} not held`}
       </Link>,
     )

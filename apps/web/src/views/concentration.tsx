@@ -82,7 +82,8 @@ export function Component() {
           <Button
             ref={settingsButton}
             variant="outline"
-            className="w-full sm:w-auto"
+            // The outline variant's dark border wins over focus-visible:border-ring, which would leave only the translucent ring.
+            className="w-full sm:w-auto dark:focus-visible:border-ring"
             onClick={(e) => openSettings('threshold', e.currentTarget)}
           >
             <SlidersHorizontalIcon aria-hidden="true" />
@@ -104,7 +105,7 @@ export function Component() {
         <Card className="items-center gap-3 py-10 text-center">
           <p className="text-sm">
             No stock is marked as held yet.{' '}
-            <Link to="/stocks" className="underline underline-offset-4">
+            <Link to="/stocks" className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
               Mark holdings on a stock's page.
             </Link>
           </p>

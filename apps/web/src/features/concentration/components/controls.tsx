@@ -90,7 +90,7 @@ export function Controls({ view, plan, stocks, lists, onChange, onSetRate }: Pro
             ) : (
               <>
                 No held stock in this scope has shares and cost.{' '}
-                <Link to="/stocks" className="underline underline-offset-4">
+                <Link to="/stocks" className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                   Mark holdings on a stock's page.
                 </Link>
               </>

@@ -104,7 +104,7 @@ export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view:
                           const stock = byId.get(id)
                           return stock ? (
                             <li key={id}>
-                              <Link to={`/stocks/${stock.id}`} className="underline underline-offset-4">
+                              <Link to={`/stocks/${stock.id}`} className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
                                 {stock.ticker}
                               </Link>
                             </li>
