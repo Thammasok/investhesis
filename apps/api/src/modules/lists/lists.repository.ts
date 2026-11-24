@@ -39,7 +39,7 @@ export async function findOwnedList(db: DbOrTx, userId: string, id: string): Pro
   return row
 }
 
-export function listLists(db: Db, userId: string): Promise<ListRow[]> {
+export function listLists(db: DbOrTx, userId: string): Promise<ListRow[]> {
   return db
     .select(columns)
     .from(lists)
@@ -97,4 +97,13 @@ export async function removeMembership(db: Db, userId: string, listId: string, s
     .where(and(eq(listStocks.listId, listId), eq(listStocks.stockId, stockId), eq(listStocks.userId, userId)))
     .returning({ stockId: listStocks.stockId })
   return rows.length > 0
+}
+
+/** Every membership of the user as (list, stock) pairs in the order they were added, then by stock id. */
+export function listMembershipsForUser(db: DbOrTx, userId: string): Promise<{ listId: string; stockId: string }[]> {
+  return db
+    .select({ listId: listStocks.listId, stockId: listStocks.stockId })
+    .from(listStocks)
+    .where(eq(listStocks.userId, userId))
+    .orderBy(listStocks.addedAt, listStocks.stockId)
 }

@@ -4,6 +4,7 @@ import type { DestinationStream } from 'pino'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
+import { exportsRoutes } from './modules/exports/exports.routes.ts'
 import { importsRoutes } from './modules/imports/imports.routes.ts'
 import type { ImportRepo } from './modules/imports/imports.service.ts'
 import { listsRoutes } from './modules/lists/lists.routes.ts'
@@ -32,6 +33,8 @@ export type AppDeps = {
   /** Defaults to the resolver for config.authMode; tests pass their own. */
   resolveIdentity?: IdentityResolver
   logStream?: DestinationStream
+  /** Test seam: the clock that dates exports. */
+  now?: () => Date
 }
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
@@ -65,6 +68,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(stocksRoutes, { db: deps.db?.db })
   await app.register(settingsRoutes, { db: deps.db?.db })
   await app.register(importsRoutes, { db: deps.db?.db, repo: deps.importRepo })
+  await app.register(exportsRoutes, { db: deps.db?.db, now: deps.now ?? (() => new Date()) })
 
   return app
 }

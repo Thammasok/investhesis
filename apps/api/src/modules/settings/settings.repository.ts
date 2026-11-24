@@ -1,5 +1,5 @@
 import { eq, sql } from 'drizzle-orm'
-import type { Db } from '../../db/client.ts'
+import type { Db, DbOrTx } from '../../db/client.ts'
 import { userSettings } from '../../db/schema/index.ts'
 
 export type SettingsRow = {
@@ -16,7 +16,7 @@ const columns = {
   usdThbRateUpdatedAt: userSettings.usdThbRateUpdatedAt,
 }
 
-export async function findSettings(db: Db, userId: string): Promise<SettingsRow | undefined> {
+export async function findSettings(db: DbOrTx, userId: string): Promise<SettingsRow | undefined> {
   const [row] = await db.select(columns).from(userSettings).where(eq(userSettings.userId, userId))
   return row
 }

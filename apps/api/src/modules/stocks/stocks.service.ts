@@ -39,7 +39,7 @@ export type StockView = Omit<repo.StockRow, 'createdAt' | 'updatedAt' | 'lensSou
   updatedAt: string
 }
 
-const view = (r: repo.StockRow): StockView => ({ ...r, market: r.market as Market, currency: r.currency as 'USD' | 'THB', createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() })
+export const view = (r: repo.StockRow): StockView => ({ ...r, market: r.market as Market, currency: r.currency as 'USD' | 'THB', createdAt: r.createdAt.toISOString(), updatedAt: r.updatedAt.toISOString() })
 
 async function owned(db: Db, userId: string, id: string): Promise<repo.StockRow> {
   const row = await repo.findOwnedStock(db, userId, id)
