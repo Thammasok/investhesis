@@ -73,6 +73,9 @@ export async function signedInUser(page: Page, path = '/stocks', prefix = 'e2e-s
 export const settled = (page: Page) => page.waitForLoadState('networkidle')
 
 export const h1 = (page: Page) => page.getByRole('heading', { level: 1 })
+/** The total count under the page title. The result line under the toolbar repeats it, so text alone is ambiguous. */
+export const headerCount = (page: Page, text: string) =>
+  page.locator('header').filter({ has: h1(page) }).getByText(text, { exact: true })
 
 export const toast = (page: Page, text: string | RegExp) => page.locator('[data-sonner-toast]').filter({ hasText: text })
 

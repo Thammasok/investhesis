@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { h1, settled, signedInUser, toast, us } from './lib/sl.ts'
+import { h1, headerCount, settled, signedInUser, toast, us } from './lib/sl.ts'
 
 /**
  * Alt+T moves focus into the toast region; Tab then reaches the toast's Undo action. The hotkey is ignored
@@ -59,13 +59,13 @@ test.describe('lists', () => {
       await page.getByRole('option', { name: new RegExp(ticker) }).click()
       await expect(page.getByRole('row', { name: new RegExp(ticker) })).toBeVisible()
     }
-    await expect(page.getByText('2 stocks')).toBeVisible()
+    await expect(headerCount(page, '2 stocks')).toBeVisible()
     await page.getByRole('button', { name: 'Remove MSFT from Core' }).click()
-    await expect(page.getByText('1 stock', { exact: true })).toBeVisible()
+    await expect(headerCount(page, '1 stock')).toBeVisible()
     await toast(page, 'Removed MSFT from Core').getByRole('button', { name: 'Undo' }).click()
 
     // Assert 3
-    await expect(page.getByText('2 stocks')).toBeVisible()
+    await expect(headerCount(page, '2 stocks')).toBeVisible()
     expect((await api.lists())[0]!.stockCount).toBe(2)
 
     // Act 4: delete the list

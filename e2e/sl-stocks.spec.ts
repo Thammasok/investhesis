@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { apiAs, choose, codePoints, fillStockForm, h1, lens, newUser, openSignedIn, saveStock, signedInUser, settled, th, toast, us } from './lib/sl.ts'
+import { apiAs, choose, codePoints, fillStockForm, h1, headerCount, lens, newUser, openSignedIn, saveStock, signedInUser, settled, th, toast, us } from './lib/sl.ts'
 
 test.describe('stocks', () => {
   test('TC-E-101: Add stock is a dialog; Esc and Back return to Stocks, a typed URL falls back to Stocks', async ({ page }) => {
@@ -309,7 +309,7 @@ test.describe('stocks', () => {
 
     // Assert
     await expect(h1(page)).toHaveText('Study')
-    await expect(page.getByText('3 stocks')).toBeVisible()
+    await expect(headerCount(page, '3 stocks')).toBeVisible()
     await expect(page.locator('tbody tr')).toHaveCount(3)
     await expect(page.getByRole('columnheader', { name: 'Lists' })).toHaveCount(0)
     void browser

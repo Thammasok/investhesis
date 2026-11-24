@@ -15,11 +15,37 @@ import type { StocksPageData } from '@/features/stocks/stocks-data'
 export function Component() {
   const { stocks, lists } = useLoaderData() as StocksPageData
   const filters = useStockFilters(stocks)
+  const empty = stocks.length === 0
 
-  if (stocks.length === 0) {
-    return (
-      <section className="space-y-6">
+  // One tree for both states, with the Outlet (the Add stock dialog) always in the same slot: when the
+  // first stock appears while the dialog is open, the dialog and its form must not remount.
+  return (
+    <section className="space-y-6">
+      {empty ? (
         <PageHeader title="Stocks" />
+      ) : (
+        <PageHeader
+          title="Stocks"
+          description={countLabel(stocks.length, 'stock')}
+          actions={
+            <>
+              <Button variant="outline" className="w-full sm:w-auto" asChild>
+                <Link to="/import-export/import">
+                  <UploadIcon aria-hidden="true" />
+                  Import
+                </Link>
+              </Button>
+              <Button className="w-full sm:w-auto" asChild>
+                <Link to="/stocks/new">
+                  <PlusIcon aria-hidden="true" />
+                  Add stock
+                </Link>
+              </Button>
+            </>
+          }
+        />
+      )}
+      {empty ? (
         <Card className="items-center gap-3 py-12 text-center">
           <LineChartIcon className="size-8 text-muted-foreground" aria-hidden="true" />
           <h2 className="font-heading text-lg font-semibold">No stocks yet</h2>
@@ -39,44 +65,21 @@ export function Component() {
             </Button>
           </div>
         </Card>
-        <Outlet />
-      </section>
-    )
-  }
-
-  return (
-    <section className="space-y-6">
-      <PageHeader
-        title="Stocks"
-        description={countLabel(stocks.length, 'stock')}
-        actions={
-          <>
-            <Button variant="outline" className="w-full sm:w-auto" asChild>
-              <Link to="/import-export/import">
-                <UploadIcon aria-hidden="true" />
-                Import
-              </Link>
-            </Button>
-            <Button className="w-full sm:w-auto" asChild>
-              <Link to="/stocks/new">
-                <PlusIcon aria-hidden="true" />
-                Add stock
-              </Link>
-            </Button>
-          </>
-        }
-      />
-      <AddressNotes notes={filters.notes} />
-      <FilterToolbar filters={filters} />
-      {filters.shown.length === 0 ? (
-        <NoMatches
-          onClearAll={() => {
-            filters.clearFilters(true)
-            document.getElementById(SEARCH_ID)?.focus()
-          }}
-        />
       ) : (
-        <StockTable stocks={filters.shown} lists={lists} sort={filters.sort} onSort={filters.toggleSort} />
+        <div className="space-y-6">
+          <AddressNotes notes={filters.notes} />
+          <FilterToolbar filters={filters} />
+          {filters.shown.length === 0 ? (
+            <NoMatches
+              onClearAll={() => {
+                filters.clearFilters(true)
+                document.getElementById(SEARCH_ID)?.focus()
+              }}
+            />
+          ) : (
+            <StockTable stocks={filters.shown} lists={lists} sort={filters.sort} onSort={filters.toggleSort} />
+          )}
+        </div>
       )}
       <Outlet />
     </section>
