@@ -9,7 +9,7 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck && pnpm --filter @investhesis/web exec tsc -p ../../e2e/tsconfig.json",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "db:keys": "node scripts/db-keys.mjs",
     "db:start": "node scripts/db-start.mjs",
     "db:stop": "supabase stop",
