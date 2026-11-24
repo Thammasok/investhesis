@@ -18,6 +18,8 @@ export type PreviewResponse = {
   format: 'csv' | 'xlsx'
   counts: Record<PreviewStatus, number>
   headerWarnings: string[]
+  /** Export-only columns found in the file (lists, held, ...); they are not imported. */
+  ignoredColumns: string[]
   rows: PreviewRow[]
 }
 

@@ -1,4 +1,4 @@
-import { Loader2Icon, TriangleAlertIcon } from 'lucide-react'
+import { InfoIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useRevalidator } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -188,6 +188,24 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
                 {preview.headerWarnings.map((w) => (
                   <p key={w}>{w}</p>
                 ))}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {preview.ignoredColumns.length > 0 ? (
+            <Alert role="status">
+              <InfoIcon aria-hidden="true" />
+              <AlertDescription>
+                <p>
+                  Lists and holdings columns are not imported:{' '}
+                  {preview.ignoredColumns.flatMap((name, i) => [
+                    i > 0 ? ', ' : '',
+                    <span key={name} className="font-mono">
+                      {name}
+                    </span>,
+                  ])}
+                  .
+                </p>
+                <p>Add the stocks to lists and mark holdings in the app after the import.</p>
               </AlertDescription>
             </Alert>
           ) : null}

@@ -25,6 +25,7 @@ function preview(overrides: Partial<PreviewResponse> = {}): PreviewResponse {
     format: 'xlsx',
     counts: { new: count('new'), duplicate: count('duplicate'), error: count('error') },
     headerWarnings: [],
+    ignoredColumns: [],
     rows,
     ...overrides,
   }
@@ -84,15 +85,38 @@ beforeEach(() => {
 })
 afterEach(() => vi.restoreAllMocks())
 
+describe('import preview: ignored columns', () => {
+  const reviewWith = async (ignoredColumns: string[]) => {
+    await openWizard(api({ 'POST /imports/preview': preview({ ignoredColumns }) }))
+    await userEvent.upload(fileInput(), csv())
+    await screen.findByRole('heading', { level: 2, name: 'Review' })
+  }
+
+  it('TC-U-662 names the ignored columns once, in a status note', async () => {
+    await reviewWith(['lists', 'held'])
+    const note = screen.getByText(/Lists and holdings columns are not imported/).closest('[data-slot="alert"]') as HTMLElement
+    expect(note).toHaveAttribute('role', 'status')
+    expect(note).toHaveTextContent('Lists and holdings columns are not imported: lists, held.')
+    expect(note).toHaveTextContent('Add the stocks to lists and mark holdings in the app after the import.')
+    expect(screen.getByText('held')).toHaveClass('font-mono')
+  })
+
+  it('TC-U-663 shows no note for a template file', async () => {
+    await reviewWith([])
+    expect(screen.queryByText(/Lists and holdings columns are not imported/)).not.toBeInTheDocument()
+  })
+})
+
 describe('import wizard: step 1', () => {
-  it('TC-C-160: shows the step indicator, the file step heading and the Export card still "Coming later"', async () => {
+  it('TC-C-160: shows the step indicator and the file step heading, with the backup card in place of "Coming later"', async () => {
     await openWizard(api())
     const steps = within(screen.getByRole('list', { name: 'Import steps' })).getAllByRole('listitem')
     expect(steps.map((s) => s.textContent?.replace(/\d/, ''))).toEqual(['File', 'Review', 'Done'])
     expect(steps[0]).toHaveAttribute('aria-current', 'step')
     expect(steps[1]).not.toHaveAttribute('aria-current')
     expect(screen.getByRole('heading', { level: 2, name: 'Choose file' })).toBeInTheDocument()
-    expect(screen.getByText(/Coming later/)).toBeInTheDocument()
+    expect(screen.queryByText(/Coming later/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Download JSON', hidden: true })).toBeInTheDocument() // the page behind the dialog
     expect(fileInput()).toHaveAttribute('accept', '.csv,.xlsx')
     expect(screen.getByText(/Up to 1 MB and 1,000 rows/)).toBeInTheDocument()
   })

@@ -10,7 +10,7 @@ export function importExportRoute(api: ApiClient): RouteObject {
   return {
     path: 'import-export',
     handle: { crumb: 'Import / export' } satisfies RouteHandle,
-    lazy: () => import('@/views/import-export'),
+    lazy: async () => ({ Component: (await import('@/views/import-export')).createImportExportPage(api) }),
     children: [
       {
         path: 'import',
