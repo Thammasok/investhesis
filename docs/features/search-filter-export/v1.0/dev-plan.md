@@ -63,7 +63,7 @@ Every test title starts with its id.
   count. Exported from index.ts. Erasable syntax only. Covers FR-001 to FR-004, NFR-001.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
@@ -178,7 +178,7 @@ getters come from `CONCENTRATION_LENSES`; market and exchange read the stock dir
   with stockIds, settings). Covers FR-012, FR-014, FR-016, NFR-005, NFR-008.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: M
 ```
 
