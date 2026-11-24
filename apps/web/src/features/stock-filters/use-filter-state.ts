@@ -1,5 +1,5 @@
 import type { FilterKey, FilterState } from '@investhesis/domain'
-import { useCallback, useDeferredValue, useMemo } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { nextSort, type SortColumn, type SortState } from '@/features/stocks/sort-stocks'
 import { filterSearch, readFilters } from './filter-address'
@@ -16,18 +16,27 @@ export function useFilterState() {
   const view = useMemo(() => readFilters(params), [params])
   const deferredState = useDeferredValue(view.state)
 
-  /** Applies a change to the latest address, not to a render's copy, so quick successive changes both land. */
+  // Writes that were made but have not reached the address yet, oldest first. React Router does not queue
+  // `setSearchParams` updates, so a second write before the first has rendered would start from a stale
+  // address and undo it; each write starts from the last one in flight instead.
+  const inFlight = useRef<string[]>([])
+  const current = params.toString()
+  useEffect(() => {
+    const at = inFlight.current.indexOf(current)
+    // The address caught up with a write (drop it and the older ones), or changed from outside (drop all).
+    inFlight.current = at >= 0 ? inFlight.current.slice(at + 1) : []
+  }, [current])
+
+  /** Applies a change on top of the newest address, written or in flight, so quick successive changes all land. */
   const update = useCallback(
-    (change: (current: View) => View) =>
-      setParams(
-        (previous) => {
-          const current = readFilters(previous)
-          const next = change({ state: current.state, sort: current.sort })
-          return new URLSearchParams(filterSearch(next.state, next.sort))
-        },
-        { replace: true },
-      ),
-    [setParams],
+    (change: (current: View) => View) => {
+      const base = readFilters(new URLSearchParams(inFlight.current.at(-1) ?? current))
+      const next = change({ state: base.state, sort: base.sort })
+      const search = new URLSearchParams(filterSearch(next.state, next.sort))
+      inFlight.current.push(search.toString())
+      setParams(search, { replace: true })
+    },
+    [current, setParams],
   )
 
   const setQuery = useCallback((q: string) => update((c) => ({ ...c, state: { ...c.state, q } })), [update])
@@ -36,6 +45,20 @@ export function useFilterState() {
       update((c) => {
         const picks = new Map(c.state.picks)
         if (picked && picked.size > 0) picks.set(key, picked)
+        else picks.delete(key)
+        return { ...c, state: { ...c.state, picks } }
+      }),
+    [update],
+  )
+  /** Adds or removes one value of a filter on the latest address, so two quick clicks both count. */
+  const togglePick = useCallback(
+    (key: FilterKey, value: string | null) =>
+      update((c) => {
+        const picks = new Map(c.state.picks)
+        const next = new Set(picks.get(key) ?? [])
+        if (next.has(value)) next.delete(value)
+        else next.add(value)
+        if (next.size > 0) picks.set(key, next)
         else picks.delete(key)
         return { ...c, state: { ...c.state, picks } }
       }),
@@ -52,5 +75,15 @@ export function useFilterState() {
     [update],
   )
 
-  return { state: view.state, deferredState, sort: view.sort, notes: view.notes, setQuery, setPicks, clearFilters, toggleSort }
+  return {
+    state: view.state,
+    deferredState,
+    sort: view.sort,
+    notes: view.notes,
+    setQuery,
+    setPicks,
+    togglePick,
+    clearFilters,
+    toggleSort,
+  }
 }

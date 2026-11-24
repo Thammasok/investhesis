@@ -188,12 +188,7 @@ function SheetBody({ filters }: { filters: StockFilters }) {
             picked={picked}
             open={openKeys.has(filter.key)}
             onOpenChange={(next) => toggleOpen(filter.key, next)}
-            onToggle={(value) => {
-              const next = new Set(picked)
-              if (next.has(value)) next.delete(value)
-              else next.add(value)
-              filters.setPicks(filter.key, next)
-            }}
+            onToggle={(value) => filters.togglePick(filter.key, value)}
           />
         )
       })}

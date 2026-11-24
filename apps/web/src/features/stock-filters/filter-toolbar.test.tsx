@@ -148,10 +148,22 @@ describe('filter sheet', () => {
     await userEvent.type(find, 'cons')
     const group = within(dialog).getByRole('group', { name: 'Sector (GICS)' })
     expect(within(group).getAllByRole('checkbox').map((c) => c.getAttribute('aria-label') ?? '')).toHaveLength(4) // 2 matches, the pick, Not set
-    expect(within(group).getByRole('checkbox', { name: /^Energy, / })).toBeChecked()
+    await waitFor(() => expect(within(group).getByRole('checkbox', { name: /^Energy, / })).toBeChecked())
     await userEvent.clear(find)
     await userEvent.type(find, 'zzz')
     expect(within(group).getByText('No match')).toBeInTheDocument()
+  })
+
+  it('TC-U-616 two quick clicks on one option both count: on, then off', async () => {
+    const { router } = renderApp('/stocks', stocksApi(fortyTwo()))
+    await screen.findByRole('table')
+    await userEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    const dialog = await screen.findByRole('dialog')
+    const th = within(dialog).getByRole('checkbox', { name: /^TH, / })
+    fireEvent.click(th)
+    fireEvent.click(th) // before the first change has reached the address
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+    await waitFor(() => expect(within(dialog).getByRole('checkbox', { name: /^TH, / })).not.toBeChecked())
   })
 
   it('TC-U-611 Clear all in the sheet clears the filters, keeps the search and stays open', async () => {
@@ -162,7 +174,7 @@ describe('filter sheet', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Clear all' }))
     await waitFor(() => expect(router.state.location.search).toBe('?q=ptt'))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Clear all' })).toBeDisabled()
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Clear all' })).toBeDisabled())
   })
 
   it('TC-U-612 works from the keyboard: opens, traps focus, toggles with Space and closes with Esc back to Filters', async () => {
