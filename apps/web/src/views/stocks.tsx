@@ -3,12 +3,14 @@ import { Link, Outlet, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { useFilterState } from '@/features/stock-filters/use-filter-state'
 import { StockTable } from '@/features/stocks/components/stock-table'
 import { countLabel } from '@/features/stocks/format'
 import type { StocksPageData } from '@/features/stocks/stocks-data'
 
 export function Component() {
   const { stocks, lists } = useLoaderData() as StocksPageData
+  const { sort, toggleSort } = useFilterState()
 
   if (stocks.length === 0) {
     return (
@@ -60,7 +62,7 @@ export function Component() {
           </>
         }
       />
-      <StockTable stocks={stocks} lists={lists} />
+      <StockTable stocks={stocks} lists={lists} sort={sort} onSort={toggleSort} />
       <Outlet />
     </section>
   )

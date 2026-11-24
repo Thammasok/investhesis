@@ -1,18 +1,21 @@
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon } from 'lucide-react'
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatShares } from '@/lib/number-format'
 import { cn } from '@/lib/utils'
-import { sortStocks, type SortColumn, type SortDirection } from '../sort-stocks'
+import { sortStocks, type SortColumn, type SortState } from '../sort-stocks'
 import type { ListSummary, Stock } from '../types'
 
 const COLUMN_LABEL: Record<SortColumn, string> = { ticker: 'Ticker', name: 'Name', market: 'Market', sector: 'Sector', held: 'Held' }
 
 type StockTableProps = {
   stocks: readonly Stock[]
+  /** The sort the page keeps (in the address); the table only shows it and reports clicks. */
+  sort: SortState
+  onSort: (column: SortColumn) => void
   /** Every list of the user, to turn a stock's `listIds` into names. Needed with `showLists`. */
   lists?: readonly Pick<ListSummary, 'id' | 'name'>[]
   /** The Lists column; the list detail page leaves it out. Default true. */
@@ -70,7 +73,7 @@ function SortHead({
   className,
 }: {
   column: SortColumn
-  sort: { column: SortColumn; direction: SortDirection }
+  sort: SortState
   onSort: (column: SortColumn) => void
   className?: string
 }) {
@@ -98,23 +101,13 @@ function SortHead({
 
 /**
  * Sortable table of stocks, shared by the Stocks page and the list detail page. Sorting is
- * client-side and kept here; a row opens the stock (the ticker link is the keyboard path).
+ * client-side but the sort itself is controlled by the page (it lives in the address); a row opens
+ * the stock (the ticker link is the keyboard path).
  */
-export function StockTable({ stocks, lists = [], showLists = true, renderRowAction, caption }: StockTableProps) {
+export function StockTable({ stocks, sort, onSort, lists = [], showLists = true, renderRowAction, caption }: StockTableProps) {
   const navigate = useNavigate()
-  const [sort, setSort] = useState<{ column: SortColumn; direction: SortDirection }>({
-    column: 'ticker',
-    direction: 'asc',
-  })
   const sorted = useMemo(() => sortStocks(stocks, sort.column, sort.direction), [stocks, sort])
   const listNames = useMemo(() => new Map(lists.map((l) => [l.id, l.name])), [lists])
-
-  const onSort = (column: SortColumn) =>
-    setSort((s) =>
-      s.column === column
-        ? { column, direction: s.direction === 'asc' ? 'desc' : 'asc' }
-        : { column, direction: column === 'held' ? 'desc' : 'asc' },
-    )
 
   return (
     <div className="rounded-lg border">

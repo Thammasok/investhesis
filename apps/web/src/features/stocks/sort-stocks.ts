@@ -4,6 +4,16 @@ import type { Stock } from './types'
 export const SORTABLE_COLUMNS = ['ticker', 'name', 'market', 'sector', 'held'] as const
 export type SortColumn = (typeof SORTABLE_COLUMNS)[number]
 export type SortDirection = 'asc' | 'desc'
+export type SortState = { column: SortColumn; direction: SortDirection }
+
+/** What the table shows when the address says nothing. */
+export const DEFAULT_SORT: SortState = { column: 'ticker', direction: 'asc' }
+
+/** A click on a header: the same column flips; a new column starts ascending (Held starts descending, held first). */
+export function nextSort(current: SortState, column: SortColumn): SortState {
+  if (current.column === column) return { column, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+  return { column, direction: column === 'held' ? 'desc' : 'asc' }
+}
 
 // Case-insensitive; Thai sorts after Latin by the root collation, the same on every machine.
 const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true })

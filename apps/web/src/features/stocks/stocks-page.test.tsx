@@ -7,7 +7,9 @@ import { ApiError } from '@/lib/api-client'
 import { makeList, makeStock } from '@/test/stock-fixtures'
 import { renderApp } from '@/test/render-app'
 import { StubApi } from '@/test/stub-api'
+import { useState } from 'react'
 import { StockTable } from './components/stock-table'
+import { DEFAULT_SORT, nextSort } from './sort-stocks'
 
 const tickerOrder = () =>
   screen
@@ -196,6 +198,12 @@ describe('stocks page', () => {
   })
 })
 
+/** The table's sort is controlled by its page; this stands in for one that keeps it in state. */
+function SortedTable(props: Omit<React.ComponentProps<typeof StockTable>, 'sort' | 'onSort'>) {
+  const [sort, setSort] = useState(DEFAULT_SORT)
+  return <StockTable {...props} sort={sort} onSort={(column) => setSort((s) => nextSort(s, column))} />
+}
+
 describe('stock table performance', () => {
   function generate(n: number) {
     return Array.from({ length: n }, (_, i) =>
@@ -216,7 +224,7 @@ describe('stock table performance', () => {
     const renders: number[] = []
     const sorts: number[] = []
     for (let run = 0; run < 5; run++) {
-      const router = createMemoryRouter([{ path: '/', element: <StockTable stocks={stocks} lists={lists} /> }])
+      const router = createMemoryRouter([{ path: '/', element: <SortedTable stocks={stocks} lists={lists} /> }])
       const t0 = performance.now()
       const view = render(<RouterProvider router={router} />)
       renders.push(performance.now() - t0)

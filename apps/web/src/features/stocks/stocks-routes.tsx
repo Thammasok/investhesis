@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router'
 import type { ApiClient } from '@/lib/api-client'
 import type { RouteHandle } from '@/routers/route-handle'
 import { STOCK_ROUTE_ID } from '@/routers/route-ids'
+import { revalidateOnSubmitOrPathChange } from '@/routers/should-revalidate'
 import type { Stock } from './types'
 
 /**
@@ -15,7 +16,9 @@ export function stocksRoutes(api: ApiClient): RouteObject {
     handle: { crumb: 'Stocks' } satisfies RouteHandle,
     children: [
       {
-        // Pathless layout: the Stocks page, with Add stock as a dialog in its outlet.
+        // Pathless layout: the Stocks page, with Add stock as a dialog in its outlet. Search, filters
+        // and sort are in the query string and applied locally, so a query change reads nothing.
+        shouldRevalidate: revalidateOnSubmitOrPathChange,
         lazy: async () => {
           const [{ createStocksLoader }, view] = await Promise.all([data(), import('@/views/stocks')])
           return { Component: view.Component, loader: createStocksLoader(api) }

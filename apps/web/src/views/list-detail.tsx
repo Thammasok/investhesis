@@ -10,12 +10,14 @@ import { DeleteListDialog } from '@/features/lists/components/delete-list-dialog
 import { ListNameDialog } from '@/features/lists/components/list-name-dialog'
 import type { ListPageData } from '@/features/lists/lists-data'
 import { useMembership } from '@/features/lists/use-membership'
+import { useFilterState } from '@/features/stock-filters/use-filter-state'
 import { StockTable } from '@/features/stocks/components/stock-table'
 import { countLabel } from '@/features/stocks/format'
 
 export function Component() {
   const { list, members, candidates } = useLoaderData() as ListPageData
   const membership = useMembership(list.name)
+  const { sort, toggleSort } = useFilterState()
   const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null)
   const renameRef = useRef<HTMLButtonElement>(null)
   const moreRef = useRef<HTMLButtonElement>(null)
@@ -98,6 +100,8 @@ export function Component() {
       ) : (
         <StockTable
           stocks={members}
+          sort={sort}
+          onSort={toggleSort}
           showLists={false}
           caption={`Stocks in ${list.name}`}
           renderRowAction={(stock) => (
