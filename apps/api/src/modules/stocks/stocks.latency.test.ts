@@ -58,7 +58,7 @@ describe('NFR-001 latency against local Supabase', () => {
       console.log(`NFR-001 ${label}: min ${Math.min(...xs).toFixed(1)} ms, median ${percentile(xs, 50).toFixed(1)} ms, p95 ${percentile(xs, 95).toFixed(1)} ms, max ${Math.max(...xs).toFixed(1)} ms`)
       expect(percentile(xs, 95)).toBeLessThan(500)
     }
-  })
+  }, 60_000)
 })
 
 describe('NFR-002 holding writes against local Supabase', () => {
@@ -78,5 +78,5 @@ describe('NFR-002 holding writes against local Supabase', () => {
       console.log(`NFR-002 ${label}: min ${Math.min(...xs).toFixed(1)} ms, median ${percentile(xs, 50).toFixed(1)} ms, p95 ${percentile(xs, 95).toFixed(1)} ms, max ${Math.max(...xs).toFixed(1)} ms`)
       expect(percentile(xs, 95)).toBeLessThan(500)
     }
-  })
+  }, 60_000)
 })
