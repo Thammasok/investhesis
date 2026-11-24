@@ -16,3 +16,14 @@ export type {
   GroupConcentrationArgs,
   GroupableStock,
 } from './concentration.ts'
+export { STOCK_FILTERS, applyStockFilters, filterOptions } from './filters.ts'
+export type {
+  FilterKey,
+  FilterOption,
+  FilterState,
+  FilterableStock,
+  LensFilterKey,
+  StockFilter,
+} from './filters.ts'
+export { BACKUP_FORMAT, BackupV1, EXPORT_COLUMNS, EXPORT_ONLY_HEADERS, exportRow, toDelimited } from './export.ts'
+export type { ExportableStock } from './export.ts'
