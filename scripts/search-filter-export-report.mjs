@@ -12,17 +12,17 @@ const feature = join(root, 'docs/features/search-filter-export/v1.0')
 // The ids this feature owns: every case heading of test-cases.md and every dev-plan case.
 const ids = new Set()
 for (const [file, re] of [
-  [join(feature, 'test-cases.md'), /^### (TC-[UACE]-5\d\d)/gm],
-  [join(feature, 'dev-plan.md'), /^\s*- id: (TC-U-5\d\d)/gm],
+  [join(feature, 'test-cases.md'), /^### (TC-[UACE]-[56]\d\d)/gm],
+  [join(feature, 'dev-plan.md'), /^\s*- id: (TC-U-[56]\d\d)/gm],
 ]) for (const m of readFileSync(file, 'utf8').matchAll(re)) ids.add(m[1])
 
-// The 500 range belongs to this slice alone (test-cases.md ID scheme), so every file counts.
+// The 500 and 600 ranges (dev-plan TC-U-6xx included) belong to this slice alone (test-cases.md ID scheme), so every file counts.
 const ours = () => true
 
 /** @type {Map<string, {file:string,title:string,status:'pass'|'fail'|'expected-fail'}[]>} */
 const results = new Map()
 const add = (file, title, status) => {
-  for (const id of new Set(title.match(/TC-[UACE]-5\d\d/g) ?? [])) {
+  for (const id of new Set(title.match(/TC-[UACE]-[56]\d\d/g) ?? [])) {
     if (!ids.has(id) || !ours(file, id)) continue
     results.set(id, [...(results.get(id) ?? []), { file, title, status }])
   }
