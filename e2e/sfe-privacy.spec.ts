@@ -6,7 +6,8 @@ import { API_ORIGIN, apiAs, newUser, openSignedIn, settled, th, us, WEB_ORIGIN }
 
 /** Dataset SF-G: values no other test uses, to prove they stay out of logs, addresses and other accounts. */
 const SHARES = '6543210.9876'
-const COST = '0.4321'
+// Long and unlikely, so it cannot appear inside an unrelated number (a response time is `0.43217…`).
+const COST = '7712345.4321'
 const RATE = '35.987654'
 const QUERY = 'SENTINEL-SFE-q'
 

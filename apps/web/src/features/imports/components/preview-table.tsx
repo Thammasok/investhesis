@@ -1,5 +1,5 @@
 import { CircleAlertIcon, CopyIcon, PlusIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -61,6 +61,19 @@ export function PreviewTable({ fileName, rows }: { fileName: string; rows: reado
   const current = FILTERS.find((f) => f.value === filter) ?? FILTERS[0]
   const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter)
 
+  // Whether the rows overflow the box, re-checked when the rows or the box change size.
+  const scroller = useRef<HTMLDivElement>(null)
+  const [scrolls, setScrolls] = useState(false)
+  useEffect(() => {
+    const el = scroller.current
+    if (!el) return setScrolls(false)
+    const measure = () => setScrolls(el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [shown.length, filter])
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -87,10 +100,9 @@ export function PreviewTable({ fileName, rows }: { fileName: string; rows: reado
         <p className="rounded-lg border p-4 text-sm">{current.empty}</p>
       ) : (
         <div
-          // A region that scrolls must be reachable and scrollable from the keyboard.
-          tabIndex={0}
-          role="region"
-          aria-label="Rows of the file"
+          ref={scroller}
+          // A region that scrolls must be reachable and scrollable from the keyboard; one that does not is no tab stop.
+          {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': 'Rows of the file' } : {})}
           className="max-h-[28rem] overflow-auto rounded-lg border focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <table className="w-full caption-bottom text-sm">
