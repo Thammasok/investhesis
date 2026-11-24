@@ -426,7 +426,7 @@ unit:
   FR-006, FR-007 (sort part), NFR-001.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: doing
+- status: done
 - size: M
 ```
 
