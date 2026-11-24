@@ -1,11 +1,20 @@
 import { expect, test, type Page } from '@playwright/test'
 import { h1, settled, signedInUser, toast, us } from './lib/sl.ts'
 
-/** Alt+T moves focus into the toast region; Tab then reaches the toast's Undo action. */
+/**
+ * Alt+T moves focus into the toast region; Tab then reaches the toast's Undo action. The hotkey is ignored
+ * while the toast is still mounting, so a miss (focus ends up elsewhere after four Tabs) starts again once
+ * the toast has settled instead of failing the journey.
+ */
 async function focusUndo(page: Page) {
   const undo = page.locator('[data-sonner-toast]').getByRole('button', { name: 'Undo' })
-  await page.keyboard.press('Alt+T')
-  for (let i = 0; i < 4 && !(await undo.evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press('Tab')
+  const isFocused = () => undo.evaluate((el) => el === document.activeElement)
+  for (let attempt = 0; attempt < 3 && !(await isFocused()); attempt++) {
+    await expect(undo).toBeVisible()
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    await page.keyboard.press('Alt+T')
+    for (let i = 0; i < 4 && !(await isFocused()); i++) await page.keyboard.press('Tab')
+  }
   await expect(undo).toBeFocused()
 }
 
