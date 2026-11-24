@@ -25,6 +25,7 @@ const PreviewOut = z.object({
   format: z.enum(['csv', 'xlsx']),
   counts: z.object({ new: z.number().int(), duplicate: z.number().int(), error: z.number().int() }),
   headerWarnings: z.array(z.string()),
+  ignoredColumns: z.array(z.string()),
   rows: z.array(
     z.object({
       rowNumber: z.number().int(),

@@ -1,4 +1,11 @@
-import { canonicaliseRow, resolveEconomicCycle, TEMPLATE_COLUMNS, type FieldError, type StockInput } from '@investhesis/domain'
+import {
+  canonicaliseRow,
+  EXPORT_ONLY_HEADERS,
+  resolveEconomicCycle,
+  TEMPLATE_COLUMNS,
+  type FieldError,
+  type StockInput,
+} from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
 import { uuidv7 } from '../../lib/ids.ts'
@@ -9,6 +16,8 @@ import { readImportFile, type FileRow } from './file-reader.ts'
 
 const REQUIRED = ['ticker', 'market', 'exchange', 'name']
 const KNOWN = new Set<string>(TEMPLATE_COLUMNS.map((c) => c.header))
+/** Written by the export; recognised and skipped, never imported (FR-014). */
+const EXPORT_ONLY = new Set<string>(EXPORT_ONLY_HEADERS)
 
 export type PreviewRow = {
   rowNumber: number
@@ -25,18 +34,36 @@ export type Preview = {
   format: 'csv' | 'xlsx'
   counts: { new: number; duplicate: number; error: number }
   headerWarnings: string[]
+  /** Export-only columns found in the file, as written and in file order; they are not imported. */
+  ignoredColumns: string[]
   rows: PreviewRow[]
 }
 
-/** Template header → column index. First of a repeated header wins. */
-export function mapHeaders(header: readonly string[]): { index: Map<string, number>; warnings: string[] } {
+/**
+ * Template header → column index. First of a repeated header wins. Export-only columns (lists, held,
+ * shares, average_cost, cost_currency) are known but unmapped: no "Unknown column" warning, the first
+ * one is reported in `ignoredColumns`, a repeat is a duplicate like any other.
+ */
+export function mapHeaders(header: readonly string[]): {
+  index: Map<string, number>
+  warnings: string[]
+  ignoredColumns: string[]
+} {
   const index = new Map<string, number>()
   const warnings: string[] = []
+  const ignoredColumns: string[] = []
+  const seenIgnored = new Set<string>()
   header.forEach((raw, i) => {
     const name = raw.trim()
     if (name === '') return
     const key = name.toLowerCase()
-    if (!KNOWN.has(key)) warnings.push(`Unknown column "${name}" ignored`)
+    if (EXPORT_ONLY.has(key)) {
+      if (seenIgnored.has(key)) warnings.push(`Duplicate column "${name}" ignored`)
+      else {
+        seenIgnored.add(key)
+        ignoredColumns.push(name)
+      }
+    } else if (!KNOWN.has(key)) warnings.push(`Unknown column "${name}" ignored`)
     else if (index.has(key)) warnings.push(`Duplicate column "${name}" ignored`)
     else index.set(key, i)
   })
@@ -49,7 +76,7 @@ export function mapHeaders(header: readonly string[]): { index: Map<string, numb
       errors: missing.map((path) => ({ path, message: 'column is missing' })),
     })
   }
-  return { index, warnings }
+  return { index, warnings, ignoredColumns }
 }
 
 export const cellsOf = (row: FileRow, index: ReadonlyMap<string, number>): Record<string, string> =>
@@ -61,7 +88,7 @@ type Analysed = { row: FileRow; cells: Record<string, string>; input?: StockInpu
 /** Reads the file and validates every row, including repeats of an earlier row's (market, ticker) (FR-016..FR-019). */
 async function analyseFile(fileName: string, bytes: Buffer) {
   const file = await readImportFile(fileName, bytes)
-  const { index, warnings } = mapHeaders(file.header)
+  const { index, warnings, ignoredColumns } = mapHeaders(file.header)
   if (file.rows.length === 0) throw new AppError({ status: 422, code: 'file_empty', detail: 'The file has no data rows' })
   const firstSeen = new Map<string, number>()
   const rows = file.rows.map((row): Analysed => {
@@ -74,12 +101,12 @@ async function analyseFile(fileName: string, bytes: Buffer) {
     firstSeen.set(key, row.rowNumber)
     return { row, cells, input: result.input, errors: [] }
   })
-  return { file, warnings, rows }
+  return { file, warnings, ignoredColumns, rows }
 }
 
 /** Validates every row and compares it with the user's saved stocks. Reads only; nothing is written (NFR-005). */
 export async function previewImport(db: Db, userId: string, fileName: string, bytes: Buffer): Promise<Preview> {
-  const { file, warnings, rows: analysed } = await analyseFile(fileName, bytes)
+  const { file, warnings, ignoredColumns, rows: analysed } = await analyseFile(fileName, bytes)
   const saved = new Map(
     (await stocks.findByMarketTickers(db, userId, analysed.flatMap((a) => (a.input ? [a.input] : [])))).map((s) => [`${s.market}/${s.ticker}`, s.id]),
   )
@@ -100,7 +127,7 @@ export async function previewImport(db: Db, userId: string, fileName: string, by
     counts.new++
     return { ...base, status: 'new' }
   })
-  return { fileName, format: file.format, counts, headerWarnings: warnings, rows }
+  return { fileName, format: file.format, counts, headerWarnings: warnings, ignoredColumns, rows }
 }
 
 export type ImportOptions = { duplicateMode: 'skip' | 'update'; listId: string } | { duplicateMode: 'skip' | 'update'; newListName: string }

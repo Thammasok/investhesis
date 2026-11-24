@@ -37,6 +37,7 @@ describe('POST /imports/preview headers', () => {
       format: 'csv',
       counts: { new: 1, duplicate: 0, error: 0 },
       headerWarnings: ['Unknown column "notes" ignored'],
+      ignoredColumns: [],
       rows: [{ rowNumber: 2, ticker: 'AAPL', market: 'US', name: 'Apple Inc.', status: 'new', errors: [] }],
     })
   })
