@@ -63,7 +63,7 @@ Every test title starts with its id.
   count. Exported from index.ts. Erasable syntax only. Covers FR-001 to FR-004, NFR-001.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: M
 ```
 
@@ -426,7 +426,7 @@ unit:
   FR-006, FR-007 (sort part), NFR-001.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: M
 ```
 
