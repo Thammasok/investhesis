@@ -108,6 +108,8 @@ test.describe('keyboard-only journeys', () => {
     await page.keyboard.press('Enter')
     await expect(page.locator('[role="option"]:focus')).toBeVisible()
     await page.keyboard.press('ArrowDown')
+    // Wait for focus to reach the target: Enter right after ArrowDown picks the old option under load.
+    await expect(page.locator('[role="option"]:focus')).toHaveText(/^Held stocks/)
     await page.keyboard.press('Enter')
     await expect(scope).toHaveText(/^Held stocks/)
     await expect(scope).toBeFocused()
