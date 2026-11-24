@@ -25,5 +25,15 @@ export type {
   LensFilterKey,
   StockFilter,
 } from './filters.ts'
-export { BACKUP_FORMAT, BackupV1, EXPORT_COLUMNS, EXPORT_ONLY_HEADERS, exportRow, toDelimited } from './export.ts'
+export { BACKUP_FORMAT, Backup, BackupV1, BackupV2, EXPORT_COLUMNS, EXPORT_ONLY_HEADERS, exportRow, toDelimited } from './export.ts'
 export type { ExportableStock } from './export.ts'
+export {
+  THESIS_INVALIDATION_MAX,
+  THESIS_NOTE_MAX,
+  THESIS_TYPES,
+  THESIS_TYPE_LABELS,
+  latestThesisDate,
+  thesisInput,
+  thesisPatch,
+} from './theses.ts'
+export type { Thesis, ThesisInput, ThesisPatch, ThesisSchemaArgs, ThesisType } from './theses.ts'

@@ -22,6 +22,11 @@ export const MESSAGES = {
   sharesFormat: 'must be greater than 0, with at most 14 digits before and 4 after the decimal point',
   averageCostFormat: 'must be 0 or more, with at most 14 digits before and 4 after the decimal point',
   thresholdRange: 'must be a whole number from 1 to 100',
+  thesisNoteLength: 'must be 1-10,000 characters',
+  thesisInvalidationLength: 'must be at most 2,000 characters',
+  thesisDateFormat: 'must be a date written as YYYY-MM-DD',
+  thesisDateFuture: "can't be in the future",
+  thesisTargetPriceFormat: 'must be greater than 0, with at most 14 digits before and 4 after the decimal point',
   usdThbRateFormat: 'must be greater than 0, with at most 12 digits before and 6 after the decimal point',
 } as const
 

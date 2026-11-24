@@ -53,7 +53,7 @@ Export's web tasks): `TC-U-7xx` in the task contracts below, and `TC-A-7xx`, `TC
   export a `Backup` alias for the current version. Covers FR-001, FR-004, FR-010, NFR-006.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: review
 - size: M
 ```
 

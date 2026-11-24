@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { FilterableStock } from './filters.ts'
 import { rejectUnknownKeys } from './stock-schema.ts'
+import { THESIS_TYPES } from './theses.ts'
 import { TEMPLATE_COLUMNS } from './template.ts'
 
 /** Columns written by the export that the import recognises and skips (FR-014). */
@@ -95,25 +96,60 @@ const BackupStock = z.looseObject(backupStockShape).superRefine((v, ctx) => {
   rejectUnknownKeys(v, Object.keys(backupStockShape), ctx)
 })
 
+const backupLists = z.array(
+  z.strictObject({
+    id: z.uuid(),
+    name: z.string(),
+    createdAt: iso,
+    updatedAt: iso,
+    stockIds: z.array(z.uuid()),
+  }),
+)
+const backupSettings = z.strictObject({
+  concentrationThreshold: z.number().int().min(1).max(100),
+  usdThbRate: decimal,
+  usdThbRateUpdatedAt: iso.nullable(),
+})
+
 /** FR-016: the documented format of the JSON backup (format version 1). */
 export const BackupV1 = z.strictObject({
   format: z.literal(BACKUP_FORMAT),
   formatVersion: z.literal(1),
   exportedAt: iso,
   stocks: z.array(BackupStock),
-  lists: z.array(
-    z.strictObject({
-      id: z.uuid(),
-      name: z.string(),
-      createdAt: iso,
-      updatedAt: iso,
-      stockIds: z.array(z.uuid()),
-    }),
-  ),
-  settings: z.strictObject({
-    concentrationThreshold: z.number().int().min(1).max(100),
-    usdThbRate: decimal,
-    usdThbRateUpdatedAt: iso.nullable(),
-  }),
+  lists: backupLists,
+  settings: backupSettings,
 })
 export type BackupV1 = z.output<typeof BackupV1>
+
+const backupThesisShape = {
+  id: z.uuid(),
+  stockId: z.uuid(),
+  type: z.enum(THESIS_TYPES),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  note: z.string(),
+  targetPrice: decimal,
+  invalidation: text,
+  createdAt: iso,
+  updatedAt: iso,
+}
+// Unknown keys fail with the key as the path (`theses.0.userId`).
+const BackupThesis = z.looseObject(backupThesisShape).superRefine((v, ctx) => {
+  rejectUnknownKeys(v, Object.keys(backupThesisShape), ctx)
+})
+
+/** Thesis Log ADR-006: format version 2 is version 1 plus the thesis entries. */
+export const BackupV2 = z.strictObject({
+  format: z.literal(BACKUP_FORMAT),
+  formatVersion: z.literal(2),
+  exportedAt: iso,
+  stocks: z.array(BackupStock),
+  lists: backupLists,
+  settings: backupSettings,
+  theses: z.array(BackupThesis),
+})
+export type BackupV2 = z.output<typeof BackupV2>
+
+/** The current backup version. */
+export const Backup = BackupV2
+export type Backup = BackupV2

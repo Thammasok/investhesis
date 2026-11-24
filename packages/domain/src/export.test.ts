@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BackupV1, EXPORT_COLUMNS, exportRow, toDelimited, type ExportableStock } from './export.ts'
+import { Backup, BackupV1, BackupV2, EXPORT_COLUMNS, exportRow, toDelimited, type ExportableStock } from './export.ts'
 import { canonicaliseRow, TEMPLATE_COLUMNS } from './template.ts'
 import { StockInput } from './stock-schema.ts'
 
@@ -196,5 +196,41 @@ describe('BackupV1', () => {
     expect(path({ ...ok, formatVersion: 2 })).toEqual(['formatVersion'])
     expect(path({ ...ok, stocks: [{ ...stock, listIds: [] }] })).toEqual(['stocks', 0, 'listIds'])
     expect(path({ ...ok, formatVersion: undefined })).toEqual(['formatVersion'])
+  })
+})
+
+describe('BackupV2', () => {
+  const stamp = '2026-11-24T09:30:00.000Z'
+  const uuid = '0193a0aa-0000-7000-8000-000000000001'
+  const thesis = {
+    id: uuid,
+    stockId: uuid,
+    type: 'buy',
+    date: '2026-11-20',
+    note: 'x',
+    targetPrice: null,
+    invalidation: null,
+    createdAt: stamp,
+    updatedAt: stamp,
+  }
+  const v2 = {
+    format: 'investhesis-backup',
+    formatVersion: 2,
+    exportedAt: stamp,
+    stocks: [],
+    lists: [],
+    settings: { concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null },
+    theses: [thesis],
+  }
+
+  it('TC-U-709: accepts theses and keeps the strict rule', () => {
+    expect(BackupV2.safeParse(v2).success).toBe(true)
+    expect(Backup).toBe(BackupV2)
+    const extra = BackupV2.safeParse({ ...v2, theses: [{ ...thesis, userId: 'x' }] })
+    expect(extra.error?.issues[0]?.path).toEqual(['theses', 0, 'userId'])
+    const { theses: _theses, ...v1Shape } = { ...v2, formatVersion: 1 }
+    expect(BackupV1.safeParse(v1Shape).success).toBe(true)
+    expect(BackupV1.safeParse(v2).success).toBe(false)
+    expect(BackupV2.safeParse({ ...v2, theses: [{ ...thesis, type: 'hold' }] }).success).toBe(false)
   })
 })
