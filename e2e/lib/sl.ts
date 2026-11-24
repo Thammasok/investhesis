@@ -9,7 +9,9 @@ export const API_ORIGIN = 'http://localhost:3000'
 export const MOCK_API_ORIGIN = 'http://localhost:3100'
 
 export type Seed = Record<string, unknown>
-export type SavedStock = { id: string; ticker: string; name: string; market: 'US' | 'TH'; listIds: string[] } & Seed
+export type SavedHolding = { shares: string | null; averageCost: string | null; costCurrency: 'USD' | 'THB' }
+export type SavedStock = { id: string; ticker: string; name: string; market: 'US' | 'TH'; listIds: string[]; holding: SavedHolding | null } & Seed
+export type SavedSettings = { concentrationThreshold: number; usdThbRate: string | null; usdThbRateUpdatedAt: string | null }
 export type SavedList = { id: string; name: string; stockCount: number }
 
 export type TestUser = { id: string; email: string; password: string }
@@ -39,6 +41,13 @@ export async function apiAs(user: { email: string; password?: string }, origin =
     call,
     stock: (body: Seed) => must<SavedStock>('POST', '/stocks', body),
     stocks: async () => (await must<{ items: SavedStock[] }>('GET', '/stocks')).items,
+    getStock: (id: string) => must<SavedStock>('GET', `/stocks/${id}`),
+    /** PATCH a stock; `{ holding: {...} }` sets the holding, `{ holding: null }` clears it. */
+    patchStock: (id: string, body: Seed) => must<SavedStock>('PATCH', `/stocks/${id}`, body),
+    deleteStock: (id: string) => must<undefined>('DELETE', `/stocks/${id}`),
+    deleteList: (id: string) => must<undefined>('DELETE', `/lists/${id}`),
+    settings: () => must<SavedSettings>('GET', '/settings'),
+    saveSettings: (body: Seed) => must<SavedSettings>('PATCH', '/settings', body),
     list: (name: string) => must<SavedList>('POST', '/lists', { name }),
     lists: async () => (await must<{ items: SavedList[] }>('GET', '/lists')).items,
     addToList: (listId: string, stockId: string) => must('POST', `/lists/${listId}/stocks`, { stockId }),

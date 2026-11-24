@@ -18,6 +18,7 @@
     "test:e2e": "node scripts/db-start.mjs && playwright test --config e2e/playwright.config.ts",
     "test:report:unit": "pnpm --filter @investhesis/domain exec vitest run --reporter=json --outputFile=../../e2e/.output/vitest/domain.json; pnpm --filter @investhesis/api exec vitest run --reporter=json --outputFile=../../e2e/.output/vitest/api.json; pnpm --filter @investhesis/web exec vitest run --reporter=json --outputFile=../../e2e/.output/vitest/web.json; pnpm exec vitest run --config scripts/vitest.config.mts --reporter=json --outputFile=../e2e/.output/vitest/scripts.json",
     "test:report": "node scripts/stock-lists-report.mjs",
+    "test:report:holdings": "node scripts/holdings-report.mjs",
     "test:report:auth": "node scripts/user-auth-report.mjs"
   },
   "devDependencies": {
