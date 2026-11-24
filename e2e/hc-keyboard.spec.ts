@@ -182,7 +182,7 @@ test.describe('keyboard-only journeys', () => {
       await applyScheme(page, scheme)
       await page.getByRole('heading', { level: 1, name: 'Concentration' }).evaluate((h) => (h as HTMLElement).focus())
 
-      // Act: the first four stops are Settings, Scope, Group by and Measure
+      // Act: the first four stops are Settings, Scope, Group by and Measure, then a ticker link
       const measured: string[] = []
       const ratios: number[] = []
       for (let i = 0; i < 4; i++) {
@@ -190,6 +190,13 @@ test.describe('keyboard-only journeys', () => {
         await expectVisibleFocus(page, `tab ${i + 1}`, ratios)
         measured.push(`${await focusLabel(page)} ${ratios.at(-1)}:1`)
       }
+      // A ticker link in an expanded group
+      const expand = page.getByRole('button', { name: 'Show stocks in Information Technology' })
+      await expand.focus()
+      await page.keyboard.press('Space')
+      await page.getByRole('table').getByRole('link', { name: 'NVDA', exact: true }).focus()
+      await expectVisibleFocus(page, 'ticker link', ratios)
+      measured.push(`NVDA link ${ratios.at(-1)}:1`)
       console.log(`TC-E-418 ${scheme} focus indicator: ${measured.join(' | ')}`)
 
       // Assert

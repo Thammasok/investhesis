@@ -40,7 +40,8 @@ test.describe('360 px layout of holdings and concentration', () => {
   })
 
   test('TC-E-417: the concentration layout rules: stacked full-width controls, folded columns, badge under the share', async ({ page }) => {
-    // Arrange
+    // Arrange: no rate (an earlier state of this file's data may have saved one), so only the two THB holdings are valued
+    await ctx.api.saveSettings({ usdThbRate: null })
     await openSignedIn(page, ctx.user, '/concentration?scope=held')
     await settled(page)
 

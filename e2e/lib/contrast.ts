@@ -46,10 +46,11 @@ export async function measureContrast(target: Locator, property: 'color' | 'bord
 }
 
 /**
- * Contrast of the focus indicator of the focused element: its outline when it has one, else the first colour of its
- * box-shadow ring, composited over the element's real background. `null` when nothing is drawn.
+ * Contrast of the focus indicator of the focused element, composited over its real background: the best of its
+ * outline, its box-shadow ring and a border drawn in the theme's `--ring` colour (shadcn's `focus-visible:border-ring`,
+ * a solid line next to the translucent ring). `null` when nothing is drawn.
  */
-export async function focusRingContrast(target: Locator): Promise<{ ratio: number; kind: 'outline' | 'ring' } | null> {
+export async function focusRingContrast(target: Locator): Promise<{ ratio: number; kind: 'outline' | 'ring' | 'border'; all: string } | null> {
   return target.evaluate((el) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1
@@ -68,12 +69,9 @@ export async function focusRingContrast(target: Locator): Promise<{ ratio: numbe
       return [c(0), c(1), c(2), a]
     }
     const style = getComputedStyle(el)
-    let kind: 'outline' | 'ring' | null = null
-    let color = ''
-    if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) {
-      kind = 'outline'
-      color = style.outlineColor
-    } else if (style.boxShadow && style.boxShadow !== 'none') {
+    const candidates: { color: string; kind: 'outline' | 'ring' | 'border' }[] = []
+    if (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) candidates.push({ color: style.outlineColor, kind: 'outline' })
+    if (style.boxShadow && style.boxShadow !== 'none') {
       // Shadows are comma separated (commas inside colour functions do not count); the ring is the one with a spread.
       const parts: string[] = []
       let depth = 0
@@ -91,27 +89,32 @@ export async function focusRingContrast(target: Locator): Promise<{ ratio: numbe
         const m = /(rgba?\([^)]*\)|oklab\([^)]*\)|oklch\([^)]*\)|color\([^)]*\)|lab\([^)]*\)|lch\([^)]*\))/.exec(part)
         const lengths = [...part.replace(m?.[1] ?? '', '').matchAll(/(-?[\d.]+)px/g)].map((l) => parseFloat(l[1]!))
         if (m && (lengths[3] ?? 0) > 0 && rgba(m[1]!)[3]! > 0) {
-          kind = 'ring'
-          color = m[1]!
+          candidates.push({ color: m[1]!, kind: 'ring' })
           break
         }
       }
     }
-    if (!kind) return null
+    const ringToken = getComputedStyle(document.documentElement).getPropertyValue('--ring').trim()
+    if (ringToken && parseFloat(style.borderTopWidth) > 0 && rgba(style.borderTopColor).join() === rgba(ringToken).join()) candidates.push({ color: style.borderTopColor, kind: 'border' })
+    if (candidates.length === 0) return null
     const layers: number[][] = []
-    // The ring is drawn outside the element, over its parent's background.
+    // The indicator is drawn outside or on the edge of the element, over its parent's background.
     for (let node: Element | null = el.parentElement; node; node = node.parentElement) layers.push(rgba(getComputedStyle(node).backgroundColor))
     let bg: number[] = [255, 255, 255, 1]
     for (const layer of layers.reverse()) bg = over(layer, bg)
-    const fg = over(rgba(color), bg)
     const lum = (c: number[]) => {
       const f = (v: number) => {
-        const s = v / 255
-        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+        const x = v / 255
+        return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4
       }
       return 0.2126 * f(c[0]!) + 0.7152 * f(c[1]!) + 0.0722 * f(c[2]!)
     }
-    const [hi, lo] = [Math.max(lum(fg), lum(bg)), Math.min(lum(fg), lum(bg))]
-    return { ratio: Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100, kind }
+    const scored = candidates.map(({ color, kind }) => {
+      const fg = over(rgba(color), bg)
+      const [hi, lo] = [Math.max(lum(fg), lum(bg)), Math.min(lum(fg), lum(bg))]
+      return { ratio: Math.round(((hi + 0.05) / (lo + 0.05)) * 100) / 100, kind }
+    })
+    const best = scored.reduce((b, c) => (c.ratio > b.ratio ? c : b))
+    return { ...best, all: scored.map((c) => `${c.kind} ${c.ratio}`).join(', ') + ` | border ${style.borderTopWidth} ${style.borderTopColor} ring token ${ringToken}` }
   })
 }
