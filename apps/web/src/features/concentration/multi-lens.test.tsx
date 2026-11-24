@@ -37,7 +37,8 @@ const api = () =>
 
 const open = async (search: string) => {
   const view = renderApp(`/concentration${search}`, api())
-  await screen.findByRole('heading', { level: 1, name: 'Concentration' })
+  // The first render in a file loads the page's lazy chunk, which can take longer than 1 s when the suites run in parallel.
+  await screen.findByRole('heading', { level: 1, name: 'Concentration' }, { timeout: 8000 })
   return view
 }
 const rowFor = (label: string) => screen.getByRole('button', { name: `Show stocks in ${label}` }).closest('tr') as HTMLElement
