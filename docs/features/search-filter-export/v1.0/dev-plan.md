@@ -287,7 +287,7 @@ touches only `packages/domain`.
   database. Register in app.ts. Covers FR-015 to FR-017, NFR-002 to NFR-004.
 - agent: software-engineer-backend
 - depends_on: [T-002]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -360,7 +360,7 @@ the order is never ambiguous. Use `buildTestApp` / `appFor` with random user ids
   as before and never writes lists or holdings from those columns. Covers FR-014.
 - agent: software-engineer-backend
 - depends_on: [T-002]
-- status: review
+- status: done
 - size: S
 ```
 
@@ -501,7 +501,7 @@ unit:
   Covers FR-001 to FR-005, FR-007, FR-008, NFR-006, NFR-007.
 - agent: react-vite-developer
 - depends_on: [T-005]
-- status: backlog
+- status: doing
 - size: L
 ```
 
