@@ -29,11 +29,11 @@ describe('sort in the address', () => {
     expect(router.state.location.search).toBe('')
 
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Name' }))
-    expect(router.state.location.search).toBe('?sort=name')
-    expect(tickers()).toEqual(['MSFT', 'AAPL'])
+    await waitFor(() => expect(router.state.location.search).toBe('?sort=name'))
+    await waitFor(() => expect(tickers()).toEqual(['MSFT', 'AAPL']))
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Name' }))
-    expect(router.state.location.search).toBe('?sort=name&dir=desc')
-    expect(tickers()).toEqual(['AAPL', 'MSFT'])
+    await waitFor(() => expect(router.state.location.search).toBe('?sort=name&dir=desc'))
+    await waitFor(() => expect(tickers()).toEqual(['AAPL', 'MSFT']))
 
     // a "reload": a fresh app at the same address shows the same order
     const search = router.state.location.search
@@ -42,11 +42,14 @@ describe('sort in the address', () => {
     const second = screen.getAllByRole('table')[1] as HTMLElement
     expect(within(second).getAllByRole('columnheader', { name: /Name/ })[0]).toHaveAttribute('aria-sort', 'descending')
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Sort by Ticker' })[0] as HTMLElement)
-    await userEvent.click(screen.getAllByRole('button', { name: 'Sort by Ticker' })[0] as HTMLElement)
-    expect(router.state.location.search).toBe('?dir=desc')
-    await userEvent.click(screen.getAllByRole('button', { name: 'Sort by Ticker' })[0] as HTMLElement)
-    expect(router.state.location.search).toBe('')
+    // Ticker ascending is the default: choosing it leaves the address bare, and flipping it writes dir=desc.
+    const ticker = () => screen.getAllByRole('button', { name: 'Sort by Ticker' })[0] as HTMLElement
+    await userEvent.click(ticker())
+    await waitFor(() => expect(router.state.location.search).toBe(''))
+    await userEvent.click(ticker())
+    await waitFor(() => expect(router.state.location.search).toBe('?dir=desc'))
+    await userEvent.click(ticker())
+    await waitFor(() => expect(router.state.location.search).toBe(''))
   })
 
   it('TC-U-592: Held starts descending, and a sort adds no history entry', async () => {
@@ -54,7 +57,7 @@ describe('sort in the address', () => {
     await screen.findByRole('table')
     const before = router.state.historyAction
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Held' }))
-    expect(router.state.location.search).toBe('?sort=held&dir=desc')
+    await waitFor(() => expect(router.state.location.search).toBe('?sort=held&dir=desc'))
     expect(router.state.historyAction).toBe('REPLACE')
     expect(before).not.toBe('REPLACE')
   })

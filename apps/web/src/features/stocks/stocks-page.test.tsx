@@ -43,7 +43,8 @@ describe('stocks page', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Ticker' }))
 
-    expect(tickerOrder()).toEqual(['PTTEP', 'MSFT', 'AAPL'])
+    // The sort is in the address now, so the table follows the router a moment later.
+    await waitFor(() => expect(tickerOrder()).toEqual(['PTTEP', 'MSFT', 'AAPL']))
     expect(tickerHead).toHaveAttribute('aria-sort', 'descending')
   })
 
@@ -85,9 +86,9 @@ describe('stocks page', () => {
     expect(within(table).getByText('Saved stocks, sorted by Ticker ascending', { selector: 'caption' })).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Name' }))
-    expect(screen.getByText('Saved stocks, sorted by Name ascending', { selector: 'caption' })).toBeInTheDocument()
+    expect(await screen.findByText('Saved stocks, sorted by Name ascending', { selector: 'caption' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Name' }))
-    expect(screen.getByText('Saved stocks, sorted by Name descending', { selector: 'caption' })).toBeInTheDocument()
+    expect(await screen.findByText('Saved stocks, sorted by Name descending', { selector: 'caption' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: /Ticker/ })).toHaveAttribute('aria-sort', 'none')
 
     const market = screen.getAllByText('US')[0] as HTMLElement
@@ -277,11 +278,11 @@ describe('stocks page: Held column', () => {
     const head = screen.getByRole('columnheader', { name: /Held/ })
     expect(head).toHaveAttribute('aria-sort', 'none')
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Held' }))
-    expect(head).toHaveAttribute('aria-sort', 'descending')
+    await waitFor(() => expect(head).toHaveAttribute('aria-sort', 'descending'))
     expect(tickerOrder()).toEqual(['BIG1', 'BIG2', 'NVDA', 'MSFT', 'TSLA', 'PTTEP', 'AAPL'])
     expect(screen.getByText('Saved stocks, sorted by Held descending', { selector: 'caption' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Sort by Held' }))
-    expect(head).toHaveAttribute('aria-sort', 'ascending')
+    await waitFor(() => expect(head).toHaveAttribute('aria-sort', 'ascending'))
     expect(tickerOrder()).toEqual(['AAPL', 'PTTEP', 'TSLA', 'MSFT', 'NVDA', 'BIG2', 'BIG1'])
   })
 })
