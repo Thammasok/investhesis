@@ -12,7 +12,8 @@ const num = 'text-right tabular-nums'
 
 function FlagBadge({ threshold }: { threshold: number }) {
   return (
-    <Badge variant="outline" className="text-foreground">
+    // The outline badge's own border is 1.3:1 on the page, so it gets a visible one (TC-E-416: at least 3:1 in both themes).
+    <Badge variant="outline" className="border-muted-foreground text-foreground">
       <TriangleAlertIcon aria-hidden="true" className="text-destructive" />
       Over {threshold}%
     </Badge>
