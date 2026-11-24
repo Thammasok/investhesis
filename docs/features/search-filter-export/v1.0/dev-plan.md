@@ -583,7 +583,7 @@ unit:
   TC-E-406 and TC-E-419 passing. Covers FR-009, FR-010.
 - agent: react-vite-developer
 - depends_on: [T-006]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -649,7 +649,7 @@ unit:
   FR-013, NFR-002 (browser part).
 - agent: react-vite-developer
 - depends_on: [T-002, T-006]
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -721,7 +721,7 @@ unit:
   to StubApi scripts in tests. Covers FR-014 (web part), FR-015 to FR-017 (web part).
 - agent: react-vite-developer
 - depends_on: [T-002]
-- status: review
+- status: done
 - size: S
 ```
 
