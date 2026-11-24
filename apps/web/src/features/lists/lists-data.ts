@@ -15,6 +15,8 @@ export type ListPageData = {
   members: Stock[]
   /** Saved stocks that are not in the list yet (the Add stock picker). */
   candidates: Stock[]
+  /** Every list, to name the lists a stock is in (the `lists` column of the export). */
+  lists: ListSummary[]
 }
 
 /** Loader of `/lists/:id`. A 404 on the list is the not-found page. Membership comes from each stock's `listIds`. */
@@ -22,12 +24,14 @@ export const createListLoader =
   (api: ApiClient) =>
   async ({ params }: LoaderFunctionArgs): Promise<ListPageData> => {
     const id = params.id ?? ''
-    const [list, stocks] = await Promise.all([
+    const [list, stocks, lists] = await Promise.all([
       api.get<ListSummary>(`/lists/${encodeURIComponent(id)}`),
       api.get<{ items: Stock[] }>('/stocks'),
+      api.get<{ items: ListSummary[] }>('/lists'),
     ])
     return {
       list,
+      lists: lists.items,
       members: stocks.items.filter((s) => s.listIds.includes(id)),
       candidates: stocks.items.filter((s) => !s.listIds.includes(id)),
     }

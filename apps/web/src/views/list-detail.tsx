@@ -1,5 +1,5 @@
 import { ImportIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import { DeleteListDialog } from '@/features/lists/components/delete-list-dialog
 import { ListNameDialog } from '@/features/lists/components/list-name-dialog'
 import type { ListPageData } from '@/features/lists/lists-data'
 import { useMembership } from '@/features/lists/use-membership'
+import { ExportMenu } from '@/features/exports/export-menu'
+import { sortStocks } from '@/features/stocks/sort-stocks'
 import { SeeConcentration } from '@/features/concentration/components/see-concentration'
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
@@ -20,9 +22,14 @@ import { StockTable } from '@/features/stocks/components/stock-table'
 import { countLabel } from '@/features/stocks/format'
 
 export function Component() {
-  const { list, members, candidates } = useLoaderData() as ListPageData
+  const { list, members, candidates, lists } = useLoaderData() as ListPageData
   const membership = useMembership(list.name)
   const filters = useStockFilters(members)
+  // What the table shows, in the order it shows it: the rows the Export menu writes.
+  const ordered = useMemo(
+    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction),
+    [filters.shown, filters.sort],
+  )
   const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null)
   const renameRef = useRef<HTMLButtonElement>(null)
   const moreRef = useRef<HTMLButtonElement>(null)
@@ -105,7 +112,11 @@ export function Component() {
       ) : (
         <>
           <AddressNotes notes={filters.notes} />
-          <FilterToolbar filters={filters} trailing={<SeeConcentration scope={list.id} filters={filters.state} />} />
+          <FilterToolbar
+            filters={filters}
+            actions={<ExportMenu stocks={ordered} lists={lists} listName={list.name} />}
+            trailing={<SeeConcentration scope={list.id} filters={filters.state} />}
+          />
           {filters.shown.length === 0 ? (
             <NoMatches
               onClearAll={() => {

@@ -1,8 +1,11 @@
+import { useMemo } from 'react'
 import { LineChartIcon, PlusIcon, UploadIcon } from 'lucide-react'
 import { Link, Outlet, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { ExportMenu } from '@/features/exports/export-menu'
+import { sortStocks } from '@/features/stocks/sort-stocks'
 import { SeeConcentration } from '@/features/concentration/components/see-concentration'
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
@@ -17,6 +20,11 @@ export function Component() {
   const { stocks, lists } = useLoaderData() as StocksPageData
   const filters = useStockFilters(stocks)
   const empty = stocks.length === 0
+  // What the table shows, in the order it shows it: the rows the Export menu writes.
+  const ordered = useMemo(
+    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction),
+    [filters.shown, filters.sort],
+  )
 
   // One tree for both states, with the Outlet (the Add stock dialog) always in the same slot: when the
   // first stock appears while the dialog is open, the dialog and its form must not remount.
@@ -69,7 +77,11 @@ export function Component() {
       ) : (
         <div className="space-y-6">
           <AddressNotes notes={filters.notes} />
-          <FilterToolbar filters={filters} trailing={<SeeConcentration scope="all" filters={filters.state} />} />
+          <FilterToolbar
+            filters={filters}
+            actions={<ExportMenu stocks={ordered} lists={lists} />}
+            trailing={<SeeConcentration scope="all" filters={filters.state} />}
+          />
           {filters.shown.length === 0 ? (
             <NoMatches
               onClearAll={() => {

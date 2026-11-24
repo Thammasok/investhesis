@@ -141,7 +141,7 @@ describe('stocks page', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/stocks/s-MSFT'))
   })
 
-  it('TC-C-112: tab order is Import, Add stock, search, Filters, See concentration, sort buttons, then each ticker link', async () => {
+  it('TC-C-112: tab order is Import, Add stock, search, Filters, Export, See concentration, sort buttons, then each ticker link', async () => {
     renderApp('/stocks', stocksApi())
     await screen.findByRole('table')
     const main = screen.getByRole('table').closest('section') as HTMLElement
@@ -150,11 +150,11 @@ describe('stocks page', () => {
       .map((l) => l.textContent)
     const buttons = within(main).getAllByRole('button')
     expect(stops).toEqual(['Import', 'Add stock', 'See concentration', 'AAPL', 'MSFT', 'PTTEP'])
-    expect(buttons).toHaveLength(6) // Filters and the five sort buttons
+    expect(buttons).toHaveLength(7) // Filters, Export and the five sort buttons
     const all = Array.from(main.querySelectorAll<HTMLElement>('a[href], button, input[type="search"]')).map((e) =>
       e instanceof HTMLInputElement ? e.getAttribute('aria-label') : (e.getAttribute('aria-label') ?? e.textContent),
     )
-    expect(all).toEqual(['Import', 'Add stock', 'Search stocks', 'Filters', 'See concentration', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
+    expect(all).toEqual(['Import', 'Add stock', 'Search stocks', 'Filters', 'Export', 'See concentration', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
   })
 
   it('TC-C-113: shows the count text with singular and plural, and links in the header', async () => {
