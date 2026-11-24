@@ -649,7 +649,7 @@ unit:
   FR-013, NFR-002 (browser part).
 - agent: react-vite-developer
 - depends_on: [T-002, T-006]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -821,7 +821,7 @@ unit:
   routes, address params and commands.
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008, T-009, T-010]
-- status: backlog
+- status: doing
 - size: L
 ```
 
