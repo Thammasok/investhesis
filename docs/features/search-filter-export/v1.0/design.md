@@ -82,7 +82,7 @@ sequenceDiagram
 | `packages/domain` `export.ts` (new) | `EXPORT_COLUMNS` (19 template columns + 5 export-only), `EXPORT_ONLY_HEADERS`, `exportRow(stock, listNames)`, `toDelimited(rows, ',' \| '\t')` with RFC 4180 quoting, `BackupV1` Zod schema and `BACKUP_FORMAT` ([FR-012](requirements.md#fr-012), [FR-016](requirements.md#fr-016), [NFR-008](requirements.md#nfr-008)) |
 | `apps/api` `modules/exports` (new) | `exports.routes.ts` → `exports.service.ts` (`buildBackup`, `backupCsv`) → reads through the existing stocks, lists and settings repositories plus one membership query; one read-only snapshot transaction |
 | `apps/api` `modules/imports` (changed) | `mapHeaders` treats `EXPORT_ONLY_HEADERS` as known and ignored; the preview gains `ignoredColumns` ([FR-014](requirements.md#fr-014)) |
-| `apps/web` `features/stock-filters` (new) | `filter-address.ts` (`readFilters`, `filterSearch`, sort params), `use-filter-state.ts`, `FilterBar` (search + filter popover / sheet), `ActiveFilters` (removable items, Clear all), `ResultCount` (polite live region), `NoMatches` |
+| `apps/web` `features/stock-filters` (new) | `filter-address.ts` (`readFilters`, `filterSearch`, sort params), `use-filter-state.ts`, `FilterBar` (search + filter sheet), `ActiveFilters` (removable items, Clear all), `ResultCount` (polite live region), `NoMatches` |
 | `apps/web` `features/exports` (new) | `ExportMenu` (Download CSV, Copy), `export-file-name.ts`, `copy-rows.ts`, `BackupCard` for `/import-export` |
 | `apps/web` `StockTable` (changed) | Sort becomes controlled (`sort`, `onSort` props) so the page keeps it in the address; default stays ticker ascending |
 | `apps/web` stocks, list detail, concentration pages (changed) | Mount the filter bar; `/stocks` and `/lists/:id` get `shouldRevalidate` like `/concentration`; concentration filters inside its scope ([FR-010](requirements.md#fr-010)) |
@@ -266,8 +266,9 @@ held stock with a rate and asserts that no share, cost or rate value appears
 
 - **Filter bar** on `/stocks`, `/lists/:id` and `/concentration`: a search input (`InputGroup`
   with a search icon and a clear button), a **Filters** button that opens the filter panel (a
-  `Popover` from `md`, a `Sheet` below it, [NFR-007](requirements.md#nfr-007)) with one
-  multi-select per filter (`Command` list with checkboxes and counts), the active filters as
+  `Sheet` on every width: right from `sm`, bottom below it, [NFR-007](requirements.md#nfr-007);
+  refined in `ux-design.md` from the Popover first planned here) with one checkbox group per
+  filter and counts, the active filters as
   removable badges with **Clear all**, and the count "N of M stocks" in a polite live region
   ([FR-005](requirements.md#fr-005), [NFR-006](requirements.md#nfr-006)). Visual specs come from
   Phase 3.
@@ -352,8 +353,8 @@ held stock with a rate and asserts that no share, cost or rate value appears
 - No new npm package and no new external service. Clipboard uses the browser's
   `navigator.clipboard` (secure context: `localhost` and HTTPS).
 - **Supabase CLI** and **Docker** for the API tests, unchanged.
-- **shadcn/ui**: `sheet` may need adding for the phone filter panel (Phase 3 decides);
-  `popover`, `command`, `checkbox`, `badge` and `input-group` are installed.
+- **shadcn/ui**: no component to add;
+  `sheet`, `collapsible`, `checkbox`, `badge`, `dropdown-menu` and `input-group` are installed.
 
 ## Risks
 
