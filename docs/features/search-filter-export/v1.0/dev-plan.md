@@ -178,7 +178,7 @@ getters come from `CONCENTRATION_LENSES`; market and exchange read the stock dir
   with stockIds, settings). Covers FR-012, FR-014, FR-016, NFR-005, NFR-008.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: M
 ```
 
