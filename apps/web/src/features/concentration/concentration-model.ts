@@ -1,4 +1,5 @@
 import {
+  applyStockFilters,
   CONCENTRATION_LENSES,
   formatDecimal,
   groupConcentration,
@@ -6,7 +7,9 @@ import {
   type ConcentrationGroup,
   type ConcentrationLens,
   type ConcentrationResult,
+  type FilterState,
 } from '@investhesis/domain'
+import { filterPairs } from '@/features/stock-filters/filter-address'
 import { formatMoney } from '@/lib/number-format'
 import type { ListSummary, Stock } from '@/features/stocks/types'
 
@@ -69,9 +72,20 @@ export function readView(params: URLSearchParams, lists: readonly ListSummary[])
   return { scope, list, lens, measure, notes }
 }
 
-/** The canonical address of a view: every control, always in this order. */
-export function viewSearch(view: Pick<View, 'scope' | 'measure'> & { lens: { key: string } }): string {
-  return `?scope=${encodeURIComponent(view.scope)}&lens=${view.lens.key}&measure=${view.measure}`
+/** The canonical address of a view: every control, always in this order, then the search and filters (FR-010). */
+export function viewSearch(view: Pick<View, 'scope' | 'measure'> & { lens: { key: string } }, filters?: FilterState): string {
+  const pairs: [string, string][] = [
+    ['scope', view.scope],
+    ['lens', view.lens.key],
+    ['measure', view.measure],
+    ...(filters ? filterPairs(filters) : []),
+  ]
+  return `?${new URLSearchParams(pairs).toString()}`
+}
+
+/** The concentration view of a scope with the given search and filters: the link on the stocks pages (FR-009). */
+export function concentrationHref(scope: string, filters: FilterState): string {
+  return `/concentration${viewSearch({ scope, lens: DEFAULT_LENS, measure: DEFAULT_MEASURE }, filters)}`
 }
 
 export function stocksInScope(stocks: readonly Stock[], scope: string): Stock[] {
@@ -85,7 +99,10 @@ export type ValueBlock =
   | { available: false; reason: 'no-amounts' | 'needs-rate' }
 
 export type Plan = {
+  /** The stocks that are grouped: the scope's stocks that pass the search and filters. */
   inScope: Stock[]
+  /** How many stocks the scope has before the search and filters. */
+  scopeCount: number
   /** The measure shown: the requested one unless value cannot be computed. */
   measure: Measure
   value: ValueBlock
@@ -98,9 +115,10 @@ export type Plan = {
 const cents = (group: ConcentrationGroup): bigint => parseDecimal(group.value, 2) ?? 0n
 
 /** Groups the stocks in scope and picks the measure. Pure and synchronous: it reruns on every control change (NFR-001). */
-export function planView(args: { stocks: readonly Stock[]; view: View; settings: Settings }): Plan {
+export function planView(args: { stocks: readonly Stock[]; view: View; settings: Settings; filters?: FilterState }): Plan {
   const { view, settings } = args
-  const inScope = stocksInScope(args.stocks, view.scope)
+  const scoped = stocksInScope(args.stocks, view.scope)
+  const inScope = args.filters ? applyStockFilters(scoped, args.filters) : scoped
   const result = groupConcentration({
     stocks: inScope,
     lens: view.lens,
@@ -124,7 +142,7 @@ export function planView(args: { stocks: readonly Stock[]; view: View; settings:
     return b.count - a.count || byLabel(a, b)
   })
   const flagged = groups.filter((g) => (measure === 'value' ? g.valueFlag : g.countFlag))
-  return { inScope, measure, value, result, groups, flagged }
+  return { inScope, scopeCount: scoped.length, measure, value, result, groups, flagged }
 }
 
 /** `฿72,500.00` from the domain's two-decimal THB text. */

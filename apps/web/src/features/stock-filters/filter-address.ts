@@ -41,7 +41,8 @@ function readPicks(filter: StockFilter, values: string[], notes: string[]): Set<
  * bad value is dropped with one note each; unknown parameter names are ignored silently. Nothing is
  * rewritten in the address.
  */
-export function readFilters(params: URLSearchParams): AddressView {
+export function readFilters(params: URLSearchParams, options: { sort?: boolean } = {}): AddressView {
+  const withSort = options.sort ?? true
   const notes: string[] = []
 
   let q = ''
@@ -58,20 +59,23 @@ export function readFilters(params: URLSearchParams): AddressView {
   }
 
   let column: SortColumn = DEFAULT_SORT.column
-  const sorts = params.getAll('sort')
-  if (sorts.length > 1) notes.push('The sort column was given more than once, so the default order is used.')
-  else if (sorts.length === 1) {
-    const found = SORTABLE_COLUMNS.find((c) => c === (sorts[0] as string))
-    if (found) column = found
-    else notes.push(`"${sorts[0]}" isn't a column you can sort by, so the default order is used.`)
-  }
-
   let direction = DEFAULT_SORT.direction
-  const dirs = params.getAll('dir')
-  if (dirs.length > 1) notes.push('The sort direction was given more than once, so ascending is used.')
-  else if (dirs.length === 1) {
-    if (dirs[0] === 'asc' || dirs[0] === 'desc') direction = dirs[0]
-    else notes.push(`"${dirs[0]}" isn't a sort direction, so ascending is used.`)
+  if (withSort) {
+    const sorts = params.getAll('sort')
+    if (sorts.length > 1) notes.push('The sort column was given more than once, so the default order is used.')
+    else if (sorts.length === 1) {
+      const found = SORTABLE_COLUMNS.find((c) => c === (sorts[0] as string))
+      if (found) column = found
+      else notes.push(`"${sorts[0]}" isn't a column you can sort by, so the default order is used.`)
+    }
+
+    const dirs = params.getAll('dir')
+    if (dirs.length > 1) notes.push('The sort direction was given more than once, so ascending is used.')
+    else if (dirs.length === 1) {
+      if (dirs[0] === 'asc' || dirs[0] === 'desc') direction = dirs[0]
+      else notes.push(`"${dirs[0]}" isn't a sort direction, so ascending is used.`)
+    }
+
   }
 
   return { state: { q, picks }, sort: { column, direction }, notes }
@@ -88,8 +92,11 @@ export function orderedValues(filter: StockFilter, picked: ReadonlySet<string | 
   return picked.has(null) ? [...values, null] : values
 }
 
-/** The filter parameters of a state in canonical order: `q`, then each filter in sheet order, values in vocabulary order. */
-export function filterPairs(state: FilterState): [string, string][] {
+/**
+ * The parameters of a view in canonical order: `q`, then each filter in sheet order with its values in
+ * vocabulary order, then the sort when one is given (the default sort is not written).
+ */
+export function filterPairs(state: FilterState, sort?: SortState): [string, string][] {
   const pairs: [string, string][] = []
   const q = state.q.trim()
   if (q !== '') pairs.push(['q', q])
@@ -97,6 +104,10 @@ export function filterPairs(state: FilterState): [string, string][] {
     const picked = state.picks.get(filter.key)
     if (!picked) continue
     for (const value of orderedValues(filter, picked)) pairs.push([filter.key, value ?? ''])
+  }
+  if (sort) {
+    if (sort.column !== DEFAULT_SORT.column) pairs.push(['sort', sort.column])
+    if (sort.direction !== DEFAULT_SORT.direction) pairs.push(['dir', sort.direction])
   }
   return pairs
 }
@@ -106,9 +117,6 @@ export function filterPairs(state: FilterState): [string, string][] {
  * written; a descending sort writes `dir=desc`. Returns '' for the bare page.
  */
 export function filterSearch(state: FilterState, sort: SortState = DEFAULT_SORT): string {
-  const pairs = filterPairs(state)
-  if (sort.column !== DEFAULT_SORT.column) pairs.push(['sort', sort.column])
-  if (sort.direction !== DEFAULT_SORT.direction) pairs.push(['dir', sort.direction])
-  const text = new URLSearchParams(pairs).toString()
+  const text = new URLSearchParams(filterPairs(state, sort)).toString()
   return text === '' ? '' : `?${text}`
 }

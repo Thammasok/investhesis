@@ -3,6 +3,7 @@ import { Link, Outlet, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { SeeConcentration } from '@/features/concentration/components/see-concentration'
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
 import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
@@ -68,7 +69,7 @@ export function Component() {
       ) : (
         <div className="space-y-6">
           <AddressNotes notes={filters.notes} />
-          <FilterToolbar filters={filters} />
+          <FilterToolbar filters={filters} trailing={<SeeConcentration scope="all" filters={filters.state} />} />
           {filters.shown.length === 0 ? (
             <NoMatches
               onClearAll={() => {

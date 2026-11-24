@@ -2,18 +2,27 @@ import type { FilterKey, FilterState } from '@investhesis/domain'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { nextSort, type SortColumn, type SortState } from '@/features/stocks/sort-stocks'
-import { filterSearch, readFilters } from './filter-address'
+import { filterPairs, readFilters } from './filter-address'
 
 type View = { state: FilterState; sort: SortState }
+
+export type FilterStateOptions = {
+  /** Other parameters of the page to carry along, written first and in this order (`/concentration`: scope, lens, measure). */
+  keep?: readonly string[]
+  /** Whether the page sorts (the stocks tables) or not (`/concentration`). Default true. */
+  sort?: boolean
+}
+
+const NO_KEEP: readonly string[] = []
 
 /**
  * Search, filters and sort of a stocks table, kept in the address (ADR-003). Writes use `replace`, so
  * a keystroke or a pick adds no history entry and Back means "previous page". `state` is current;
  * `deferredState` is what the table renders, so typing stays responsive (NFR-001).
  */
-export function useFilterState() {
+export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: FilterStateOptions = {}) {
   const [params, setParams] = useSearchParams()
-  const view = useMemo(() => readFilters(params), [params])
+  const view = useMemo(() => readFilters(params, { sort: withSort }), [params, withSort])
   const deferredState = useDeferredValue(view.state)
 
   // Writes that were made but have not reached the address yet, oldest first. React Router does not queue
@@ -28,16 +37,23 @@ export function useFilterState() {
   }, [current])
 
   /** Applies a change on top of the newest address, written or in flight, so quick successive changes all land. */
-  const update = useCallback(
-    (change: (current: View) => View) => {
-      const base = readFilters(new URLSearchParams(inFlight.current.at(-1) ?? current))
-      const next = change({ state: base.state, sort: base.sort })
-      const search = new URLSearchParams(filterSearch(next.state, next.sort))
+  const write = useCallback(
+    (change: (current: View, kept: Map<string, string>) => { view: View; kept: Map<string, string> }) => {
+      const base = new URLSearchParams(inFlight.current.at(-1) ?? current)
+      const read = readFilters(base, { sort: withSort })
+      const kept = new Map(keep.flatMap((name) => (base.has(name) ? [[name, base.get(name) as string] as const] : [])))
+      const next = change({ state: read.state, sort: read.sort }, kept)
+      const pairs: [string, string][] = [
+        ...keep.flatMap((name) => (next.kept.has(name) ? [[name, next.kept.get(name) as string] as [string, string]] : [])),
+        ...filterPairs(next.view.state, withSort ? next.view.sort : undefined),
+      ]
+      const search = new URLSearchParams(pairs)
       inFlight.current.push(search.toString())
       setParams(search, { replace: true })
     },
-    [current, setParams],
+    [current, keep, setParams, withSort],
   )
+  const update = useCallback((change: (current: View) => View) => write((c, kept) => ({ view: change(c), kept })), [write])
 
   const setQuery = useCallback((q: string) => update((c) => ({ ...c, state: { ...c.state, q } })), [update])
   const setPicks = useCallback(
@@ -80,6 +96,9 @@ export function useFilterState() {
     deferredState,
     sort: view.sort,
     notes: view.notes,
+    /** Sets the kept parameters (scope, lens, measure) and leaves the filters as they are. */
+    setKept: (next: Record<string, string>) =>
+      write((c, kept) => ({ view: c, kept: new Map([...kept, ...Object.entries(next)]) })),
     setQuery,
     setPicks,
     togglePick,

@@ -10,33 +10,43 @@ import { AdviceNote, LeftOutNote, MultiValueNote } from '@/features/concentratio
 import { ConcentrationSettingsDialog } from '@/features/concentration/components/settings-dialog'
 import { FallbackNotes, FlagSummary } from '@/features/concentration/components/summary'
 import type { ConcentrationData } from '@/features/concentration/concentration-data'
-import { planView, readView, viewSearch, type Measure } from '@/features/concentration/concentration-model'
+import { planView, readView, stocksInScope, type Measure } from '@/features/concentration/concentration-model'
+import { AddressNotes } from '@/features/stock-filters/address-notes'
+import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
+import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
+import { NoMatches } from '@/features/stock-filters/no-matches'
+import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 
 const DESCRIPTION = 'How your stocks are spread across each lens.'
+/** Parameters of this page that the filters leave alone. */
+const KEEP = ['scope', 'lens', 'measure'] as const
 
 export function Component() {
   const { stocks, lists, settings } = useLoaderData() as ConcentrationData
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
   const [settingsFocus, setSettingsFocus] = useState<'threshold' | 'rate' | null>(null)
   const settingsButton = useRef<HTMLButtonElement>(null)
   const openerRef = useRef<HTMLElement | null>(null)
 
   const view = useMemo(() => readView(params, lists), [params, lists])
-  const plan = useMemo(() => planView({ stocks, view, settings }), [stocks, view, settings])
+  const scoped = useMemo(() => stocksInScope(stocks, view.scope), [stocks, view.scope])
+  // Search and filters work inside the scope: the options count over it, and the grouping uses what passes.
+  const filters = useStockFilters(scoped, { keep: KEEP, sort: false })
+  const plan = useMemo(
+    () => planView({ stocks, view, settings, filters: filters.deferredState }),
+    [stocks, view, settings, filters.deferredState],
+  )
 
   const change = useCallback(
     (next: { scope?: string; lensKey?: string; measure?: Measure }) => {
       // The full canonical address, with `replace`, so Back leaves the page instead of undoing each tweak.
-      setParams(
-        viewSearch({
-          scope: next.scope ?? view.scope,
-          lens: { key: next.lensKey ?? view.lens.key },
-          measure: next.measure ?? view.measure,
-        }),
-        { replace: true },
-      )
+      filters.setKept({
+        scope: next.scope ?? view.scope,
+        lens: next.lensKey ?? view.lens.key,
+        measure: next.measure ?? view.measure,
+      })
     },
-    [setParams, view],
+    [filters, view],
   )
   const openSettings = (focus: 'threshold' | 'rate', opener: HTMLElement | null) => {
     openerRef.current = opener
@@ -71,7 +81,8 @@ export function Component() {
     )
   }
 
-  const emptyScope = plan.inScope.length === 0
+  const emptyScope = plan.scopeCount === 0
+  const noMatch = !emptyScope && plan.inScope.length === 0
   const setRate = () => openSettings('rate', settingsButton.current)
   return (
     <section className="space-y-6">
@@ -93,6 +104,12 @@ export function Component() {
       />
       <FallbackNotes notes={view.notes} />
       <Controls view={view} plan={plan} stocks={stocks} lists={lists} onChange={change} onSetRate={setRate} />
+      {emptyScope ? null : (
+        <div className="space-y-3">
+          <AddressNotes notes={filters.notes} />
+          <FilterToolbar filters={filters} countSuffix=" in scope" />
+        </div>
+      )}
 
       {emptyScope && view.list ? (
         <Card className="items-center gap-3 py-10 text-center">
@@ -110,6 +127,13 @@ export function Component() {
             </Link>
           </p>
         </Card>
+      ) : noMatch ? (
+        <NoMatches
+          onClearAll={() => {
+            filters.clearFilters(true)
+            document.getElementById(SEARCH_ID)?.focus()
+          }}
+        />
       ) : (
         <>
           <FlagSummary plan={plan} settings={settings} />

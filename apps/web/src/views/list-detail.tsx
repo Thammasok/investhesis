@@ -10,6 +10,7 @@ import { DeleteListDialog } from '@/features/lists/components/delete-list-dialog
 import { ListNameDialog } from '@/features/lists/components/list-name-dialog'
 import type { ListPageData } from '@/features/lists/lists-data'
 import { useMembership } from '@/features/lists/use-membership'
+import { SeeConcentration } from '@/features/concentration/components/see-concentration'
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
 import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
@@ -104,7 +105,7 @@ export function Component() {
       ) : (
         <>
           <AddressNotes notes={filters.notes} />
-          <FilterToolbar filters={filters} />
+          <FilterToolbar filters={filters} trailing={<SeeConcentration scope={list.id} filters={filters.state} />} />
           {filters.shown.length === 0 ? (
             <NoMatches
               onClearAll={() => {

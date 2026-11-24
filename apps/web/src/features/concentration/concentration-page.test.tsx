@@ -62,7 +62,7 @@ describe('concentration page', () => {
     await pick('Group by', 'Style')
     await userEvent.click(screen.getByRole('radio', { name: 'Value at cost' }))
 
-    expect(router.state.location.search).toBe('?scope=all&lens=style&measure=value')
+    await waitFor(() => expect(router.state.location.search).toBe('?scope=all&lens=style&measure=value'))
     expect(router.state.historyAction).toBe('REPLACE')
     expect(router.state.location.key).not.toBe(before)
   })
