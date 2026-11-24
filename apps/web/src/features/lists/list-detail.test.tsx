@@ -16,6 +16,9 @@ beforeEach(() => {
   vi.mocked(toast.error).mockClear()
 })
 
+/** The page header holds the total count; the result line under the toolbar repeats it, so scope to the header. */
+const pageHeader = () => screen.getByRole('heading', { level: 1 }).closest('header') as HTMLElement
+
 const aapl = makeStock({ ticker: 'AAPL', name: 'Apple Inc.', listIds: ['core'], gicsSector: 'Information Technology' })
 const msft = makeStock({ ticker: 'MSFT', name: 'Microsoft Corporation' })
 const pttep = makeStock({ ticker: 'PTTEP', name: 'บมจ. ปตท. สำรวจและผลิตปิโตรเลียม', market: 'TH', exchange: 'SET' })
@@ -34,7 +37,7 @@ describe('list detail: page', () => {
   it('TC-C-154: shows the name, the count and the shared table without a Lists column, with remove buttons', async () => {
     renderApp('/lists/core', detailApi())
     expect(await screen.findByRole('heading', { level: 1, name: 'Core holdings' })).toBeInTheDocument()
-    expect(screen.getByText('1 stock')).toBeInTheDocument()
+    expect(within(pageHeader()).getByText('1 stock')).toBeInTheDocument()
     const table = screen.getByRole('table')
     expect(within(table).queryByRole('columnheader', { name: 'Lists' })).not.toBeInTheDocument()
     expect(within(table).getByRole('link', { name: 'AAPL' })).toHaveAttribute('href', `/stocks/${aapl.id}`)
@@ -58,7 +61,8 @@ describe('list detail: page', () => {
   it('TC-C-154: 22 stocks are counted in the plural', async () => {
     const many = Array.from({ length: 22 }, (_, i) => makeStock({ ticker: `T${i}`, listIds: ['core'] }))
     renderApp('/lists/core', detailApi(many))
-    expect(await screen.findByText('22 stocks')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(within(pageHeader()).getByText('22 stocks')).toBeInTheDocument()
   })
 
   it('TC-C-154: an unknown id shows the not-found page with a link to /lists', async () => {
@@ -116,7 +120,8 @@ describe('list detail: add stock', () => {
     expect(api.callsTo('POST /lists/core/stocks')[0]?.body).toEqual({ stockId: pttep.id })
     // The toast is raised after the POST resolves, so it can land a tick after the request is logged.
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Added PTTEP to Core holdings'))
-    expect(await screen.findByText('2 stocks')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(within(pageHeader()).getByText('2 stocks')).toBeInTheDocument()
     expect(within(screen.getByRole('table')).getByRole('link', { name: 'PTTEP' })).toBeInTheDocument()
   })
 
@@ -206,7 +211,8 @@ describe('list detail: remove with Undo', () => {
 
     await waitFor(() => expect(api.callsTo('POST /lists/core/stocks')).toHaveLength(1))
     expect(api.callsTo('POST /lists/core/stocks')[0]?.body).toEqual({ stockId: aapl.id })
-    expect(await screen.findByText('1 stock')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(within(pageHeader()).getByText('1 stock')).toBeInTheDocument()
   })
 
   it('TC-C-156: ignoring the toast leaves the stock removed; a failed Undo shows an error; a 404 remove refreshes', async () => {

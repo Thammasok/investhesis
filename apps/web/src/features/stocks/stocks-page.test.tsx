@@ -11,6 +11,9 @@ import { useState } from 'react'
 import { StockTable } from './components/stock-table'
 import { DEFAULT_SORT, nextSort } from './sort-stocks'
 
+/** The page header holds the total count; the result line under the toolbar repeats it, so scope to the header. */
+const pageHeader = () => screen.getByRole('heading', { level: 1 }).closest('header') as HTMLElement
+
 const tickerOrder = () =>
   screen
     .getAllByRole('row')
@@ -138,7 +141,7 @@ describe('stocks page', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/stocks/s-MSFT'))
   })
 
-  it('TC-C-112: tab order is Import, Add stock, sort buttons, then each ticker link', async () => {
+  it('TC-C-112: tab order is Import, Add stock, search, Filters, sort buttons, then each ticker link', async () => {
     renderApp('/stocks', stocksApi())
     await screen.findByRole('table')
     const main = screen.getByRole('table').closest('section') as HTMLElement
@@ -147,19 +150,23 @@ describe('stocks page', () => {
       .map((l) => l.textContent)
     const buttons = within(main).getAllByRole('button')
     expect(stops).toEqual(['Import', 'Add stock', 'AAPL', 'MSFT', 'PTTEP'])
-    expect(buttons).toHaveLength(5)
-    const all = Array.from(main.querySelectorAll<HTMLElement>('a[href], button')).map((e) => e.getAttribute('aria-label') ?? e.textContent)
-    expect(all).toEqual(['Import', 'Add stock', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
+    expect(buttons).toHaveLength(6) // Filters and the five sort buttons
+    const all = Array.from(main.querySelectorAll<HTMLElement>('a[href], button, input[type="search"]')).map((e) =>
+      e instanceof HTMLInputElement ? e.getAttribute('aria-label') : (e.getAttribute('aria-label') ?? e.textContent),
+    )
+    expect(all).toEqual(['Import', 'Add stock', 'Search stocks', 'Filters', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
   })
 
   it('TC-C-113: shows the count text with singular and plural, and links in the header', async () => {
     const { unmount } = renderApp('/stocks', stocksApi([aapl]))
-    expect(await screen.findByText('1 stock')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(within(pageHeader()).getByText('1 stock')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Import' })).toHaveAttribute('href', '/import-export/import')
     expect(screen.getByRole('link', { name: 'Add stock' })).toHaveAttribute('href', '/stocks/new')
     unmount()
     renderApp('/stocks', stocksApi())
-    expect(await screen.findByText('3 stocks')).toBeInTheDocument()
+    await screen.findByRole('table')
+    expect(within(pageHeader()).getByText('3 stocks')).toBeInTheDocument()
   })
 
   it('TC-C-113: shows five skeleton rows while the first load is pending', async () => {

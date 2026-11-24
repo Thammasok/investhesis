@@ -77,7 +77,8 @@ export function readFilters(params: URLSearchParams): AddressView {
   return { state: { q, picks }, sort: { column, direction }, notes }
 }
 
-function orderedValues(filter: StockFilter, picked: ReadonlySet<string | null>): (string | null)[] {
+/** A filter's picked values in display order: vocabulary order (free text sorted), "Not set" (`null`) last. */
+export function orderedValues(filter: StockFilter, picked: ReadonlySet<string | null>): (string | null)[] {
   const values = [...picked].filter((v): v is string => v !== null)
   if (filter.vocabulary === 'fromData') values.sort((a, b) => collator.compare(a, b))
   else {

@@ -3,14 +3,18 @@ import { Link, Outlet, useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { useFilterState } from '@/features/stock-filters/use-filter-state'
+import { AddressNotes } from '@/features/stock-filters/address-notes'
+import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
+import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
+import { NoMatches } from '@/features/stock-filters/no-matches'
+import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 import { StockTable } from '@/features/stocks/components/stock-table'
 import { countLabel } from '@/features/stocks/format'
 import type { StocksPageData } from '@/features/stocks/stocks-data'
 
 export function Component() {
   const { stocks, lists } = useLoaderData() as StocksPageData
-  const { sort, toggleSort } = useFilterState()
+  const filters = useStockFilters(stocks)
 
   if (stocks.length === 0) {
     return (
@@ -62,7 +66,18 @@ export function Component() {
           </>
         }
       />
-      <StockTable stocks={stocks} lists={lists} sort={sort} onSort={toggleSort} />
+      <AddressNotes notes={filters.notes} />
+      <FilterToolbar filters={filters} />
+      {filters.shown.length === 0 ? (
+        <NoMatches
+          onClearAll={() => {
+            filters.clearFilters(true)
+            document.getElementById(SEARCH_ID)?.focus()
+          }}
+        />
+      ) : (
+        <StockTable stocks={filters.shown} lists={lists} sort={filters.sort} onSort={filters.toggleSort} />
+      )}
       <Outlet />
     </section>
   )

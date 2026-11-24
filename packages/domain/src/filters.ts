@@ -90,10 +90,7 @@ const valuesOf = (filter: StockFilter, stock: FilterableStock): readonly string[
  * Keeps the stocks that match the search and every active filter (OR within a filter, AND across),
  * in input order. Returns a new array; the input is not changed.
  */
-export function applyStockFilters(
-  stocks: readonly FilterableStock[],
-  state: FilterState,
-): FilterableStock[] {
+export function applyStockFilters<T extends FilterableStock>(stocks: readonly T[], state: FilterState): T[] {
   const q = lower(state.q.trim())
   const active: { filter: StockFilter; wanted: Set<string | null>; fold: boolean }[] = []
   for (const filter of STOCK_FILTERS) {

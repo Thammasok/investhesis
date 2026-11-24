@@ -10,14 +10,18 @@ import { DeleteListDialog } from '@/features/lists/components/delete-list-dialog
 import { ListNameDialog } from '@/features/lists/components/list-name-dialog'
 import type { ListPageData } from '@/features/lists/lists-data'
 import { useMembership } from '@/features/lists/use-membership'
-import { useFilterState } from '@/features/stock-filters/use-filter-state'
+import { AddressNotes } from '@/features/stock-filters/address-notes'
+import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
+import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
+import { NoMatches } from '@/features/stock-filters/no-matches'
+import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 import { StockTable } from '@/features/stocks/components/stock-table'
 import { countLabel } from '@/features/stocks/format'
 
 export function Component() {
   const { list, members, candidates } = useLoaderData() as ListPageData
   const membership = useMembership(list.name)
-  const { sort, toggleSort } = useFilterState()
+  const filters = useStockFilters(members)
   const [dialog, setDialog] = useState<'rename' | 'delete' | null>(null)
   const renameRef = useRef<HTMLButtonElement>(null)
   const moreRef = useRef<HTMLButtonElement>(null)
@@ -98,25 +102,38 @@ export function Component() {
           </div>
         </Card>
       ) : (
-        <StockTable
-          stocks={members}
-          sort={sort}
-          onSort={toggleSort}
-          showLists={false}
-          caption={`Stocks in ${list.name}`}
-          renderRowAction={(stock) => (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              aria-label={`Remove ${stock.ticker} from ${list.name}`}
-              disabled={membership.busy}
-              onClick={() => membership.remove(stock)}
-            >
-              <XIcon aria-hidden="true" />
-            </Button>
+        <>
+          <AddressNotes notes={filters.notes} />
+          <FilterToolbar filters={filters} />
+          {filters.shown.length === 0 ? (
+            <NoMatches
+              onClearAll={() => {
+                filters.clearFilters(true)
+                document.getElementById(SEARCH_ID)?.focus()
+              }}
+            />
+          ) : (
+            <StockTable
+              stocks={filters.shown}
+              sort={filters.sort}
+              onSort={filters.toggleSort}
+              showLists={false}
+              caption={`Stocks in ${list.name}`}
+              renderRowAction={(stock) => (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Remove ${stock.ticker} from ${list.name}`}
+                  disabled={membership.busy}
+                  onClick={() => membership.remove(stock)}
+                >
+                  <XIcon aria-hidden="true" />
+                </Button>
+              )}
+            />
           )}
-        />
+        </>
       )}
       <ListNameDialog
         mode="rename"

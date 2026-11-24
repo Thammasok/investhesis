@@ -1,8 +1,10 @@
-import type { FilterState } from '@investhesis/domain'
+import type { FilterKey, FilterState } from '@investhesis/domain'
 import { useCallback, useDeferredValue, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { nextSort, type SortColumn, type SortState } from '@/features/stocks/sort-stocks'
 import { filterSearch, readFilters } from './filter-address'
+
+type View = { state: FilterState; sort: SortState }
 
 /**
  * Search, filters and sort of a stocks table, kept in the address (ADR-003). Writes use `replace`, so
@@ -16,7 +18,7 @@ export function useFilterState() {
 
   /** Applies a change to the latest address, not to a render's copy, so quick successive changes both land. */
   const update = useCallback(
-    (change: (current: { state: FilterState; sort: SortState }) => { state: FilterState; sort: SortState }) =>
+    (change: (current: View) => View) =>
       setParams(
         (previous) => {
           const current = readFilters(previous)
@@ -28,11 +30,27 @@ export function useFilterState() {
     [setParams],
   )
 
-  const setState = useCallback((state: FilterState) => update((c) => ({ ...c, state })), [update])
+  const setQuery = useCallback((q: string) => update((c) => ({ ...c, state: { ...c.state, q } })), [update])
+  const setPicks = useCallback(
+    (key: FilterKey, picked: ReadonlySet<string | null> | null) =>
+      update((c) => {
+        const picks = new Map(c.state.picks)
+        if (picked && picked.size > 0) picks.set(key, picked)
+        else picks.delete(key)
+        return { ...c, state: { ...c.state, picks } }
+      }),
+    [update],
+  )
+  /** Clears every filter; the search stays unless `includingSearch`. */
+  const clearFilters = useCallback(
+    (includingSearch = false) =>
+      update((c) => ({ ...c, state: { q: includingSearch ? '' : c.state.q, picks: new Map() } })),
+    [update],
+  )
   const toggleSort = useCallback(
     (column: SortColumn) => update((c) => ({ ...c, sort: nextSort(c.sort, column) })),
     [update],
   )
 
-  return { state: view.state, deferredState, sort: view.sort, notes: view.notes, setState, toggleSort }
+  return { state: view.state, deferredState, sort: view.sort, notes: view.notes, setQuery, setPicks, clearFilters, toggleSort }
 }
