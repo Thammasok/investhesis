@@ -299,7 +299,7 @@ held stock with a rate and asserts that no share, cost or rate value appears
   are disabled with a reason when no row is shown.
 - **File names** ([FR-011](requirements.md#fr-011)): `exportFileName(base, now)` uses the local
   date (`YYYY-MM-DD`); a list name has `/ \ : * ? " < > |` and control characters replaced by `-`,
-  runs of `-` collapsed, trimmed, cut to 60 code points, falling back to `list` when nothing is left.
+  runs of `-` collapsed, spaces and `-` trimmed from both ends, cut to 60 code points, falling back to `list` when nothing is left.
 - **Backup card** on `/import-export`: two buttons, **Download JSON** and **Download CSV**, calling
   `api.download('/exports/backup.json' | '.csv')` then `saveFile(blob, local-date name)`, with a
   spinner (`motion-reduce:animate-none`) and an error message on failure; a short line says what
