@@ -146,7 +146,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <>
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="break-words tabular-nums [overflow-wrap:anywhere]">{value}</dd>
+      <dd className="tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </>
   )
 }
