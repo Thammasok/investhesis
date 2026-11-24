@@ -6,7 +6,8 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
-| Search, Filter and Export | v1.0 | [dev-plan.md](features/search-filter-export/v1.0/dev-plan.md) | done | All 11 tasks approved; awaiting release tag | 2026-11-24 |
+| Thesis Log | v1.0 | [dev-plan.md](features/thesis-log/v1.0/dev-plan.md) | todo | Planning approved (requirements, design, ux, dev plan) | 2026-11-24 |
+| Search, Filter and Export | v1.0 | [dev-plan.md](features/search-filter-export/v1.0/dev-plan.md) | done | Released as v0.5.0 | 2026-11-24 |
 | Holdings and Concentration | v1.0 | [dev-plan.md](features/holdings-concentration/v1.0/dev-plan.md) | done | Released as v0.4.0 | 2026-11-24 |
 | User Auth (admin-created accounts, no sign-up) | v1.2 | [dev-plan.md](features/user-auth/v1.2/dev-plan.md) | done | Released as v0.3.0 | 2026-11-23 |
 | User Auth (open sign-up) | v1.1 | [dev-plan.md](features/user-auth/v1.1/dev-plan.md) | superseded | Replaced by v1.2 before any task started | 2026-11-23 |
