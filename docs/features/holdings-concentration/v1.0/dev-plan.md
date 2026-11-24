@@ -1,6 +1,6 @@
 ---
 version: 1.0
-status: active
+status: done
 date: 2026-11-23
 requires: design.md
 ux-design: ux-design.md
