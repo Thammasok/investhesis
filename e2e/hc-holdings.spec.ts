@@ -214,6 +214,8 @@ test.describe('holdings in the stock UI', () => {
 
     // Act: sort by Held
     await page.getByRole('button', { name: 'Sort by Held' }).click()
+    // The sort is in the address, so the rows follow the router a moment later.
+    await expect(page.getByRole('columnheader', { name: /Held/ })).toHaveAttribute('aria-sort', 'descending')
 
     // Assert: held with larger shares first, AAPL (held, no shares), then not held
     const tickers = async () => (await page.locator('tbody tr td:first-child').allTextContents()).map((t) => t.trim())
