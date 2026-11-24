@@ -98,6 +98,36 @@ describe('import of a file written by the export', () => {
     expect(held.rows[0].n).toBe(0)
   })
 
+  it('TC-A-505 an export imported into an empty account gives the same stocks, with no holding and no list', async () => {
+    const source = await t.appFor(newUserId())
+    const fresh = await t.appFor(newUserId())
+    const lenses = {
+      valueChain: 'Chips', valueChainPosition: 'Upstream', size: 'Mega', style: 'Growth', economicCycle: 'Cyclical',
+      lynchType: 'Fast Grower', lifeCycle: 'Growth', customers: ['B2B', 'B2C'], revenueTypes: ['Product sale'],
+      moat: 'Network effect', themes: ['AI', 'GPU'], volatility: 'High',
+    }
+    await api(source, 'POST', '/stocks', { ticker: 'NVDA', market: 'US', exchange: 'NASDAQ', name: 'NVIDIA, "Corp"', indexMembership: ['S&P 500', 'Nasdaq-100'], gicsSector: 'Information Technology', ...lenses, holding: { shares: '10', averageCost: '100' } })
+    await api(source, 'POST', '/stocks', { ticker: 'PTTEP', market: 'TH', exchange: 'SET', name: 'บริษัท ปตท. สำรวจ', indexMembership: ['SET50'], gicsSector: 'Energy', setIndustryGroup: 'Resources', ...lenses, valueChain: 'Oil and gas' })
+    const core = await api(source, 'POST', '/lists', { name: 'Core' })
+    const stocksOf = async (a: FastifyInstance) => ((await api(a, 'GET', '/stocks')) as { items: Json[] }).items
+    await api(source, 'POST', `/lists/${core['id']}/stocks`, { stockId: (await stocksOf(source))[0]?.['id'] })
+
+    const csv = (await source.inject({ method: 'GET', url: '/exports/backup.csv' })).payload
+    const res = await preview(fresh, csv)
+    expect(res.json()).toMatchObject({ headerWarnings: [], counts: { new: 2, duplicate: 0, error: 0 } })
+    expect((await confirm(fresh, csv, { newListName: 'Imported' })).statusCode).toBeLessThan(300)
+
+    const keep = ['ticker', 'market', 'exchange', 'name', 'indexMembership', 'gicsSector', 'setIndustryGroup', 'valueChain', 'valueChainPosition', 'size', 'style', 'economicCycle', 'lynchType', 'lifeCycle', 'customers', 'revenueTypes', 'moat', 'themes', 'volatility']
+    const pick = (s: Json) => Object.fromEntries(keep.map((k) => [k, s[k]]))
+    const byTicker = (xs: Json[]) => Object.fromEntries(xs.map((s) => [s['ticker'] as string, s]))
+    const before = byTicker(await stocksOf(source))
+    const after = byTicker(await stocksOf(fresh))
+    expect(Object.keys(after).sort()).toEqual(['NVDA', 'PTTEP'])
+    for (const ticker of Object.keys(before)) expect(pick(after[ticker] as Json)).toEqual(pick(before[ticker] as Json))
+    expect(Object.values(after).every((s) => s['holding'] === null)).toBe(true)
+    expect(((await api(fresh, 'GET', '/lists')) as { items: Json[] }).items.map((l) => l['name'])).toEqual(['Imported'])
+  })
+
   it('TC-U-563 confirm does not apply holdings or lists from the file', async () => {
     const user = newUserId()
     const a = await t.appFor(user)

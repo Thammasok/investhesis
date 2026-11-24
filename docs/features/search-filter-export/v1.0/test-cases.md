@@ -191,10 +191,10 @@ in section 9.
 
 ### TC-A-508
 - **Level** API · **P2** · EG · ADR-005
-- **Preconditions** U with 3 stocks and a list; the exports repository seam runs a hook between the stocks read and the memberships read that inserts a 4th stock with a membership (committed by another connection).
+- **Preconditions** U with 3 stocks and a list; a hook runs between the stocks read and the memberships read and commits a new stock with a membership on another connection.
 - **Input** `GET /exports/backup.json`.
 - **Expected** every id in `lists[].stockIds` exists in `stocks` (snapshot consistent: either both or neither of the new rows appear).
-- **Mock** DB, SeedRepo, repository seam **(proposed: wrap `listMembershipsForUser` in the test)**.
+- **Mock** DB, SeedRepo, and `vi.mock` of `lists.repository.ts` in the test file (no seam in product code). Mutation-checked: under `read committed` the test fails.
 
 ### TC-A-509
 - **Level** API · **P1** · EG · NFR-004
@@ -265,7 +265,7 @@ in section 9.
 - **Level** Component · **P1** · UC · FR-006, UC-003
 - **Preconditions** memory router at `/stocks?q=ptt&market=TH&sort=name&dir=desc`.
 - **Input** click a stock row, then `router.navigate(-1)`.
-- **Expected** same rows and order, search box shows `ptt`, badges `Search: ptt`, `Market: TH`, no API request on the way back **(proposed: Back to a loader route does not revalidate, as the concentration page)**.
+- **Expected** same rows and order, search box shows `ptt`, badges `Search: ptt`, `Market: TH`. Going Back to `/stocks` is a path change, so the data is read again (design: re-read on a form submit or a path change); only a change to the query string sends nothing.
 - **Mock** StubApi.
 
 ### TC-C-504
@@ -321,7 +321,7 @@ in section 9.
 - **Level** Component · **P1** · EP · NFR-006
 - **Preconditions** 2 filters active, search `ptt`.
 - **Input** query by role.
-- **Expected** textbox `Search stocks`; button `Filters, 2 active` with `aria-haspopup="dialog"`, `aria-expanded` follows the sheet; buttons `Remove filter Market: TH`, `Remove filter Economic cycle: Cyclical, Not set`, `Remove search: ptt` **(proposed name)**; checkbox `Cyclical, 9 stocks`; dialog named `Filters`; each section is a `group` named by its legend; the no-match heading is level 2.
+- **Expected** textbox `Search stocks`; button `Filters 2 active` with `aria-haspopup="dialog"`, `aria-expanded` follows the sheet; buttons `Remove filter Market: TH`, `Remove filter Economic cycle: Cyclical, Not set`, `Remove search: ptt` **(proposed name)**; checkbox `Cyclical, 9 stocks`; dialog named `Filters`; each section is a `group` named by its legend; the no-match heading is level 2.
 - **Mock** StubApi.
 
 ### TC-C-512
@@ -646,18 +646,24 @@ All E2E cases use a fresh admin-created user per test (`confirmedUser`) and SF-A
 
 Every FR-001..FR-017 and NFR-001..NFR-008 has at least one case.
 
-## 9. Assumptions and open points (all marked **(proposed)** above)
+## 9. Assumptions and how they ended
 
-1. **Semicolon inside a multi-value cell** (`a;b` as one theme) is exported as `a;b` and splits on re-import. The documents accept this; the import already splits on `;`. Not tested for equality.
-2. **List order with the en collator** (`core` before `Watching`): the design says "by name"; TC-A-502 fixes case-insensitive order.
-3. **IME composition** (TC-C-506): ux-design is silent; proposed that the search box ignores in-progress composition as `TagInput` does.
-4. **Back revalidation** (TC-C-503): proposed that returning to a list or stocks page does not re-request, like the concentration page.
-5. **Remove-search accessible name** (TC-C-511) is not specified; proposed `Remove search: <text>`.
-6. **Dropped parts are cleaned on the first user change** (TC-C-518, TC-E-505): the design says only "not rewritten".
-7. **Singular wording** (`1 stock`, `1 row`) and the See concentration link with 0 shown stocks (TC-C-522, 526).
-8. **Export on an account with no stocks** (TC-E-514): the page shows its empty card and no toolbar, so only the backup card exports.
-9. **Touch target size** (TC-E-521): 24 px is the WCAG 2.2 AA minimum; not in the requirements.
-10. **Repository seam for the snapshot test** (TC-A-508): the test wraps one repository function; if the owner prefers no seam, replace it with a two-connection test.
+Each was marked **(proposed)** in the cases above. Outcome after implementation (T-011):
+
+1. **Semicolon inside a multi-value cell** (`a;b` as one theme) is exported as `a;b` and splits on re-import; kept, not tested for equality.
+2. **List order**: lists are ordered by `lower(name)`, then name, by the database; `core` comes before `Watching` (TC-A-502).
+3. **IME composition** (TC-C-506): the search box filters on what is committed to the box; the Thai test types the committed text. Not specially handled.
+4. **Back revalidation** (TC-C-503): *changed.* Going Back to a table is a path change, so it re-reads; only a query change does not (TC-C-501, TC-E-507).
+5. **Remove-search accessible name** (TC-C-511): `Remove search: <text>`, as proposed.
+6. **Dropped parts are cleaned on the first user change** (TC-C-518, TC-E-505): confirmed.
+7. **Singular wording** (`1 stock`, `1 row`): confirmed. The See concentration link is shown with no stock in view (the concentration page has its own no-match card).
+8. **Export with no stocks** (TC-E-514): the page shows its empty card and no toolbar; only the backup card exports.
+9. **Touch targets** (TC-E-521): the 24 px minimum is checked; the two link buttons and the badge remove buttons were enlarged to meet it.
+10. **Snapshot test** (TC-A-508): done with a module mock in the test, no product seam.
+
+Findings the E2E specs raised and the web tasks fixed (listed in `test-report.md`): the Filters button's accessible name,
+the sheet checkbox border, the badge remove focus ring, the import preview's scroll region, and the backup button losing
+keyboard focus while busy. The checkbox in the other forms (`border-input`, 1.2:1) is not part of this slice and is not changed.
 
 ## 10. Coverage matrix
 

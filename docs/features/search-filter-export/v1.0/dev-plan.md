@@ -529,7 +529,7 @@ unit:
     scenario: picking in the sheet applies at once
     given: the sheet open on /stocks
     when: tick Market TH then Economic cycle Cyclical
-    then: table and sheet description show the filtered count; Filters button reads "Filters, 2 active"; Show N stocks closes and focus returns to Filters
+    then: table and sheet description show the filtered count; Filters button reads "Filters 2 active"; Show N stocks closes and focus returns to Filters
     test_data:
       input: { market: ["TH"], economicCycle: ["Cyclical"] }
       expected: { activeFilters: 2 }

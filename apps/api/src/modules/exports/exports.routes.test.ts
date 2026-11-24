@@ -184,6 +184,20 @@ describe('backup export (other cases)', () => {
     expect(text.split('\r\n').filter(Boolean)).toHaveLength(3)
   })
 
+  it('TC-A-513 declares both backup routes, the BackupV1 body and the ignored-columns field in the OpenAPI document', async () => {
+    const doc = (await app.inject({ method: 'GET', url: '/openapi.json' })).json() as Json
+    for (const path of ['/exports/backup.json', '/exports/backup.csv']) {
+      const op = doc['paths'][path]['get']
+      expect(op['security']).toEqual([{ bearerAuth: [] }])
+      expect(Object.keys(op['responses'])).toEqual(expect.arrayContaining(['200', '401', '503']))
+    }
+    const body = doc['paths']['/exports/backup.json']['get']['responses']['200']['content']['application/json']['schema']
+    expect(Object.keys(body['properties']).sort()).toEqual(['exportedAt', 'format', 'formatVersion', 'lists', 'settings', 'stocks'])
+    expect(doc['paths']['/exports/backup.csv']['get']['produces'] ?? Object.keys(doc['paths']['/exports/backup.csv']['get']['responses']['200']['content'] ?? {})).toEqual(expect.arrayContaining(['text/csv']))
+    const preview = doc['paths']['/imports/preview']['post']['responses']['200']['content']['application/json']['schema']
+    expect(preview['properties']['ignoredColumns']).toMatchObject({ type: 'array', items: { type: 'string' } })
+  })
+
   it('TC-A-502 lists are ordered by name and membership by the time it was added', async () => {
     const a = await t.appFor(newUserId())
     const s1 = await post(a, '/stocks', stock('M1'))

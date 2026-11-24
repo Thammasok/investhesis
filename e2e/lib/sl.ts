@@ -51,6 +51,11 @@ export async function apiAs(user: { email: string; password?: string }, origin =
     list: (name: string) => must<SavedList>('POST', '/lists', { name }),
     lists: async () => (await must<{ items: SavedList[] }>('GET', '/lists')).items,
     addToList: (listId: string, stockId: string) => must('POST', `/lists/${listId}/stocks`, { stockId }),
+    /** A full backup as the API sends it, with the headers (no parsing, so a test can check the bytes). */
+    backup: async (kind: 'json' | 'csv', query = '') => {
+      const res = await fetch(`${origin}/exports/backup.${kind}${query}`, { headers: { authorization: `Bearer ${session.access_token}` } })
+      return { status: res.status, headers: res.headers, text: await res.text() }
+    },
   }
 }
 export type Api = Awaited<ReturnType<typeof apiAs>>
