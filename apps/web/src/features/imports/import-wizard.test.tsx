@@ -92,7 +92,7 @@ describe('import preview: ignored columns', () => {
     await screen.findByRole('heading', { level: 2, name: 'Review' })
   }
 
-  it('TC-U-662 names the ignored columns once, in a status note', async () => {
+  it('TC-U-662 and TC-C-530 names the ignored columns once, in a status note', async () => {
     await reviewWith(['lists', 'held'])
     const note = screen.getByText(/Lists and holdings columns are not imported/).closest('[data-slot="alert"]') as HTMLElement
     expect(note).toHaveAttribute('role', 'status')
@@ -101,7 +101,14 @@ describe('import preview: ignored columns', () => {
     expect(screen.getByText('held')).toHaveClass('font-mono')
   })
 
-  it('TC-U-663 shows no note for a template file', async () => {
+  it('TC-C-530 lists all five export-only columns by name', async () => {
+    await reviewWith(['lists', 'held', 'shares', 'average_cost', 'cost_currency'])
+    expect(screen.getByText(/Lists and holdings columns are not imported/).closest('[data-slot="alert"]')).toHaveTextContent(
+      'Lists and holdings columns are not imported: lists, held, shares, average_cost, cost_currency.',
+    )
+  })
+
+  it('TC-U-663 and TC-C-530 shows no note for a template file', async () => {
     await reviewWith([])
     expect(screen.queryByText(/Lists and holdings columns are not imported/)).not.toBeInTheDocument()
   })

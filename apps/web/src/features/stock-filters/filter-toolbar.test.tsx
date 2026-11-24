@@ -81,11 +81,11 @@ describe('filter sheet', () => {
     await waitFor(() => expect(router.state.location.search).toBe('?market=TH&economicCycle=Cyclical'))
     await waitFor(() => expect(within(dialog).getByText('1 of 42 stocks')).toBeInTheDocument())
     expect(within(dialog).getByRole('button', { name: 'Show 1 stock' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Filters, 2 active', hidden: true })).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(screen.getByRole('button', { name: 'Filters 2 active', hidden: true })).toHaveAttribute('aria-haspopup', 'dialog')
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Show 1 stock' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters, 2 active' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters 2 active' })).toHaveFocus())
     expect(tickers()).toEqual(['PTT'])
   })
 
@@ -93,7 +93,7 @@ describe('filter sheet', () => {
     renderApp('/stocks?themes=ai', stocksApi([makeStock({ ticker: 'AI1', themes: ['AI'] }), ...fortyTwo()]))
     await screen.findByRole('table')
     await screen.findByRole('table')
-    await userEvent.click(screen.getByRole('button', { name: 'Filters, 1 active' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Filters 1 active' }))
     const dialog = await screen.findByRole('dialog', { name: 'Filters' })
     const triggers = within(dialog).getAllByRole('button').filter((b) => b.hasAttribute('aria-expanded'))
     expect(triggers.map((b) => b.textContent?.replace(/\(\d+\)/, '').trim())).toEqual([
@@ -105,7 +105,7 @@ describe('filter sheet', () => {
     expect(open).toEqual(['Market', 'Held', 'Themes'])
   })
 
-  it('TC-U-609 puts Not set last in italics, keeps zero counts pickable and None apart from Not set', async () => {
+  it('TC-U-609 and TC-C-505 puts Not set last in italics, keeps zero counts pickable and None apart from Not set', async () => {
     const items = [
       makeStock({ ticker: 'A', valueChainPosition: 'None' }),
       makeStock({ ticker: 'B', valueChainPosition: null }),
@@ -133,7 +133,7 @@ describe('filter sheet', () => {
     await waitFor(() => expect(tickers()).toEqual(['B']))
   })
 
-  it('TC-U-610 a section with more than 8 options has a Find box; picked options stay visible', async () => {
+  it('TC-U-610 and TC-C-508 a section with more than 8 options has a Find box; picked options stay visible', async () => {
     const sectors = ['Energy', 'Financials', 'Health Care', 'Industrials', 'Materials', 'Utilities', 'Real Estate', 'Consumer Staples', 'Consumer Discretionary']
     const items = sectors.map((gicsSector, i) => makeStock({ ticker: `G${i}`, gicsSector }))
     renderApp('/stocks', stocksApi(items))
@@ -166,10 +166,10 @@ describe('filter sheet', () => {
     await waitFor(() => expect(within(dialog).getByRole('checkbox', { name: /^TH, / })).not.toBeChecked())
   })
 
-  it('TC-U-611 Clear all in the sheet clears the filters, keeps the search and stays open', async () => {
+  it('TC-U-611 and TC-C-514 Clear all in the sheet clears the filters, keeps the search and stays open', async () => {
     const { router } = renderApp('/stocks?q=ptt&market=TH', stocksApi(fortyTwo()))
     await screen.findByRole('table')
-    await userEvent.click(screen.getByRole('button', { name: 'Filters, 1 active' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Filters 1 active' }))
     const dialog = await screen.findByRole('dialog')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Clear all' }))
     await waitFor(() => expect(router.state.location.search).toBe('?q=ptt'))
@@ -177,7 +177,7 @@ describe('filter sheet', () => {
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Clear all' })).toBeDisabled())
   })
 
-  it('TC-U-612 works from the keyboard: opens, traps focus, toggles with Space and closes with Esc back to Filters', async () => {
+  it('TC-U-612 and TC-C-510 works from the keyboard: opens, traps focus, toggles with Space and closes with Esc back to Filters', async () => {
     const { router } = renderApp('/stocks', stocksApi(fortyTwo()))
     await screen.findByRole('table')
     const filtersButton = screen.getByRole('button', { name: 'Filters' })
@@ -191,12 +191,12 @@ describe('filter sheet', () => {
     await waitFor(() => expect(router.state.location.search).toBe('?market=US'))
     await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters, 1 active' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filters 1 active' })).toHaveFocus())
   })
 })
 
 describe('active filters and the result line', () => {
-  it('TC-U-602 removes a badge and moves focus on; Clear all clears everything and focuses the search', async () => {
+  it('TC-U-602 and TC-C-513 removes a badge and moves focus on; Clear all clears everything and focuses the search', async () => {
     const { router } = renderApp('/stocks?q=ptt&market=TH&economicCycle=Cyclical&economicCycle=', stocksApi(fortyTwo()))
     await screen.findByRole('table')
     expect(screen.getByText('Economic cycle: Cyclical, Not set')).toBeInTheDocument()
@@ -222,7 +222,7 @@ describe('active filters and the result line', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument())
   })
 
-  it('TC-U-603 tells no match from no stocks', async () => {
+  it('TC-U-603 and TC-C-515 tells no match from no stocks', async () => {
     const { unmount } = renderApp('/stocks?q=zzz', stocksApi(fortyTwo()))
     expect(await screen.findByRole('heading', { level: 2, name: 'No stocks match' })).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
@@ -248,7 +248,7 @@ describe('active filters and the result line', () => {
 })
 
 describe('list page', () => {
-  it('TC-U-604 filters the members only and counts options over them', async () => {
+  it('TC-U-604 and TC-C-516 filters the members only and counts options over them', async () => {
     const members = [
       makeStock({ ticker: 'A', market: 'TH', exchange: 'SET', listIds: ['core'] }),
       makeStock({ ticker: 'B', market: 'TH', exchange: 'SET', listIds: ['core'] }),
@@ -259,13 +259,13 @@ describe('list page', () => {
     await screen.findByRole('table')
     expect(tickers()).toEqual(['A', 'B'])
     expect(status()).toHaveTextContent('2 of 3 stocks')
-    await userEvent.click(screen.getByRole('button', { name: 'Filters, 1 active' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Filters 1 active' }))
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('checkbox', { name: 'TH, 2 stocks' })).toBeChecked()
     expect(within(dialog).getByRole('checkbox', { name: 'US, 1 stock' })).toBeInTheDocument()
   })
 
-  it('TC-U-613 an empty list keeps its empty card with no toolbar', async () => {
+  it('TC-U-613 and TC-C-515 an empty list keeps its empty card with no toolbar', async () => {
     renderApp('/lists/core', new StubApi({ 'GET /stocks': { items: [makeStock({ ticker: 'A' })] }, 'GET /lists': { items: [makeList('core', 'Core', 0)] }, 'GET /lists/core': makeList('core', 'Core', 0) }))
     expect(await screen.findByText('This list is empty.')).toBeInTheDocument()
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument()
@@ -273,7 +273,7 @@ describe('list page', () => {
 })
 
 describe('no request, speed and layout', () => {
-  it('TC-U-614 typing, picking, removing and sorting send no API request', async () => {
+  it('TC-U-614 and TC-C-501 typing, picking, removing and sorting send no API request', async () => {
     const stub = stocksApi(fortyTwo())
     renderApp('/stocks', stub)
     await screen.findByRole('table')
@@ -287,7 +287,7 @@ describe('no request, speed and layout', () => {
     expect(reads(stub)).toBe(first)
   })
 
-  it('TC-U-615 a keystroke on 200 stocks updates the table in under 200 ms (median of 5)', () => {
+  it('TC-U-615 and TC-C-502 a keystroke on 200 stocks updates the table in under 200 ms (median of 5)', () => {
     const stocks = Array.from({ length: 200 }, (_, i) =>
       makeStock({ ticker: `T${String(i).padStart(3, '0')}`, name: `Company ${(i * 7919) % 200}`, market: i % 2 ? 'TH' : 'US', themes: [`theme${i % 7}`] }),
     )

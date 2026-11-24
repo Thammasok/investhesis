@@ -137,7 +137,7 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
           />
         ))}
         {anyActive ? (
-          <Button variant="link" size="sm" className="h-auto p-0" onClick={clearAll}>
+          <Button variant="link" size="sm" className="h-auto min-h-6 p-0" onClick={clearAll}>
             Clear all
           </Button>
         ) : null}
@@ -156,7 +156,7 @@ function ActiveBadge({ text, removeLabel, onRemove }: { text: string; removeLabe
         data-remove=""
         aria-label={removeLabel}
         onClick={onRemove}
-        className="rounded-sm p-0.5 outline-none hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="rounded-sm p-1 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
       >
         <XIcon className="size-3" aria-hidden="true" />
       </button>

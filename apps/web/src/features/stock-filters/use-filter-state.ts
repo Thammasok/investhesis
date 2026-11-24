@@ -38,7 +38,10 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
 
   /** Applies a change on top of the newest address, written or in flight, so quick successive changes all land. */
   const write = useCallback(
-    (change: (current: View, kept: Map<string, string>) => { view: View; kept: Map<string, string> }) => {
+    (
+      change: (current: View, kept: Map<string, string>) => { view: View; kept: Map<string, string> },
+      immediate = false,
+    ) => {
       const base = new URLSearchParams(inFlight.current.at(-1) ?? current)
       const read = readFilters(base, { sort: withSort })
       const kept = new Map(keep.flatMap((name) => (base.has(name) ? [[name, base.get(name) as string] as const] : [])))
@@ -49,11 +52,16 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
       ]
       const search = new URLSearchParams(pairs)
       inFlight.current.push(search.toString())
-      setParams(search, { replace: true })
+      // A click shows its result at once (a checkbox must flip when clicked); typing must not, or the box and
+      // the address would update inside one input event.
+      setParams(search, { replace: true, flushSync: immediate })
     },
     [current, keep, setParams, withSort],
   )
-  const update = useCallback((change: (current: View) => View) => write((c, kept) => ({ view: change(c), kept })), [write])
+  const update = useCallback(
+    (change: (current: View) => View, immediate = false) => write((c, kept) => ({ view: change(c), kept }), immediate),
+    [write],
+  )
 
   const setQuery = useCallback((q: string) => update((c) => ({ ...c, state: { ...c.state, q } })), [update])
   const setPicks = useCallback(
@@ -63,7 +71,7 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
         if (picked && picked.size > 0) picks.set(key, picked)
         else picks.delete(key)
         return { ...c, state: { ...c.state, picks } }
-      }),
+      }, true),
     [update],
   )
   /** Adds or removes one value of a filter on the latest address, so two quick clicks both count. */
@@ -77,17 +85,17 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
         if (next.size > 0) picks.set(key, next)
         else picks.delete(key)
         return { ...c, state: { ...c.state, picks } }
-      }),
+      }, true),
     [update],
   )
   /** Clears every filter; the search stays unless `includingSearch`. */
   const clearFilters = useCallback(
     (includingSearch = false) =>
-      update((c) => ({ ...c, state: { q: includingSearch ? '' : c.state.q, picks: new Map() } })),
+      update((c) => ({ ...c, state: { q: includingSearch ? '' : c.state.q, picks: new Map() } }), true),
     [update],
   )
   const toggleSort = useCallback(
-    (column: SortColumn) => update((c) => ({ ...c, sort: nextSort(c.sort, column) })),
+    (column: SortColumn) => update((c) => ({ ...c, sort: nextSort(c.sort, column) }), true),
     [update],
   )
 
@@ -98,7 +106,7 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
     notes: view.notes,
     /** Sets the kept parameters (scope, lens, measure) and leaves the filters as they are. */
     setKept: (next: Record<string, string>) =>
-      write((c, kept) => ({ view: c, kept: new Map([...kept, ...Object.entries(next)]) })),
+      write((c, kept) => ({ view: c, kept: new Map([...kept, ...Object.entries(next)]) }), true),
     setQuery,
     setPicks,
     togglePick,

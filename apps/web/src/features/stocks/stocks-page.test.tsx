@@ -152,7 +152,7 @@ describe('stocks page', () => {
     expect(stops).toEqual(['Import', 'Add stock', 'See concentration', 'AAPL', 'MSFT', 'PTTEP'])
     expect(buttons).toHaveLength(7) // Filters, Export and the five sort buttons
     const all = Array.from(main.querySelectorAll<HTMLElement>('a[href], button, input[type="search"]')).map((e) =>
-      e instanceof HTMLInputElement ? e.getAttribute('aria-label') : (e.getAttribute('aria-label') ?? e.textContent),
+      e instanceof HTMLInputElement ? e.getAttribute('aria-label') : (e.getAttribute('aria-label') ?? e.textContent?.trim()),
     )
     expect(all).toEqual(['Import', 'Add stock', 'Search stocks', 'Filters', 'Export', 'See concentration', 'Sort by Ticker', 'Sort by Name', 'Sort by Market', 'Sort by Sector', 'Sort by Held', 'AAPL', 'MSFT', 'PTTEP'])
   })

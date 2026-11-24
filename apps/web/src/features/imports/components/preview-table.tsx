@@ -86,7 +86,13 @@ export function PreviewTable({ fileName, rows }: { fileName: string; rows: reado
       {shown.length === 0 ? (
         <p className="rounded-lg border p-4 text-sm">{current.empty}</p>
       ) : (
-        <div className="max-h-[28rem] overflow-auto rounded-lg border">
+        <div
+          // A region that scrolls must be reachable and scrollable from the keyboard.
+          tabIndex={0}
+          role="region"
+          aria-label="Rows of the file"
+          className="max-h-[28rem] overflow-auto rounded-lg border focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+        >
           <table className="w-full caption-bottom text-sm">
             <caption className="sr-only">{`Rows in ${fileName}, showing ${current.shown}`}</caption>
             <TableHeader className="sticky top-0 z-10 bg-background">

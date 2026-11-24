@@ -59,7 +59,7 @@ describe('concentration with search and filters', () => {
     expect(status()).toHaveTextContent('6 of 10 stocks in scope')
   })
 
-  it('picking a filter keeps scope, lens and measure and regroups with no API request', async () => {
+  it('TC-C-501 picking a filter keeps scope, lens and measure and regroups with no API request', async () => {
     const { router, stub } = await open('/concentration?scope=all&lens=style&measure=count')
     const before = stub.calls.length
     await userEvent.click(screen.getByRole('button', { name: 'Filters' }))
@@ -111,13 +111,13 @@ describe('concentration with search and filters', () => {
     makeStock({ ticker: 'NVDA', gicsSector: 'Information Technology', holding: { shares: '1.0000', averageCost: '100.0000', costCurrency: 'USD' } }),
   ]
 
-  it('names a USD holding that cannot be valued while it is in the filtered set', async () => {
+  it('TC-C-525 names a USD holding that cannot be valued while it is in the filtered set', async () => {
     // No exchange rate is saved, so the USD holding is left out of the value shares and named in the note.
     await open('/concentration?scope=all&lens=gicsSector&measure=value', valued())
     expect(screen.getAllByText(/NVDA/).length).toBeGreaterThan(0)
   })
 
-  it('value shares and the left-out note are computed over the filtered stocks only', async () => {
+  it('TC-C-525 value shares and the left-out note are computed over the filtered stocks only', async () => {
     await open('/concentration?scope=all&lens=gicsSector&measure=value&market=TH', valued())
     await waitFor(() => expect(status()).toHaveTextContent('2 of 3 stocks in scope'))
     expect(screen.queryAllByText(/NVDA/)).toHaveLength(0)
@@ -134,7 +134,7 @@ describe('See concentration from the stocks pages', () => {
       'GET /lists/L1': lists[0],
     })
 
-  it('TC-U-621 carries the search and filters but not the sort, with the list as scope', async () => {
+  it('TC-U-621 and TC-C-526 carries the search and filters but not the sort, with the list as scope', async () => {
     const { router } = renderApp('/lists/L1?q=ptt&held=yes&sort=name', stocksApi())
     const link = await screen.findByRole('link', { name: 'See concentration' })
     expect(link).toHaveAttribute('href', '/concentration?scope=L1&lens=gicsSector&measure=count&q=ptt&held=yes')
@@ -143,7 +143,7 @@ describe('See concentration from the stocks pages', () => {
     expect(router.state.location.search).toBe('?scope=L1&lens=gicsSector&measure=count&q=ptt&held=yes')
   })
 
-  it('links /stocks to the all-stocks scope, bare when nothing is filtered', async () => {
+  it('TC-C-526 links /stocks to the all-stocks scope, bare when nothing is filtered', async () => {
     renderApp('/stocks', stocksApi())
     expect(await screen.findByRole('link', { name: 'See concentration' })).toHaveAttribute(
       'href',

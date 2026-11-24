@@ -71,6 +71,13 @@ describe('buildErrorCsv', () => {
     expect(csv).toContain('2,"Berkshire ""B"", Inc.","a\nb",ticker: required')
   })
 
+  it('TC-C-527 writes the same bytes through the shared quoting rule: a comma, a quote, a line break and an unescaped formula', () => {
+    const csv = buildErrorCsv([
+      { rowNumber: 2, cells: { name: 'a,b', note: 'say "hi"', text: 'x\ny', formula: '=1+1' }, errors: [{ path: 'ticker', message: 'required' }] },
+    ])
+    expect(csv).toBe('﻿row,name,note,text,formula,errors\r\n2,"a,b","say ""hi""","x\ny",=1+1,ticker: required\r\n')
+  })
+
   it('TC-U-115: takes the union of the rows\' columns in first-seen order, leaving gaps empty', () => {
     const csv = buildErrorCsv([
       { rowNumber: 2, cells: { ticker: 'A' }, errors: [] },

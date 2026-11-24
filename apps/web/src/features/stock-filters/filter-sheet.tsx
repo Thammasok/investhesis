@@ -91,6 +91,8 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
               <div key={option.value ?? '__not_set__'} className="flex items-center gap-2 py-1.5">
                 <Checkbox
                   id={id}
+                  aria-label={`${text}, ${countLabel(option.count, 'stock')}`}
+                  className="border-muted-foreground"
                   checked={picked.has(option.value)}
                   onCheckedChange={() => onToggle(option.value)}
                 />
@@ -102,7 +104,6 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
                   >
                     {option.count}
                   </span>
-                  <span className="sr-only">, {countLabel(option.count, 'stock')}</span>
                 </Label>
               </div>
             )
@@ -123,16 +124,13 @@ export function FilterSheet({ filters, countText }: { filters: StockFilters; cou
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="flex-1 sm:flex-none"
-          aria-label={active > 0 ? `Filters, ${active} active` : 'Filters'}
-        >
+        <Button variant="outline" className="flex-1 sm:flex-none">
           <ListFilterIcon aria-hidden="true" />
-          <span aria-hidden={active > 0 ? 'true' : undefined}>Filters</span>
+          Filters{' '}
           {active > 0 ? (
-            <Badge variant="secondary" aria-hidden="true" className="tabular-nums">
-              {active}
+            <Badge variant="secondary" className="tabular-nums">
+              {active}{' '}
+              <span className="sr-only">active</span>
             </Badge>
           ) : null}
         </Button>

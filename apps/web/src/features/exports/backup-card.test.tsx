@@ -29,7 +29,7 @@ const open = async (stub: StubApi) => {
 }
 
 describe('backup card', () => {
-  it('TC-U-660 downloads the JSON backup and saves it under the local date', async () => {
+  it('TC-U-660 and TC-C-524 downloads the JSON backup and saves it under the local date', async () => {
     let release: () => void = () => {}
     const gate = new Promise<void>((resolve) => (release = resolve))
     const stub = page({ 'DOWNLOAD /exports/backup.json': async () => { await gate; return file('investhesis-backup-2026-11-25.json') } })
@@ -39,16 +39,16 @@ describe('backup card', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Download JSON' }))
     const busy = screen.getByRole('button', { name: 'Download JSON' })
     expect(busy).toHaveAttribute('aria-busy', 'true')
-    expect(busy).toBeDisabled()
+    expect(busy).toHaveAttribute('aria-disabled', 'true')
     expect(screen.getByRole('button', { name: 'Download CSV' })).toBeEnabled()
     release()
     await waitFor(() => expect(saved).toEqual(['investhesis-backup-2026-11-24.json']))
     expect(screen.getByRole('button', { name: 'Download JSON' })).not.toHaveAttribute('aria-busy')
-    expect(screen.getByRole('button', { name: 'Download JSON' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Download JSON' })).not.toHaveAttribute('aria-disabled')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
-  it('TC-U-661 a failed backup shows an alert, keeps the other button usable and clears on the next click', async () => {
+  it('TC-U-661 and TC-C-524 a failed backup shows an alert, keeps the other button usable and clears on the next click', async () => {
     const stub = page({
       'DOWNLOAD /exports/backup.csv': () => { throw new ApiError(503, { code: 'db_unavailable' }) },
       'DOWNLOAD /exports/backup.json': file('x.json'),
@@ -66,7 +66,7 @@ describe('backup card', () => {
     await waitFor(() => expect(saved).toHaveLength(1))
   })
 
-  it('TC-U-664 the loading spinner respects reduced motion and the busy button keeps its name', async () => {
+  it('TC-U-664 and TC-C-524 the loading spinner respects reduced motion and the busy button keeps its name', async () => {
     let release: () => void = () => {}
     const gate = new Promise<void>((resolve) => (release = resolve))
     await open(page({ 'DOWNLOAD /exports/backup.csv': async () => { await gate; return file('x.csv') } }))
@@ -75,7 +75,7 @@ describe('backup card', () => {
     expect(button).toHaveTextContent('Preparing…')
     expect(button.querySelector('svg.animate-spin')).toHaveClass('motion-reduce:animate-none')
     release()
-    await waitFor(() => expect(button).toBeEnabled())
+    await waitFor(() => expect(button).not.toHaveAttribute('aria-disabled'))
   })
 
   it('TC-U-665 says what the files hold, that they include shares and costs, and points to the Stocks page', async () => {

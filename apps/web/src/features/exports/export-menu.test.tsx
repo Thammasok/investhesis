@@ -76,7 +76,7 @@ describe('export menu', () => {
     expect(lines.slice(1).map((l) => l.split(',')[0])).toEqual(['PTTEP', 'PTT', 'KBANK'])
   })
 
-  it('TC-U-642 copies the same rows tab-separated, no BOM, and confirms', async () => {
+  it('TC-U-642 and TC-C-523 copies the same rows tab-separated, no BOM, and confirms', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     setClipboard({ writeText })
     await openMenu('/stocks?market=TH&sort=ticker')
@@ -91,7 +91,7 @@ describe('export menu', () => {
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Copied 3 rows'))
   })
 
-  it('TC-U-643 says so when the clipboard is refused or missing, without a success toast', async () => {
+  it('TC-U-643 and TC-C-523 says so when the clipboard is refused or missing, without a success toast', async () => {
     const refusal = "Couldn't copy: your browser blocked the clipboard. Use Download CSV instead."
     setClipboard({ writeText: vi.fn().mockRejectedValue(new Error('NotAllowedError')) })
     const first = await openMenu('/stocks')
@@ -108,7 +108,7 @@ describe('export menu', () => {
     expect(toast.success).not.toHaveBeenCalled()
   })
 
-  it('TC-U-644 disables both exports with a reason when no stock is shown, but keeps the backup link', async () => {
+  it('TC-U-644 and TC-C-522 disables both exports with a reason when no stock is shown, but keeps the backup link', async () => {
     await openMenu('/stocks?q=zzz')
     expect(screen.getByText('No stocks to export')).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /Download CSV/ })).toHaveAttribute('aria-disabled', 'true')
@@ -118,7 +118,7 @@ describe('export menu', () => {
     expect(saveFile).not.toHaveBeenCalled()
   })
 
-  it('names the counts with the right number: 1 stock, 1 row', async () => {
+  it('TC-C-522 names the counts with the right number: 1 stock, 1 row', async () => {
     await openMenu('/stocks?q=nvda')
     expect(screen.getByRole('menuitem', { name: /Download CSV/ })).toHaveTextContent('(1 stock)')
     expect(screen.getByRole('menuitem', { name: /Copy as table/ })).toHaveTextContent('(1 row)')
@@ -175,7 +175,7 @@ describe('export rows', () => {
     expect(text.endsWith('\r\n')).toBe(true)
   })
 
-  it('a tab inside a cell is quoted in the copied table, a comma is not', () => {
+  it('TC-C-523 a tab inside a cell is quoted in the copied table, a comma is not', () => {
     const text = tableOfRows([makeStock({ ticker: 'T', name: 'a\tb, c' })], new Map())
     expect(text).toContain('"a\tb, c"')
   })

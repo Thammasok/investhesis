@@ -22,7 +22,7 @@ const api = () =>
 const reads = (stub: StubApi) => stub.calls.filter((c) => c.path !== '/me').length
 
 describe('sort in the address', () => {
-  it('TC-U-591: sorting writes sort and dir, reload restores it, the default leaves the address bare', async () => {
+  it('TC-U-591 and TC-C-517: sorting writes sort and dir, reload restores it, the default leaves the address bare', async () => {
     const stub = api()
     const { router } = renderApp('/stocks', stub)
     await screen.findByRole('table')
@@ -62,7 +62,7 @@ describe('sort in the address', () => {
     expect(before).not.toBe('REPLACE')
   })
 
-  it('TC-U-593: changing only the query sends no API request on /stocks or /lists/:id', async () => {
+  it('TC-U-593 and TC-C-501: changing only the query sends no API request on /stocks or /lists/:id', async () => {
     for (const path of ['/stocks', '/lists/core']) {
       const stub = api()
       const { router, unmount } = renderApp(path, stub)

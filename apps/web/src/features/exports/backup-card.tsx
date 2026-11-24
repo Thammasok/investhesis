@@ -21,6 +21,7 @@ export function BackupCard({ api }: { api: ApiClient }) {
   const [failed, setFailed] = useState(false)
 
   async function download(ext: 'json' | 'csv') {
+    if (busy === ext) return // aria-disabled, not disabled: a disabled button would drop the keyboard focus
     setBusy(ext)
     setFailed(false)
     try {
@@ -47,7 +48,7 @@ export function BackupCard({ api }: { api: ApiClient }) {
             <Button
               key={ext}
               variant={variant}
-              disabled={busy === ext}
+              aria-disabled={busy === ext ? 'true' : undefined}
               aria-busy={busy === ext ? 'true' : undefined}
               onClick={() => download(ext)}
             >
