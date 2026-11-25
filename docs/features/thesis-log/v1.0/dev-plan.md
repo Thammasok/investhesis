@@ -582,7 +582,7 @@ unit:
   ux-design.md (count, none, unknown). Covers FR-005, FR-007, NFR-007.
 - agent: react-vite-developer
 - depends_on: [T-006]
-- status: backlog
+- status: done
 - size: S
 ```
 
