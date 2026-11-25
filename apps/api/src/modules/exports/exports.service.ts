@@ -1,5 +1,7 @@
-import { BACKUP_FORMAT, EXPORT_COLUMNS, exportRow, toDelimited, type BackupV1 } from '@investhesis/domain'
+import { BACKUP_FORMAT, EXPORT_COLUMNS, exportRow, toDelimited, type BackupV2, type Thesis } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
+import { toThesis } from '../theses/theses.service.ts'
+import { listThesesForUser } from '../theses/theses.repository.ts'
 import { listLists, listMembershipsForUser } from '../lists/lists.repository.ts'
 import { getSettings } from '../settings/settings.service.ts'
 import { listOwnedStocks } from '../stocks/stocks.repository.ts'
@@ -11,7 +13,7 @@ const BOM = '﻿'
 const byMarketThenTicker = (a: StockView, b: StockView) =>
   a.market === b.market ? (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0) : a.market < b.market ? -1 : 1
 
-type Snapshot = { stocks: StockView[]; lists: BackupV1['lists']; settings: BackupV1['settings']; listNames: Map<string, string> }
+type Snapshot = { stocks: StockView[]; lists: BackupV2['lists']; settings: BackupV2['settings']; theses: Thesis[]; listNames: Map<string, string> }
 
 /**
  * Everything the user owns, read in one repeatable-read, read-only transaction so a write that lands
@@ -24,6 +26,7 @@ async function snapshot(db: Db, userId: string): Promise<Snapshot> {
       const lists = await listLists(tx, userId)
       const memberships = await listMembershipsForUser(tx, userId)
       const settings = await getSettings(tx, userId)
+      const theses = (await listThesesForUser(tx, userId)).map(toThesis)
       const stockIdsByList = new Map<string, string[]>()
       for (const m of memberships) {
         const ids = stockIdsByList.get(m.listId) ?? []
@@ -40,6 +43,7 @@ async function snapshot(db: Db, userId: string): Promise<Snapshot> {
           stockIds: stockIdsByList.get(l.id) ?? [],
         })),
         settings,
+        theses,
         listNames: new Map(lists.map((l) => [l.id, l.name])),
       }
     },
@@ -47,16 +51,18 @@ async function snapshot(db: Db, userId: string): Promise<Snapshot> {
   )
 }
 
-/** FR-016: the JSON backup. A stock carries no `listIds`; membership is stated once, on the list. */
-export async function buildBackup(db: Db, userId: string, now: Date): Promise<BackupV1> {
-  const { stocks, lists, settings } = await snapshot(db, userId)
+/** FR-016, thesis-log FR-010: the JSON backup (format version 2: version 1 plus the thesis entries). A stock carries no `listIds`; membership is stated once, on the list. */
+export async function buildBackup(db: Db, userId: string, now: Date): Promise<BackupV2> {
+  const { stocks, lists, settings, theses } = await snapshot(db, userId)
   return {
     format: BACKUP_FORMAT,
-    formatVersion: 1,
+    formatVersion: 2,
     exportedAt: now.toISOString(),
     stocks: stocks.map(({ listIds: _listIds, ...stock }) => stock),
     lists,
     settings,
+    // Spread: the schema's loose entry type has an index signature that the Thesis interface lacks.
+    theses: theses.map((e) => ({ ...e })),
   }
 }
 

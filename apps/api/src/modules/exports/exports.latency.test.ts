@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { BackupV1 } from '@investhesis/domain'
+import { BackupV2 } from '@investhesis/domain'
 import { uuidv7 } from '../../lib/ids.ts'
 import { buildTestApp, type TestApp } from '../../../test/db.ts'
 
@@ -42,7 +42,7 @@ describe('NFR-002 backup latency against local Supabase', () => {
 
     // Act: check the shape once, then time 20 requests per route after a warm-up
     const first = await t.app.inject({ method: 'GET', url: '/exports/backup.json' })
-    const backup = BackupV1.parse(first.json())
+    const backup = BackupV2.parse(first.json())
     expect(backup.stocks).toHaveLength(1000)
     expect(backup.lists).toHaveLength(20)
     expect(backup.lists[0]?.stockIds).toHaveLength(50)

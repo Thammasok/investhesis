@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
-import { BackupV1 } from '@investhesis/domain'
+import { BackupV2 } from '@investhesis/domain'
 import { buildTestApp, newUserId, type TestApp } from '../../../test/db.ts'
 import { seedList, seedMembership, seedStock } from '../../../test/seed.ts'
 
@@ -42,7 +42,7 @@ describe('backup snapshot', () => {
     }
     const res = await app.inject({ method: 'GET', url: '/exports/backup.json' })
     expect(res.statusCode).toBe(200)
-    const body = BackupV1.parse(res.json())
+    const body = BackupV2.parse(res.json())
     const stockIds = new Set(body.stocks.map((s) => s.id))
     expect(late).not.toBe('')
     for (const l of body.lists) for (const id of l.stockIds) expect(stockIds.has(id), `${id} is in a list but not in the stocks`).toBe(true)
@@ -50,7 +50,24 @@ describe('backup snapshot', () => {
     expect(body.lists[0]?.stockIds.sort()).toEqual([a, b].sort())
 
     // The next export sees it.
-    const next = BackupV1.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
+    const next = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
     expect(next.stocks.map((s) => s.ticker)).toContain('LATE')
+  })
+
+  it('TC-A-508 a thesis entry committed mid-export is in the next backup, not this one', async () => {
+    const user = newUserId()
+    const app = await t.appFor(user)
+    const stockId = await seedStock(t.handle, user, 'SNAP3')
+    midway.run = async () => {
+      midway.run = undefined
+      await t.handle.pool.query(
+        "insert into app.theses (user_id, stock_id, type, entry_date, note) values ($1, $2, 'buy', '2026-01-10', 'late entry')",
+        [user, stockId],
+      )
+    }
+    const body = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
+    expect(body.theses).toEqual([])
+    const next = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
+    expect(next.theses.map((e) => e.note)).toEqual(['late entry'])
   })
 })

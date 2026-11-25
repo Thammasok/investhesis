@@ -1,7 +1,7 @@
 import { parse } from 'csv-parse/sync'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { BackupV1, EXPORT_COLUMNS } from '@investhesis/domain'
+import { BackupV2, EXPORT_COLUMNS } from '@investhesis/domain'
 import { buildTestApp, newUserId, type TestApp } from '../../../test/db.ts'
 
 const NOW = new Date('2026-11-24T09:30:00.000Z')
@@ -52,14 +52,14 @@ describe('backup export (account with data)', () => {
     await post(app, '/settings', { concentrationThreshold: 35, usdThbRate: '34.045' }, 'PATCH')
   })
 
-  it('TC-U-540 and TC-A-500 answers the full JSON backup that parses with BackupV1', async () => {
+  it('TC-U-540 and TC-A-500 answers the full JSON backup that parses with BackupV2', async () => {
     const { res, body } = await json()
     expect(res.statusCode).toBe(200)
     expect(res.headers['content-type']).toContain('application/json')
     expect(res.headers['content-disposition']).toBe('attachment; filename="investhesis-backup-2026-11-24.json"')
-    expect(BackupV1.safeParse(body).success).toBe(true)
+    expect(BackupV2.safeParse(body).success).toBe(true)
     expect(body['format']).toBe('investhesis-backup')
-    expect(body['formatVersion']).toBe(1)
+    expect(body['formatVersion']).toBe(2)
     expect(body['exportedAt']).toBe(NOW.toISOString())
     expect(body['stocks'].map((s: Json) => s['ticker'])).toEqual(['PTT', 'AAPL']) // TH before US
     expect(body['stocks'][0]['holding']).toEqual({ shares: '1000.0000', averageCost: '34.5000', costCurrency: 'THB' })
@@ -72,7 +72,7 @@ describe('backup export (account with data)', () => {
 
   it('TC-A-501 carries no user id, no list ids on stocks and no unexpected key', async () => {
     const { res, body } = await json()
-    expect(Object.keys(body).sort()).toEqual(['exportedAt', 'format', 'formatVersion', 'lists', 'settings', 'stocks'])
+    expect(Object.keys(body).sort()).toEqual(['exportedAt', 'format', 'formatVersion', 'lists', 'settings', 'stocks', 'theses'])
     for (const s of body['stocks']) expect(s).not.toHaveProperty('listIds')
     for (const word of [u, 'userId', 'user_id', 'listIds']) expect(res.payload).not.toContain(word)
   })
@@ -118,7 +118,7 @@ describe('backup export (other cases)', () => {
     const empty = newUserId()
     const a = await t.appFor(empty)
     const { body } = await json(a)
-    expect(BackupV1.safeParse(body).success).toBe(true)
+    expect(BackupV2.safeParse(body).success).toBe(true)
     expect(body['stocks']).toEqual([])
     expect(body['lists']).toEqual([])
     expect(body['settings']).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
@@ -184,7 +184,7 @@ describe('backup export (other cases)', () => {
     expect(text.split('\r\n').filter(Boolean)).toHaveLength(3)
   })
 
-  it('TC-A-513 declares both backup routes, the BackupV1 body and the ignored-columns field in the OpenAPI document', async () => {
+  it('TC-A-513 declares both backup routes, the BackupV2 body and the ignored-columns field in the OpenAPI document', async () => {
     const doc = (await app.inject({ method: 'GET', url: '/openapi.json' })).json() as Json
     for (const path of ['/exports/backup.json', '/exports/backup.csv']) {
       const op = doc['paths'][path]['get']
@@ -192,7 +192,7 @@ describe('backup export (other cases)', () => {
       expect(Object.keys(op['responses'])).toEqual(expect.arrayContaining(['200', '401', '503']))
     }
     const body = doc['paths']['/exports/backup.json']['get']['responses']['200']['content']['application/json']['schema']
-    expect(Object.keys(body['properties']).sort()).toEqual(['exportedAt', 'format', 'formatVersion', 'lists', 'settings', 'stocks'])
+    expect(Object.keys(body['properties']).sort()).toEqual(['exportedAt', 'format', 'formatVersion', 'lists', 'settings', 'stocks', 'theses'])
     expect(doc['paths']['/exports/backup.csv']['get']['produces'] ?? Object.keys(doc['paths']['/exports/backup.csv']['get']['responses']['200']['content'] ?? {})).toEqual(expect.arrayContaining(['text/csv']))
     const preview = doc['paths']['/imports/preview']['post']['responses']['200']['content']['application/json']['schema']
     expect(preview['properties']['ignoredColumns']).toMatchObject({ type: 'array', items: { type: 'string' } })

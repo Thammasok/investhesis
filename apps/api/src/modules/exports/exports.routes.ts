@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
-import { BackupV1 } from '@investhesis/domain'
+import { BackupV2 } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
@@ -19,7 +19,7 @@ const ProblemOut = z.object({
 const attachment = (name: string) => `attachment; filename="${name}"`
 
 /**
- * The full backup of everything the caller owns, as JSON (the documented `BackupV1`) and as CSV (the
+ * The full backup of everything the caller owns, as JSON (the documented `BackupV2`) and as CSV (the
  * export columns, re-importable). Read-only; nothing in a body is logged (NFR-004).
  */
 export const exportsRoutes: FastifyPluginAsync<{ db: Db | undefined; now: () => Date }> = async (app, { db, now }) => {
@@ -31,7 +31,7 @@ export const exportsRoutes: FastifyPluginAsync<{ db: Db | undefined; now: () => 
 
   r.get(
     '/exports/backup.json',
-    { schema: { tags: ['exports'], response: { 200: BackupV1, 401: ProblemOut, 503: ProblemOut } } },
+    { schema: { tags: ['exports'], response: { 200: BackupV2, 401: ProblemOut, 503: ProblemOut } } },
     async (req, reply) => {
       const { userId } = requireIdentity(req)
       const at = now()
