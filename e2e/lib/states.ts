@@ -283,3 +283,117 @@ export async function enterHc(page: Page, state: HcState, ctx: HcCtx) {
   await state.run(page, ctx)
   await settled(page)
 }
+
+// ---- thesis log (T-009) ----------------------------------------------------------------------
+
+/** One user with NVDA (four entries, one of each type, one edited) and AAPL (no entries). */
+export type TlCtx = { user: TestUser; api: Api; nvda: { id: string }; aapl: { id: string } }
+
+export async function seedForTheses(): Promise<TlCtx> {
+  const user = await newUser('e2e-tl-a11y')
+  const api = await apiAs(user)
+  const nvda = await api.stock(us('NVDA', { name: 'NVIDIA Corporation', gicsSector: 'Information Technology' }))
+  const aapl = await api.stock(us('AAPL', { name: 'Apple Inc' }))
+  await api.addThesis(nvda.id, { type: 'buy', date: '2026-11-20', note: 'Capex keeps rising.\nMargins hold.', targetPrice: '180', invalidation: 'Gross margin below 65%.' })
+  await api.addThesis(nvda.id, { type: 'sell', date: '2026-09-01', note: 'Valuation stretched.' })
+  const update = await api.addThesis(nvda.id, { type: 'update', date: '2026-06-15', note: 'Quarter beat.' })
+  await api.patchThesis(nvda.id, update.id, { note: 'Quarter beat, guidance raised.' })
+  await api.addThesis(nvda.id, { type: 'review', date: '2025-12-31', note: 'Year-end review: thesis intact.' })
+  return { user, api, nvda, aapl }
+}
+
+export type TlState = {
+  name: string
+  /** A held request never settles, so the page cannot be waited on to be idle. */
+  noSettle?: boolean
+  run: (page: Page, ctx: TlCtx) => Promise<void>
+}
+
+const thesesUrl = (c: TlCtx) => `**/api/stocks/${c.nvda.id}/theses`
+const thesisDialog = (page: Page) => page.getByRole('dialog', { name: /thesis entry/ })
+
+export const TL_STATES: TlState[] = [
+  { name: 'section-filled', run: async (page, c) => open(`/stocks/${c.nvda.id}`)(page) },
+  { name: 'section-empty', run: async (page, c) => open(`/stocks/${c.aapl.id}`)(page) },
+  {
+    name: 'section-loading',
+    noSettle: true,
+    run: async (page, c) => {
+      await page.route(thesesUrl(c), () => {}) // never answered
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await expect(page.locator('[aria-busy="true"]')).toBeVisible()
+    },
+  },
+  {
+    name: 'section-load-error',
+    run: async (page, c) => {
+      await page.route(thesesUrl(c), (route) => route.fulfill({ status: 500, contentType: 'application/problem+json', body: JSON.stringify({ code: 'internal', status: 500, title: 'x', type: 'about:blank' }) }))
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await expect(page.getByRole('alert').filter({ hasText: "Couldn't load the thesis entries." })).toBeVisible()
+    },
+  },
+  {
+    name: 'add-dialog-clean',
+    run: async (page, c) => {
+      await page.goto(`/stocks/${c.aapl.id}`)
+      await page.getByRole('button', { name: 'Add first entry' }).click()
+      await expect(thesisDialog(page)).toBeVisible()
+    },
+  },
+  {
+    name: 'add-dialog-errors',
+    run: async (page, c) => {
+      await page.goto(`/stocks/${c.aapl.id}`)
+      await page.getByRole('button', { name: 'Add first entry' }).click()
+      await thesisDialog(page).getByRole('textbox', { name: /^Target price/ }).fill('1.23456')
+      await thesisDialog(page).getByRole('button', { name: 'Add entry' }).click()
+      await expect(thesisDialog(page).locator('[aria-invalid="true"]').first()).toBeVisible()
+    },
+  },
+  {
+    name: 'edit-dialog',
+    run: async (page, c) => {
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await page.getByRole('button', { name: /^Edit Buy entry of 20 Nov 2026/ }).click()
+      await expect(thesisDialog(page)).toBeVisible()
+    },
+  },
+  {
+    name: 'delete-confirm',
+    run: async (page, c) => {
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await page.getByRole('button', { name: /^Delete Sell entry of 1 Sep 2026/ }).click()
+      await expect(page.getByRole('alertdialog', { name: 'Delete this entry?' })).toBeVisible()
+    },
+  },
+  {
+    name: 'stock-delete-confirm',
+    run: async (page, c) => {
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await page.getByRole('button', { name: 'More actions' }).click()
+      await page.getByRole('menuitem', { name: 'Delete' }).click()
+      await expect(page.getByRole('alertdialog', { name: 'Delete NVDA?' })).toContainText('This also deletes its 4 thesis entries.')
+    },
+  },
+  // Last: it deletes an entry (a fresh one, so the states above keep their data) to show the Undo toast.
+  {
+    name: 'undo-toast-visible',
+    run: async (page, c) => {
+      const doomed = await c.api.addThesis(c.nvda.id, { type: 'review', date: '2024-01-02', note: 'Short-lived entry' })
+      await page.goto(`/stocks/${c.nvda.id}`)
+      await page.getByRole('button', { name: /^Delete Review entry of 2 Jan 2024/ }).click()
+      await page.getByRole('alertdialog', { name: 'Delete this entry?' }).getByRole('button', { name: 'Delete' }).click()
+      await expect(page.locator('[data-sonner-toast]').filter({ hasText: 'Entry deleted' })).toBeVisible()
+      void doomed
+    },
+  },
+]
+
+/** Signs the browser in as the seeded user and runs a state (routes of an earlier state are dropped first). */
+export async function enterTl(page: Page, state: TlState, ctx: TlCtx) {
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await openSignedIn(page, ctx.user, '/stocks')
+  await settled(page)
+  await state.run(page, ctx)
+  if (!state.noSettle) await settled(page)
+}

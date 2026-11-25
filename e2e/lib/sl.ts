@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test'
+import type { Thesis } from '../../packages/domain/src/index.ts'
 import { adminCreateUser, newEmail, openSignedIn, PASSWORD, signedIn } from './kit.ts'
 
 export * from './kit.ts'
@@ -51,10 +52,21 @@ export async function apiAs(user: { email: string; password?: string }, origin =
     list: (name: string) => must<SavedList>('POST', '/lists', { name }),
     lists: async () => (await must<{ items: SavedList[] }>('GET', '/lists')).items,
     addToList: (listId: string, stockId: string) => must('POST', `/lists/${listId}/stocks`, { stockId }),
+    /** Thesis log (thesis-log T-009): the entries of a stock, newest first, as the API sorts them. */
+    theses: async (stockId: string) => (await must<{ items: Thesis[] }>('GET', `/stocks/${stockId}/theses`)).items,
+    addThesis: (stockId: string, body: Seed) => must<Thesis>('POST', `/stocks/${stockId}/theses`, body),
+    patchThesis: (stockId: string, id: string, body: Seed) => must<Thesis>('PATCH', `/stocks/${stockId}/theses/${id}`, body),
+    deleteThesis: (stockId: string, id: string) => must<Thesis>('DELETE', `/stocks/${stockId}/theses/${id}`),
+    restoreThesis: (stockId: string, entry: Thesis) => must<Thesis>('POST', `/stocks/${stockId}/theses/restore`, { entry }),
     /** A full backup as the API sends it, with the headers (no parsing, so a test can check the bytes). */
     backup: async (kind: 'json' | 'csv', query = '') => {
       const res = await fetch(`${origin}/exports/backup.${kind}${query}`, { headers: { authorization: `Bearer ${session.access_token}` } })
       return { status: res.status, headers: res.headers, text: await res.text() }
+    },
+    /** The JSON backup, parsed (use `backup` for the raw bytes). */
+    backupJson: async () => {
+      const res = await fetch(`${origin}/exports/backup.json`, { headers: { authorization: `Bearer ${session.access_token}` } })
+      return (await res.json()) as { formatVersion: number; stocks: SavedStock[]; theses: Thesis[] }
     },
   }
 }
