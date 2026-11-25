@@ -19,6 +19,8 @@ import type { Stock } from '../types'
 
 type DeleteStockDialogProps = {
   stock: Stock
+  /** Entries of the stock's thesis log once loaded; `null` while loading or after a failed read. */
+  thesisCount: number | null
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Focus returns here when the dialog closes (the menu button that opened it). */
@@ -26,7 +28,7 @@ type DeleteStockDialogProps = {
 }
 
 /** Confirms deleting a stock; focus starts on Cancel. Success redirects to /stocks from the action. */
-export function DeleteStockDialog({ stock, open, onOpenChange, returnFocusTo }: DeleteStockDialogProps) {
+export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, returnFocusTo }: DeleteStockDialogProps) {
   const fetcher = useFetcher<DetailActionResult>()
   const submitted = useRef(false)
   const pending = fetcher.state !== 'idle'
@@ -54,7 +56,8 @@ export function DeleteStockDialog({ stock, open, onOpenChange, returnFocusTo }: 
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {stock.ticker}?</AlertDialogTitle>
           <AlertDialogDescription>
-            {lists > 0 ? `It will be removed from ${countLabel(lists, 'list')}. ` : ''}This can't be undone.
+            {lists > 0 ? `It will be removed from ${countLabel(lists, 'list')}. ` : ''}
+            {thesisSentence(thesisCount)}This can&apos;t be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         {failure ? (
@@ -77,4 +80,11 @@ export function DeleteStockDialog({ stock, open, onOpenChange, returnFocusTo }: 
       </AlertDialogContent>
     </AlertDialog>
   )
+}
+
+/** The thesis log goes with the stock: say so with the count when it is known, generically when it is not. */
+function thesisSentence(count: number | null): string {
+  if (count === null) return 'Any thesis entries for this stock are deleted too. '
+  if (count === 0) return ''
+  return `This also deletes its ${count} thesis ${count === 1 ? 'entry' : 'entries'}. `
 }

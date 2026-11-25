@@ -27,6 +27,7 @@ const nvda = makeStock({
 function detailApi(stock = nvda, listItems = lists) {
   return new StubApi({
     [`GET /stocks/${stock.id}`]: stock,
+    [`GET /stocks/${stock.id}/theses`]: { items: [] },
     'GET /lists': { items: listItems },
     'GET /stocks': { items: [stock] },
   })
