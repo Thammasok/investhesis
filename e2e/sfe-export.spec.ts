@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
-import { BackupV1, EXPORT_COLUMNS } from '../packages/domain/src/index.ts'
+import { BackupV2, EXPORT_COLUMNS } from '../packages/domain/src/index.ts'
 import { asRecords, dateIn, openAs, parseCsv, seedFilterDataset, SWING_NAME, tableTickers } from './lib/sfe.ts'
 import { apiAs, chooseTarget, h1, importButton, newUser, openSignedIn, pickFile, settled, summaryLine, toast } from './lib/sl.ts'
 
@@ -111,7 +111,7 @@ test.describe('export the shown rows', () => {
 })
 
 test.describe('the full backup', () => {
-  test('TC-E-513: both backups download under the local date, the JSON parses as BackupV1 and the CSV re-imports', async ({ page }) => {
+  test('TC-E-513: both backups download under the local date, the JSON parses as BackupV2 and the CSV re-imports', async ({ page }) => {
     const seed = await seedFilterDataset()
     await openAs(page, seed.user, '/import-export')
 
@@ -120,7 +120,7 @@ test.describe('the full backup', () => {
     expect(json.name).toBe(`investhesis-backup-${dateIn(ZONE)}.json`)
     expect(csv.name).toBe(`investhesis-backup-${dateIn(ZONE)}.csv`)
 
-    const backup = BackupV1.parse(JSON.parse(json.bytes.toString('utf8')))
+    const backup = BackupV2.parse(JSON.parse(json.bytes.toString('utf8')))
     expect(backup.stocks.map((s) => s.ticker)).toEqual(['ADVANC', 'CPALL', 'KBANK', 'PTT', 'PTTEP', 'PTTGC', 'AAPL', 'JNJ', 'KO', 'MSFT', 'NVDA', 'XOM']) // TH first, then US, by ticker
     expect(backup.lists.map((l) => l.name).sort()).toEqual(['Core', SWING_NAME].sort())
     const core = backup.lists.find((l) => l.name === 'Core')
@@ -141,7 +141,7 @@ test.describe('the full backup', () => {
     const json = await download(page, () => page.getByRole('button', { name: 'Download JSON' }).click())
     const csv = await download(page, () => page.getByRole('button', { name: 'Download CSV' }).click())
 
-    const backup = BackupV1.parse(JSON.parse(json.bytes.toString('utf8')))
+    const backup = BackupV2.parse(JSON.parse(json.bytes.toString('utf8')))
     expect(backup.stocks).toEqual([])
     expect(backup.lists).toEqual([])
     expect(backup.settings).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })

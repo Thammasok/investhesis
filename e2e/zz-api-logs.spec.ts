@@ -8,7 +8,9 @@ test('TC-E-023: the API output never contains a token or a password', () => {
   const log = readFileSync(join(__dirname, '.output/dev-server.log'), 'utf8')
 
   expect(log.length).toBeGreaterThan(0)
-  expect(log).not.toContain('eyJ')
+  // A JWT is three dot-separated base64url parts starting `eyJ`; a bare `eyJ` can occur by chance in a random
+  // multipart boundary, which made this check flaky.
+  expect(log).not.toMatch(/eyJ[\w-]{8,}\.[\w-]{8,}\.[\w-]*/)
   for (const password of ['Abc12345', 'Xyz98765', 'Wrong12345', 'Different1', 'Different123']) {
     expect(log, password).not.toContain(password)
   }
