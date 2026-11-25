@@ -2,8 +2,9 @@ import type { FastifyRequest } from 'fastify'
 import { stdSerializers, type LoggerOptions } from 'pino'
 import type { Config } from '../config/env.ts'
 
+// Thesis text and target prices are private too (thesis-log NFR-004).
 // Holdings are private (brief: shares and cost basis never leave the app), so keep them out of logs too.
-const SECRET_KEYS = ['password', 'token', 'accessToken', 'refreshToken', 'shares', 'averageCost', 'usdThbRate', 'holding']
+const SECRET_KEYS = ['password', 'token', 'accessToken', 'refreshToken', 'shares', 'averageCost', 'usdThbRate', 'holding', 'note', 'invalidation', 'targetPrice']
 
 export const REDACT_PATHS: readonly string[] = [
   'req.headers.authorization',

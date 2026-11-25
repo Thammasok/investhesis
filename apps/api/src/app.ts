@@ -9,6 +9,7 @@ import { importsRoutes } from './modules/imports/imports.routes.ts'
 import type { ImportRepo } from './modules/imports/imports.service.ts'
 import { listsRoutes } from './modules/lists/lists.routes.ts'
 import { settingsRoutes } from './modules/settings/settings.routes.ts'
+import { thesesRoutes } from './modules/theses/theses.routes.ts'
 import { stocksRoutes } from './modules/stocks/stocks.routes.ts'
 import { meRoutes } from './modules/me/me.routes.ts'
 import { authenticatePlugin, identityResolverFor, type IdentityResolver } from './plugins/authenticate.ts'
@@ -68,6 +69,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(stocksRoutes, { db: deps.db?.db })
   await app.register(settingsRoutes, { db: deps.db?.db })
   await app.register(importsRoutes, { db: deps.db?.db, repo: deps.importRepo })
+  await app.register(thesesRoutes, { db: deps.db?.db, now: deps.now ?? (() => new Date()) })
   await app.register(exportsRoutes, { db: deps.db?.db, now: deps.now ?? (() => new Date()) })
 
   return app
