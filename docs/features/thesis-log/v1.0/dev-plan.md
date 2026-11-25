@@ -679,7 +679,7 @@ unit:
   route shape, backup version and commands.
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007, T-008]
-- status: backlog
+- status: review
 - size: L
 ```
 
