@@ -167,7 +167,7 @@ unit:
   app.theses. Covers FR-001, FR-007, NFR-003, NFR-006.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: S
 ```
 
