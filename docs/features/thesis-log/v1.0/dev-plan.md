@@ -341,7 +341,7 @@ unit:
   and the OpenAPI response schema. Covers FR-010, NFR-009 (brief).
 - agent: software-engineer-backend
 - depends_on: [T-003]
-- status: backlog
+- status: done
 - size: S
 ```
 
@@ -402,7 +402,7 @@ unit:
   NFR-002, NFR-005, NFR-007, NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -649,7 +649,7 @@ unit:
   confirm). Save as docs/features/thesis-log/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
