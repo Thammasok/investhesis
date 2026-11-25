@@ -494,7 +494,7 @@ unit:
   NFR-007, NFR-008.
 - agent: react-vite-developer
 - depends_on: [T-005]
-- status: backlog
+- status: review
 - size: M
 ```
 
