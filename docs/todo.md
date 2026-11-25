@@ -6,7 +6,7 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
-| Thesis Log | v1.0 | [dev-plan.md](features/thesis-log/v1.0/dev-plan.md) | todo | Planning approved (requirements, design, ux, dev plan) | 2026-11-24 |
+| Thesis Log | v1.0 | [dev-plan.md](features/thesis-log/v1.0/dev-plan.md) | done | All 9 tasks approved; awaiting its release tag | 2026-11-25 |
 | Search, Filter and Export | v1.0 | [dev-plan.md](features/search-filter-export/v1.0/dev-plan.md) | done | Released as v0.5.0 | 2026-11-24 |
 | Holdings and Concentration | v1.0 | [dev-plan.md](features/holdings-concentration/v1.0/dev-plan.md) | done | Released as v0.4.0 | 2026-11-24 |
 | User Auth (admin-created accounts, no sign-up) | v1.2 | [dev-plan.md](features/user-auth/v1.2/dev-plan.md) | done | Released as v0.3.0 | 2026-11-23 |
@@ -24,3 +24,5 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 | Check F-1 (import wizard focus under StrictMode) against a production build | Stock Lists v1.0 | Probably dev-only |
 | Decide on spreadsheet formula escaping in the error CSV and templates | Stock Lists v1.0 | Not escaped, per NFR-009; pinned by TC-A-149 |
 | Rewrite or delete the Pacta rule files in `.claude/rules/` | Stock Lists v1.0 | Still open from CLAUDE.md |
+| Thesis Log findings: destructive confirm contrast on the entry delete (same as F-2, F-3) and its faint focus ring (F-6); dialog held open until the entries re-read; focus lost after a failed save; query-only change re-sends the entries request; double Undo error toast; advice note hidden while loading. Decide which to fix and which to pin with `test.fail` | Thesis Log v1.0 | Listed in `docs/features/thesis-log/v1.0/test-report.md`; nothing was pinned |
+| TC-C-734 (axe in jsdom) needs `vitest-axe`; decide to add it or accept TC-E-712 as the cover | Thesis Log v1.0 | The one case id without a test |
