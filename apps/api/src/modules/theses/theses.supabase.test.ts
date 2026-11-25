@@ -69,3 +69,21 @@ describe('thesis routes need an identity', () => {
     expect(text).not.toMatch(/Bearer [A-Za-z0-9_-]{10,}/)
   })
 })
+
+describe('thesis routes refuse bad sessions', () => {
+  it.each(rows)('TC-A-741 %s %s answers 401 for an anon-audience token and for an expired one, and changes nothing', async (method, url, payload) => {
+    const past = Math.floor(Date.now() / 1000) - 600
+    const tokens = [await signTestToken(keys, { aud: 'anon' }), await signTestToken(keys, { iat: past - 3600, exp: past })]
+    const count = async () => (await handle.pool.query('select count(*)::int n from app.theses where user_id = $1', [SUB])).rows[0].n
+    const before = await count()
+    for (const token of tokens) {
+      const res = await app.inject({ method: method as 'GET', url, headers: bearer(token), ...(payload !== undefined && { payload: payload as object }) })
+      expect(res.statusCode).toBe(401)
+      expect(res.headers['www-authenticate']).toBe('Bearer')
+      expect(res.headers['content-type']).toContain('application/problem+json')
+      expect(res.json().code).toBe('unauthenticated')
+    }
+    expect(await count()).toBe(before)
+  })
+})
+

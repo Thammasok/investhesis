@@ -70,4 +70,25 @@ describe('backup snapshot', () => {
     const next = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
     expect(next.theses.map((e) => e.note)).toEqual(['late entry'])
   })
+
+  it('TC-A-734 a stock and an entry committed mid-export leave no entry without its stock in the file', async () => {
+    const user = newUserId()
+    const app = await t.appFor(user)
+    const early = await seedStock(t.handle, user, 'SNAP4')
+    await t.handle.pool.query("insert into app.theses (user_id, stock_id, type, entry_date, note) values ($1, $2, 'buy', '2026-01-10', 'early')", [user, early])
+    let late = ''
+    midway.run = async () => {
+      midway.run = undefined
+      late = await seedStock(t.handle, user, 'LATE4')
+      await t.handle.pool.query("insert into app.theses (user_id, stock_id, type, entry_date, note) values ($1, $2, 'buy', '2026-01-11', 'late on a new stock')", [user, late])
+      await t.handle.pool.query("insert into app.theses (user_id, stock_id, type, entry_date, note) values ($1, $2, 'buy', '2026-01-12', 'late on an old stock')", [user, early])
+    }
+    const body = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
+    expect(late).not.toBe('')
+    const stockIds = new Set(body.stocks.map((s) => s.id))
+    for (const e of body.theses) expect(stockIds.has(e.stockId), `${e.note} has no stock in the file`).toBe(true)
+    expect(body.theses.map((e) => e.note)).toEqual(['early'])
+    const next = BackupV2.parse((await app.inject({ method: 'GET', url: '/exports/backup.json' })).json())
+    expect(next.theses.map((e) => e.note).sort()).toEqual(['early', 'late on a new stock', 'late on an old stock'])
+  })
 })

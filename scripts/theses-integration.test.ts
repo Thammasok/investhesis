@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { psql } from './lib/stack.ts'
+import { adminCreateUser, API, psql, publishableKey, signedIn } from './lib/stack.ts'
 
 /** Thesis log T-002: app.theses is private to the API role and the migration is safe on populated data (needs `pnpm db:start`). */
 const userId = randomUUID()
@@ -58,5 +58,23 @@ describe('thesis log T-002: the table and its migration', () => {
     expect(lines[0]).toBe(before)
     expect(lines.at(-1)).toBe('0')
     expect(psql(`select count(*) from app.theses where user_id = '${userId}';`).out).toBe('1')
+  })
+
+  it('TC-A-703 the Data API never returns an entry, and the anon and authenticated roles cannot read the table', async () => {
+    const user = await adminCreateUser()
+    const { session } = await signedIn(user.email)
+    const rest = (token?: string) =>
+      fetch(`${API}/rest/v1/theses`, { headers: { apikey: publishableKey(), authorization: `Bearer ${token ?? publishableKey()}`, 'accept-profile': 'app' } })
+    for (const res of [await rest(), await rest(session.access_token)]) {
+      const text = await res.text()
+      expect(res.ok, `REST answered ${res.status}`).toBe(false)
+      expect(text).not.toContain('private note')
+      expect(text).not.toContain(stockId)
+    }
+    for (const role of ['anon', 'authenticated']) {
+      const r = psql(`\\set ON_ERROR_STOP on\nset role ${role}; select * from app.theses;`)
+      expect(r.status).not.toBe(0)
+      expect(r.err).toContain('permission denied for schema app')
+    }
   })
 })
