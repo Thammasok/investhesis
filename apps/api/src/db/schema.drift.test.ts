@@ -11,7 +11,7 @@ type Col = { type: string; nullable: boolean }
 
 const drizzleColumns = (): Map<string, Col> => {
   const out = new Map<string, Col>()
-  const tables: PgTable[] = [schema.stocks, schema.lists, schema.listStocks, schema.holdings, schema.userSettings]
+  const tables: PgTable[] = [schema.stocks, schema.lists, schema.listStocks, schema.holdings, schema.userSettings, schema.theses]
   for (const table of tables) {
     const cfg = getTableConfig(table)
     for (const c of cfg.columns) out.set(`${cfg.schema}.${cfg.name}.${c.name}`, { type: c.getSQLType().replace(/\(.*\)/, ''), nullable: !c.notNull })
@@ -23,7 +23,7 @@ async function databaseColumns(): Promise<Map<string, Col>> {
   const { rows } = await handle.pool.query(
     `select table_name, column_name, data_type, udt_name, is_nullable
        from information_schema.columns
-      where table_schema = 'app' and table_name in ('stocks', 'lists', 'list_stocks', 'holdings', 'user_settings')`,
+      where table_schema = 'app' and table_name in ('stocks', 'lists', 'list_stocks', 'holdings', 'user_settings', 'theses')`,
   )
   return new Map(
     rows.map((r) => [

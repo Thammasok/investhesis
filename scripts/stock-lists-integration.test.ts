@@ -24,7 +24,7 @@ describe('TC-A-106: the database is not reachable except through the API', () =>
     const { session } = await signedIn(user.email)
 
     // Act + Assert: every table, both credentials
-    for (const table of ['stocks', 'lists', 'list_stocks', 'holdings', 'user_settings']) {
+    for (const table of ['stocks', 'lists', 'list_stocks', 'holdings', 'user_settings', 'theses']) {
       for (const res of [await rest(table, publishableKey()), await rest(table, publishableKey(), session.access_token)]) {
         const text = await res.text()
         expect(res.ok, `${table}: ${res.status}`).toBe(false)
@@ -42,6 +42,8 @@ describe('TC-A-106: the database is not reachable except through the API', () =>
     ['authenticated', 'app.holdings'],
     ['anon', 'app.user_settings'],
     ['authenticated', 'app.user_settings'],
+    ['anon', 'app.theses'],
+    ['authenticated', 'app.theses'],
   ])('TC-A-106: SET ROLE %s then select from %s fails with permission denied for schema app', (role, table) => {
     // Act
     const r = psql(`\\set ON_ERROR_STOP on\nset role ${role}; select * from ${table};`)
