@@ -237,7 +237,7 @@ unit:
   FR-007, FR-009, NFR-001, NFR-003, NFR-004.
 - agent: software-engineer-backend
 - depends_on: [T-001, T-002]
-- status: review
+- status: done
 - size: M
 ```
 
