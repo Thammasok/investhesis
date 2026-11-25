@@ -1,4 +1,5 @@
 import type { ListSummary, Stock } from '@/features/stocks/types'
+import type { Thesis } from '@/features/theses/types'
 
 const stamp = '2026-11-21T10:00:00.000Z'
 
@@ -38,4 +39,20 @@ export function makeStock(overrides: Partial<Stock> = {}): Stock {
 
 export function makeList(id: string, name: string, stockCount = 0): ListSummary {
   return { id, name, stockCount, createdAt: stamp, updatedAt: stamp }
+}
+
+/** A thesis entry of `stockId`; override what a test needs. `createdAt` equals `updatedAt`, so it is not edited. */
+export function makeThesis(overrides: Partial<Thesis> = {}): Thesis {
+  return {
+    id: 't-1',
+    stockId: 's-AAPL',
+    type: 'buy',
+    date: '2026-11-20',
+    note: 'A reason to hold.',
+    targetPrice: null,
+    invalidation: null,
+    createdAt: stamp,
+    updatedAt: stamp,
+    ...overrides,
+  }
 }

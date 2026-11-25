@@ -57,3 +57,14 @@ export const DEFAULT_SETTINGS = { concentrationThreshold: 40, usdThbRate: null, 
 export function emptyApi(): StubApi {
   return new StubApi({ 'GET /stocks': { items: [] }, 'GET /lists': { items: [] }, 'GET /settings': DEFAULT_SETTINGS })
 }
+
+/** A promise a test settles itself, for a request that must stay pending (a handler may return it). */
+export function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (reason: unknown) => void
+  const promise = new Promise<T>((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  return { promise, resolve, reject }
+}

@@ -11,12 +11,13 @@ import { StockListsCard } from '@/features/stocks/components/stock-lists-card'
 import { identityLine } from '@/features/stocks/format'
 import type { StockDetailData } from '@/features/stocks/stocks-data'
 import type { Stock } from '@/features/stocks/types'
+import { ThesisLog } from '@/features/theses/components/thesis-section'
 import { STOCK_ROUTE_ID } from '@/routers/route-ids'
 
 export function Component() {
   // The `:id` route loads the stock (it also gives the breadcrumb its ticker); this page loads the lists.
   const stock = useRouteLoaderData(STOCK_ROUTE_ID) as Stock
-  const { lists } = useLoaderData() as StockDetailData
+  const { lists, theses } = useLoaderData() as StockDetailData
   const [confirmOpen, setConfirmOpen] = useState(false)
   const moreRef = useRef<HTMLButtonElement>(null)
 
@@ -62,6 +63,7 @@ export function Component() {
           <StockListsCard stock={stock} lists={lists} />
         </div>
       </div>
+      <ThesisLog theses={theses} currency={stock.currency} />
       <DeleteStockDialog stock={stock} open={confirmOpen} onOpenChange={setConfirmOpen} returnFocusTo={moreRef} />
     </section>
   )

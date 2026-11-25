@@ -1,6 +1,7 @@
 import { redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
 import { ApiError, type ApiClient } from '@/lib/api-client'
+import type { Thesis } from '@/features/theses/types'
 import type { ListSummary, Stock } from './types'
 
 export type StocksPageData = { stocks: Stock[]; lists: ListSummary[] }
@@ -20,13 +21,28 @@ export const createStockLoader =
   ({ params }: LoaderFunctionArgs): Promise<Stock> =>
     api.get<Stock>(`/stocks/${encodeURIComponent(params.id ?? '')}`)
 
-export type StockDetailData = { lists: ListSummary[] }
-
-/** Loader of the detail page: the lists the stock can be added to. The stock itself comes from the parent route. */
-export const createStockDetailLoader = (api: ApiClient) => async (): Promise<StockDetailData> => {
-  const lists = await api.get<{ items: ListSummary[] }>('/lists')
-  return { lists: lists.items }
+export type StockDetailData = {
+  lists: ListSummary[]
+  /** Not awaited: the page shows the stock first and the Thesis section streams in (thesis-log ADR-004). */
+  theses: Promise<Thesis[]>
 }
+
+/**
+ * Loader of the detail page: the lists the stock can be added to, awaited, and the thesis entries, not.
+ * The stock itself comes from the parent route. A failed entries call is the Thesis section's error, so it
+ * must not reject the loader.
+ */
+export const createStockDetailLoader =
+  (api: ApiClient) =>
+  async ({ params }: LoaderFunctionArgs): Promise<StockDetailData> => {
+    const theses = api
+      .get<{ items: Thesis[] }>(`/stocks/${encodeURIComponent(params.id ?? '')}/theses`)
+      .then((r) => r.items)
+    // The page reads it later through `Await`; until then a rejection must not count as unhandled.
+    theses.catch(() => undefined)
+    const lists = await api.get<{ items: ListSummary[] }>('/lists')
+    return { lists: lists.items, theses }
+  }
 
 type Intent = 'delete' | 'add-to-list' | 'remove-from-list' | 'undo-remove'
 /** What `set-holding` and `clear-holding` answer. `field` names the input a 400 points at. */
