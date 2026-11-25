@@ -85,7 +85,12 @@ test.describe('isolation and privacy of exports', () => {
     // The API log has the backup requests and none of the values
     const logFile = join(__dirname, '.output/dev-server.log')
     await expect.poll(() => readFileSync(logFile, 'utf8').includes(lastRequestId), { timeout: 10_000 }).toBe(true)
+    // The file also holds Vite's forwarded browser-console lines, which print the page URL (so a search text typed
+    // at that moment, in a router warning). This check is about what the API logs, so those lines are left out.
     const log = readFileSync(logFile, 'utf8')
+      .split('\n')
+      .filter((line) => !line.includes('[vite]'))
+      .join('\n')
     expect(log).toContain('/exports/backup.json')
     for (const s of [SHARES, COST, RATE, QUERY, 'Secret Holdings']) expect(log, s).not.toContain(s)
   })
