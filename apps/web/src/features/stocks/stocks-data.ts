@@ -1,6 +1,7 @@
 import { redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
 import { ApiError, type ApiClient } from '@/lib/api-client'
+import { changeThesis, isThesisIntent, type ThesisActionResult } from '@/features/theses/thesis-actions'
 import type { Thesis } from '@/features/theses/types'
 import type { ListSummary, Stock } from './types'
 
@@ -65,11 +66,12 @@ const isStatus = (error: unknown, status: number) => error instanceof ApiError &
  */
 export const createStockDetailAction =
   (api: ApiClient) =>
-  async ({ request, params }: ActionFunctionArgs): Promise<DetailActionResult | HoldingActionResult | Response> => {
+  async ({ request, params }: ActionFunctionArgs): Promise<DetailActionResult | HoldingActionResult | ThesisActionResult | Response> => {
     const form = await request.formData()
     const intentName = text(form, 'intent')
     if (intentName === 'set-holding' || intentName === 'clear-holding')
       return changeHolding(api, params.id ?? '', intentName, form)
+    if (isThesisIntent(intentName)) return changeThesis(api, params.id ?? '', intentName, form)
     const stockId = encodeURIComponent(params.id ?? '')
     const listId = text(form, 'listId')
     const listName = text(form, 'listName')

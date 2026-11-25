@@ -13,7 +13,7 @@ import { ThesisEntryCard } from './thesis-entry-card'
 type Shell = {
   /** Entries loaded (shows the count and Add entry); `null` while loading or failed. */
   count: number | null
-  onAdd?: (() => void) | undefined
+  onAdd?: ((event: React.MouseEvent<HTMLButtonElement>) => void) | undefined
   addRef?: React.Ref<HTMLButtonElement> | undefined
   headingRef?: React.Ref<HTMLHeadingElement> | undefined
   /** A function gets the heading's id, to name a list by the section heading. */
@@ -100,15 +100,34 @@ export type ThesisSectionProps = {
   entries: readonly Thesis[]
   currency: 'USD' | 'THB'
   /** Opens the add dialog (T-006); the section only places the buttons. */
-  onAdd?: () => void
+  onAdd?: (event: React.MouseEvent<HTMLButtonElement>) => void
   addRef?: React.Ref<HTMLButtonElement>
   headingRef?: React.Ref<HTMLHeadingElement>
   /** Edit and Delete buttons of one entry (T-006, T-007). */
   renderActions?: (entry: Thesis) => React.ReactNode
+  /**
+   * After a save, focus returns to the opener once the saved entry is on screen: the list is re-read, the
+   * section remounts, and the opener of the old list is gone. `edit` also waits for the new `updatedAt`.
+   */
+  focusRequest?: FocusRequest | null
+  onFocusDone?: () => void
 }
 
+export type FocusRequest = { id: string; target: 'add' | 'edit'; updatedAt: string }
+
 /** The loaded section: the entries, newest first as the API sorts them, or the empty state. */
-export function ThesisSection({ entries, currency, onAdd, addRef, headingRef, renderActions }: ThesisSectionProps) {
+export function ThesisSection({ entries, currency, onAdd, addRef, headingRef, renderActions, focusRequest, onFocusDone }: ThesisSectionProps) {
+  useEffect(() => {
+    if (!focusRequest) return
+    const saved = entries.find((e) => e.id === focusRequest.id)
+    if (!saved || (focusRequest.target === 'edit' && saved.updatedAt !== focusRequest.updatedAt)) return
+    const button =
+      focusRequest.target === 'edit'
+        ? document.querySelector<HTMLElement>(`[data-thesis-edit="${CSS.escape(focusRequest.id)}"]`)
+        : (addRef as React.RefObject<HTMLButtonElement | null> | undefined)?.current
+    button?.focus()
+    onFocusDone?.()
+  }, [entries, focusRequest, addRef, onFocusDone])
   return (
     <ThesisCard count={entries.length} onAdd={onAdd} addRef={addRef} headingRef={headingRef}>
       {(titleId) => (

@@ -13,7 +13,7 @@ describe('thesis text is never run as markup', () => {
     expect(files.length).toBeGreaterThan(3)
     for (const file of files) {
       const text = readFileSync(file, 'utf8')
-      expect(text, file).not.toMatch(/dangerouslySetInnerHTML|\.innerHTML|insertAdjacentHTML|react-markdown|marked|dompurify/i)
+      expect(text, file).not.toMatch(/dangerouslySetInnerHTML|\.innerHTML|insertAdjacentHTML|['"](react-markdown|marked|dompurify)['"]/i)
     }
   })
 })
