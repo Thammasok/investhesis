@@ -104,9 +104,16 @@ export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: Filter
     deferredState,
     sort: view.sort,
     notes: view.notes,
-    /** Sets the kept parameters (scope, lens, measure) and leaves the filters as they are. */
-    setKept: (next: Record<string, string>) =>
-      write((c, kept) => ({ view: c, kept: new Map([...kept, ...Object.entries(next)]) }), true),
+    /** Sets the kept parameters (scope, lens, measure) and leaves the filters as they are; `null` removes one. */
+    setKept: (next: Record<string, string | null>) =>
+      write((c, kept) => {
+        const merged = new Map(kept)
+        for (const [name, value] of Object.entries(next)) {
+          if (value === null) merged.delete(name)
+          else merged.set(name, value)
+        }
+        return { view: c, kept: merged }
+      }, true),
     setQuery,
     setPicks,
     togglePick,

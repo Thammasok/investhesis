@@ -1,0 +1,42 @@
+import { Link } from 'react-router'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { thb } from '@/features/concentration/concentration-model'
+import type { Stock } from '@/features/stocks/types'
+
+type Props = {
+  stock: Stock
+  held: boolean
+  /** THB at cost, two decimals; `null` when the stock is not held or cannot be valued. */
+  value: string | null
+  /** Offers Set position (the No position area only). */
+  setPosition?: boolean
+}
+
+/** One stock of a lane: a single link to its page (ticker, Held, name and market, value). */
+export function ChainStockEntry({ stock, held, value, setPosition = false }: Props) {
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-x-2">
+      <Link
+        to={`/stocks/${stock.id}`}
+        className="block min-w-0 flex-1 rounded-md px-2 py-1.5 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="font-medium break-words">{stock.ticker}</span>
+        {held ? (
+          <Badge variant="secondary" className="ml-2">
+            Held
+          </Badge>
+        ) : null}
+        <span className="block text-sm text-muted-foreground break-words">{`${stock.name} · ${stock.market}`}</span>
+        {value !== null ? <span className="block text-sm tabular-nums">{thb(value)}</span> : null}
+      </Link>
+      {setPosition ? (
+        <Button variant="link" size="sm" asChild>
+          <Link to={`/stocks/${stock.id}/edit`} aria-label={`Set position of ${stock.ticker}`}>
+            Set position
+          </Link>
+        </Button>
+      ) : null}
+    </li>
+  )
+}
