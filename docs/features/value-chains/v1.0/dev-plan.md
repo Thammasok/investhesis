@@ -1,6 +1,6 @@
 ---
 version: 1.0
-status: active
+status: done
 date: 2026-11-25
 requires: design.md
 ux-design: ux-design.md
@@ -60,7 +60,7 @@ Thesis Log): `TC-U-9xx` in the task contracts below, and `TC-A-9xx`, `TC-C-9xx`,
   FR-009, FR-010, NFR-005.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -183,7 +183,7 @@ in UTC sorts lexically), not through `Date`. `GroupableStock.createdAt` is added
   lens, including themes, keeps exact-label grouping. Covers FR-008 via ADR-006.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: backlog
+- status: done
 - size: S
 ```
 
@@ -234,7 +234,7 @@ unit:
   FR-009..FR-011, NFR-002..NFR-004.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -359,7 +359,7 @@ unit:
   default lens). Covers FR-007, FR-008 (groundwork).
 - agent: react-vite-developer
 - depends_on: []
-- status: backlog
+- status: done
 - size: S
 ```
 
@@ -416,7 +416,7 @@ unit:
   T-006). Covers FR-001..FR-008, FR-012, FR-013, NFR-001, NFR-005..NFR-007.
 - agent: react-vite-developer
 - depends_on: [T-001, T-004]
-- status: backlog
+- status: done
 - size: L
 ```
 
@@ -546,7 +546,7 @@ is a timing test: keep it off the CPU-heavy path the way the existing NFR timing
   to the merged chain's h2. Covers FR-009..FR-012, NFR-006.
 - agent: react-vite-developer
 - depends_on: [T-005]
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -638,7 +638,7 @@ unit:
   docs/features/value-chains/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
@@ -669,7 +669,7 @@ unit:
   CLAUDE.md for the new module, route, domain names and commands.
 - agent: software-tester-automation
 - depends_on: [T-001, T-002, T-003, T-004, T-005, T-006, T-007]
-- status: backlog
+- status: done
 - size: L
 ```
 

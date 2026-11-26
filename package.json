@@ -21,6 +21,7 @@
     "test:report:holdings": "node scripts/holdings-report.mjs",
     "test:report:sfe": "node scripts/search-filter-export-report.mjs",
     "test:report:tl": "node scripts/thesis-log-report.mjs",
+    "test:report:vc": "node scripts/value-chains-report.mjs",
     "test:report:auth": "node scripts/user-auth-report.mjs"
   },
   "devDependencies": {
