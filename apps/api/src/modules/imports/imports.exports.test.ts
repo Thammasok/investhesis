@@ -28,7 +28,7 @@ const api = async (a: FastifyInstance, method: 'POST' | 'PATCH' | 'GET', url: st
 }
 
 const stockOf = (over: Partial<ExportableStock> & { ticker: string }): ExportableStock => ({
-  id: 'x', market: 'US', exchange: 'NASDAQ', name: over.ticker, gicsSector: null, setIndustryGroup: null, valueChain: null,
+  id: 'x', createdAt: '2026-01-01T00:00:00.000Z', market: 'US', exchange: 'NASDAQ', name: over.ticker, gicsSector: null, setIndustryGroup: null, valueChain: null,
   valueChainPosition: null, size: null, style: null, economicCycle: null, lynchType: null, lifeCycle: null, customers: [],
   revenueTypes: [], moat: null, themes: [], volatility: null, indexMembership: [], holding: null, listIds: [], ...over,
 })

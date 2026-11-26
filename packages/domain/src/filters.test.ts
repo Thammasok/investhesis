@@ -12,6 +12,7 @@ import {
 let n = 0
 const stock = (over: Partial<FilterableStock> & { ticker: string }): FilterableStock => ({
   id: `id-${++n}`,
+  createdAt: '2026-01-01T00:00:00.000Z',
   market: 'TH',
   exchange: 'SET',
   name: over.ticker,

@@ -1,9 +1,11 @@
 import { atLeastPercent, formatDecimal, parseDecimal, percentOneDecimal } from './decimal.ts'
+import { foldText } from './fold-text.ts'
 import { LENS_LABELS, NOT_SET_LABEL } from './messages.ts'
 
 /** The part of a stock that grouping reads. Structural, so API rows and web rows both fit. */
 export interface GroupableStock {
   id: string
+  createdAt: string
   market: string
   gicsSector: string | null
   setIndustryGroup: string | null
@@ -29,6 +31,8 @@ export interface ConcentrationLens {
   key: keyof typeof LENS_LABELS
   label: string
   kind: 'single' | 'multi'
+  /** Spellings that differ only in case or surrounding spaces form one group (ADR-006). */
+  foldCase?: boolean
   get: (stock: GroupableStock) => Pick
 }
 
@@ -50,7 +54,7 @@ export const CONCENTRATION_LENSES: readonly ConcentrationLens[] = [
   single('gicsSector', (s) => s.gicsSector),
   single('setIndustryGroup', (s) => s.setIndustryGroup),
   single('valueChainPosition', (s) => s.valueChainPosition),
-  single('valueChain', (s) => s.valueChain),
+  { ...single('valueChain', (s) => s.valueChain), foldCase: true },
   single('size', (s) => s.size),
   single('style', (s) => s.style),
   single('economicCycle', (s) => s.economicCycle),
@@ -95,44 +99,43 @@ export interface GroupConcentrationArgs {
 }
 
 // shares (4) + cost (4) + rate (6)
-const VALUE_SCALE = 14
+export const VALUE_SCALE = 14
 const RATE_SCALE = 6
+
+export type ValueAtCost = { value: bigint } | { reason: 'not-held' | 'no-amount' | 'needs-rate' }
+
+/** Shares x average cost in THB as a BigInt at VALUE_SCALE, or why the holding has no value. */
+export function valueAtCost(holding: GroupableStock['holding'], usdThbRate: string | null): ValueAtCost {
+  if (!holding) return { reason: 'not-held' }
+  const shares = holding.shares === null ? null : parseDecimal(holding.shares, 4)
+  const cost = holding.averageCost === null ? null : parseDecimal(holding.averageCost, 4)
+  if (shares === null || cost === null) return { reason: 'no-amount' }
+  const base = shares * cost
+  if (holding.costCurrency === 'USD') {
+    const rate = usdThbRate === null ? null : parseDecimal(usdThbRate, RATE_SCALE)
+    if (rate === null || rate === 0n) return { reason: 'needs-rate' }
+    return { value: base * rate }
+  }
+  return { value: base * 10n ** BigInt(RATE_SCALE) }
+}
 
 export function groupConcentration(args: GroupConcentrationArgs): ConcentrationResult {
   const lens =
     typeof args.lens === 'string' ? CONCENTRATION_LENSES.find((l) => l.key === args.lens) : args.lens
   if (!lens) throw new RangeError(`unknown lens ${String(args.lens)}`)
 
-  const rate = args.usdThbRate === null ? null : parseDecimal(args.usdThbRate, RATE_SCALE)
   const leftOut = { notHeld: [] as string[], noAmount: [] as string[], needsRate: [] as string[] }
   const values = new Map<string, bigint>()
   let totalValue = 0n
 
   for (const stock of args.stocks) {
-    const h = stock.holding
-    if (!h) {
-      leftOut.notHeld.push(stock.id)
-      continue
-    }
-    const shares = h.shares === null ? null : parseDecimal(h.shares, 4)
-    const cost = h.averageCost === null ? null : parseDecimal(h.averageCost, 4)
-    if (shares === null || cost === null) {
-      leftOut.noAmount.push(stock.id)
-      continue
-    }
-    const base = shares * cost
-    let value: bigint
-    if (h.costCurrency === 'USD') {
-      if (rate === null || rate === 0n) {
-        leftOut.needsRate.push(stock.id)
-        continue
-      }
-      value = base * rate
-    } else {
-      value = base * 10n ** BigInt(RATE_SCALE)
-    }
-    values.set(stock.id, value)
-    totalValue += value
+    const result = valueAtCost(stock.holding, args.usdThbRate)
+    if ('value' in result) {
+      values.set(stock.id, result.value)
+      totalValue += result.value
+    } else if (result.reason === 'not-held') leftOut.notHeld.push(stock.id)
+    else if (result.reason === 'no-amount') leftOut.noAmount.push(stock.id)
+    else leftOut.needsRate.push(stock.id)
   }
 
   interface Bucket {
@@ -140,6 +143,8 @@ export function groupConcentration(args: GroupConcentrationArgs): ConcentrationR
     notSet: boolean
     ids: string[]
     value: bigint
+    /** Oldest stock seen, whose spelling titles a folded group. */
+    oldest?: { createdAt: string; id: string }
   }
   const buckets = new Map<string, Bucket>()
   let notSet: Bucket | undefined
@@ -151,11 +156,20 @@ export function groupConcentration(args: GroupConcentrationArgs): ConcentrationR
       notSet ??= { label: NOT_SET_LABEL, notSet: true, ids: [], value: 0n }
       targets.push(notSet)
     } else {
-      for (const label of labels) {
-        let bucket = buckets.get(label)
+      for (const raw of labels) {
+        const label = lens.foldCase ? raw.trim() : raw
+        const key = lens.foldCase ? foldText(label) : label
+        let bucket = buckets.get(key)
         if (!bucket) {
           bucket = { label, notSet: false, ids: [], value: 0n }
-          buckets.set(label, bucket)
+          buckets.set(key, bucket)
+        }
+        if (lens.foldCase) {
+          const o = bucket.oldest
+          if (!o || stock.createdAt < o.createdAt || (stock.createdAt === o.createdAt && stock.id < o.id)) {
+            bucket.oldest = { createdAt: stock.createdAt, id: stock.id }
+            bucket.label = label
+          }
         }
         targets.push(bucket)
       }

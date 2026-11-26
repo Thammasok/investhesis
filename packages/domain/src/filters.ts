@@ -1,5 +1,6 @@
 import { CONCENTRATION_LENSES, type GroupableStock } from './concentration.ts'
 import { ALL_EXCHANGES, ALL_INDEXES, LENS_VALUES, MARKETS } from './vocabulary.ts'
+import { foldText } from './fold-text.ts'
 
 /** The part of a stock that search and filters read. Structural, so API rows and web rows both fit. */
 export interface FilterableStock extends GroupableStock {
@@ -78,7 +79,8 @@ export const STOCK_FILTERS: readonly StockFilter[] = [
   ) satisfies StockFilter[]),
 ]
 
-const lower = (s: string) => s.toLocaleLowerCase('en')
+export { foldText }
+const lower = foldText
 
 /** Values of a stock for one filter, as a list (empty = Not set). */
 const valuesOf = (filter: StockFilter, stock: FilterableStock): readonly string[] => {

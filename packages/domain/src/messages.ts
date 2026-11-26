@@ -27,6 +27,9 @@ export const MESSAGES = {
   thesisDateFormat: 'must be a date written as YYYY-MM-DD',
   thesisDateFuture: "can't be in the future",
   thesisTargetPriceFormat: 'must be greater than 0, with at most 14 digits before and 4 after the decimal point',
+  chainNotFound: 'This value chain no longer exists.',
+  chainExists: (name: string, count: number) =>
+    `A chain named "${name}" already exists with ${count} ${count === 1 ? 'stock' : 'stocks'}.`,
   usdThbRateFormat: 'must be greater than 0, with at most 12 digits before and 6 after the decimal point',
 } as const
 

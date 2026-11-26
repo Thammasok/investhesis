@@ -8,15 +8,16 @@ export type { FieldError, RowResult, TemplateColumn } from './template.ts'
 export { MESSAGES, LENS_LABELS, NOT_SET_LABEL } from './messages.ts'
 export { HoldingInput, SettingsPatch } from './holding-schema.ts'
 export { atLeastPercent, formatDecimal, parseDecimal, percentOneDecimal } from './decimal.ts'
-export { CONCENTRATION_LENSES, groupConcentration } from './concentration.ts'
+export { CONCENTRATION_LENSES, VALUE_SCALE, groupConcentration, valueAtCost } from './concentration.ts'
 export type {
   ConcentrationGroup,
   ConcentrationLens,
   ConcentrationResult,
   GroupConcentrationArgs,
   GroupableStock,
+  ValueAtCost,
 } from './concentration.ts'
-export { STOCK_FILTERS, applyStockFilters, filterOptions } from './filters.ts'
+export { STOCK_FILTERS, applyStockFilters, filterOptions, foldText } from './filters.ts'
 export type {
   FilterKey,
   FilterOption,
@@ -37,3 +38,5 @@ export {
   thesisPatch,
 } from './theses.ts'
 export type { Thesis, ThesisInput, ThesisPatch, ThesisSchemaArgs, ThesisType } from './theses.ts'
+export { CHAIN_AREAS, ChainRename, chainKey, groupChains } from './chains.ts'
+export type { Chain, ChainArea, ChainAreaGroup, ChainAreaStock, ChainStockInput, ChainsResult } from './chains.ts'

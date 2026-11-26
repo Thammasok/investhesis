@@ -6,6 +6,7 @@ type Holding = NonNullable<GroupableStock['holding']>
 
 const stock = (id: string, over: Partial<GroupableStock> = {}): GroupableStock => ({
   id,
+  createdAt: '2026-01-01T00:00:00.000Z',
   market: 'US',
   gicsSector: null,
   setIndustryGroup: null,
@@ -215,5 +216,46 @@ describe('groupConcentration', () => {
     const t0 = performance.now()
     groupConcentration({ stocks, lens: 'themes', usdThbRate: null, threshold: 40 })
     expect(performance.now() - t0).toBeLessThan(20)
+  })
+})
+
+describe('valueChain lens folds case (ADR-006)', () => {
+  it('TC-U-911: valueChain groups fold case and use the earliest spelling', () => {
+    const r = groupConcentration({
+      stocks: [
+        stock('a', { valueChain: 'ai & semis', createdAt: '2026-01-01T00:00:00.000Z' }),
+        stock('b', { valueChain: 'AI & Semis', createdAt: '2026-02-01T00:00:00.000Z' }),
+        stock('c', { valueChain: 'AI & Semis ', createdAt: '2026-03-01T00:00:00.000Z' }),
+        stock('d', { valueChain: 'Banks' }),
+      ],
+      lens: 'valueChain',
+      usdThbRate: null,
+      threshold: 40,
+    })
+    expect(r.groups.map((g) => [g.label, g.count, g.countShare, g.countFlag])).toEqual([
+      ['ai & semis', 3, '75.0', true],
+      ['Banks', 1, '25.0', false],
+    ])
+  })
+
+  it('TC-U-911: the title ties on createdAt break by id, whatever the row order', () => {
+    const rows = [
+      stock('b', { valueChain: 'Chips', createdAt: '2026-01-01T00:00:00.000Z' }),
+      stock('a', { valueChain: 'chips', createdAt: '2026-01-01T00:00:00.000Z' }),
+    ]
+    for (const stocks of [rows, [...rows].reverse()]) {
+      const r = groupConcentration({ stocks, lens: 'valueChain', usdThbRate: null, threshold: 40 })
+      expect(r.groups.map((g) => g.label)).toEqual(['chips'])
+    }
+  })
+
+  it('TC-U-912: themes keep exact-label grouping', () => {
+    const r = groupConcentration({
+      stocks: [stock('a', { themes: ['AI'] }), stock('b', { themes: ['ai'] })],
+      lens: 'themes',
+      usdThbRate: null,
+      threshold: 40,
+    })
+    expect(r.groups.map((g) => g.label).sort()).toEqual(['AI', 'ai'])
   })
 })

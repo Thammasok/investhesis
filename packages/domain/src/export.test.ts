@@ -5,6 +5,7 @@ import { StockInput } from './stock-schema.ts'
 
 const base = (over: Partial<ExportableStock>): ExportableStock => ({
   id: 'x',
+  createdAt: '2026-01-01T00:00:00.000Z',
   ticker: 'NVDA',
   market: 'US',
   exchange: 'NASDAQ',
@@ -122,7 +123,7 @@ describe('EXPORT_COLUMNS and exportRow', () => {
       const result = canonicaliseRow(cells)
       expect(result.ok).toBe(true)
       if (!result.ok) return
-      const { id: _i, holding: _h, listIds: _l, ...expected } = stock
+      const { id: _i, createdAt: _c, holding: _h, listIds: _l, ...expected } = stock
       expect(result.input).toEqual(StockInput.parse(expected))
     }
   })
