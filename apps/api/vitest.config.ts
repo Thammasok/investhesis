@@ -8,7 +8,7 @@ export default defineConfig({
     // stocks, lists, imports, settings and exports modules at or above 85 % (stock-lists T-013).
     coverage: {
       provider: 'v8',
-      include: ['src/auth/**', 'src/modules/stocks/**', 'src/modules/lists/**', 'src/modules/imports/**', 'src/modules/settings/**', 'src/modules/exports/**', 'src/modules/theses/**'],
+      include: ['src/auth/**', 'src/modules/stocks/**', 'src/modules/lists/**', 'src/modules/imports/**', 'src/modules/settings/**', 'src/modules/exports/**', 'src/modules/theses/**', 'src/modules/chains/**'],
       exclude: ['src/**/*.test.ts'],
       reporter: ['text'],
       thresholds: {
@@ -19,6 +19,7 @@ export default defineConfig({
         'src/modules/settings/**': { lines: 85 },
         'src/modules/exports/**': { lines: 85 },
         'src/modules/theses/**': { lines: 85 },
+        'src/modules/chains/**': { lines: 85 },
       },
     },
   },

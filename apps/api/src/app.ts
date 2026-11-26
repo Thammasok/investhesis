@@ -4,6 +4,8 @@ import type { DestinationStream } from 'pino'
 import type { Config } from './config/env.ts'
 import type { Db } from './db/client.ts'
 import { loggerOptions } from './lib/logger.ts'
+import { chainsRoutes } from './modules/chains/chains.routes.ts'
+import type { ChainsRepo } from './modules/chains/chains.service.ts'
 import { exportsRoutes } from './modules/exports/exports.routes.ts'
 import { importsRoutes } from './modules/imports/imports.routes.ts'
 import type { ImportRepo } from './modules/imports/imports.service.ts'
@@ -30,6 +32,8 @@ export type AppDeps = {
   config: Config
   /** Test seam: replaces repository calls of the import confirm to inject failures. */
   importRepo?: Partial<ImportRepo>
+  /** Test seam: replaces repository calls of the chain rename to inject failures. */
+  chainsRepo?: Partial<ChainsRepo>
   db?: DbHealth & { close?(): Promise<void>; db?: Db }
   /** Defaults to the resolver for config.authMode; tests pass their own. */
   resolveIdentity?: IdentityResolver
@@ -70,6 +74,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(settingsRoutes, { db: deps.db?.db })
   await app.register(importsRoutes, { db: deps.db?.db, repo: deps.importRepo })
   await app.register(thesesRoutes, { db: deps.db?.db, now: deps.now ?? (() => new Date()) })
+  await app.register(chainsRoutes, { db: deps.db?.db, repo: deps.chainsRepo })
   await app.register(exportsRoutes, { db: deps.db?.db, now: deps.now ?? (() => new Date()) })
 
   return app
