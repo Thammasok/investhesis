@@ -3,10 +3,10 @@ import { Link } from 'react-router'
 import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { ListSummary, Stock } from '@/features/stocks/types'
 import type { Measure, Plan, View } from '../concentration-model'
-import { stocksInScope } from '../concentration-model'
+import { ScopeSelect } from '@/features/stock-filters/scope-select'
 
 type Props = {
   view: View
@@ -19,31 +19,9 @@ type Props = {
 
 /** Scope, Group by and Measure (ux-design.md §Concentration). Changing one navigates with `replace`; focus stays put. */
 export function Controls({ view, plan, stocks, lists, onChange, onSetRate }: Props) {
-  const held = stocks.filter((s) => s.holding !== null).length
   return (
     <div className="flex flex-wrap items-end gap-4">
-      <Field className="w-full sm:w-56">
-        <FieldLabel htmlFor="concentration-scope">Scope</FieldLabel>
-        <Select value={view.scope} onValueChange={(scope) => onChange({ scope })}>
-          <SelectTrigger id="concentration-scope" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All stocks ({stocks.length})</SelectItem>
-            <SelectItem value="held">Held stocks ({held})</SelectItem>
-            {lists.length > 0 ? (
-              <SelectGroup>
-                <SelectLabel>Lists</SelectLabel>
-                {lists.map((list) => (
-                  <SelectItem key={list.id} value={list.id}>
-                    {list.name} ({stocksInScope(stocks, list.id).length})
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ) : null}
-          </SelectContent>
-        </Select>
-      </Field>
+      <ScopeSelect scope={view.scope} stocks={stocks} lists={lists} onChange={(scope) => onChange({ scope })} />
       <Field className="w-full sm:w-56">
         <FieldLabel htmlFor="concentration-lens">Group by</FieldLabel>
         <Select value={view.lens.key} onValueChange={(lensKey) => onChange({ lensKey })}>

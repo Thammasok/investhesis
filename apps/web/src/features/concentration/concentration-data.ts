@@ -1,20 +1,12 @@
 import type { ActionFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
-import type { ListSummary, Stock } from '@/features/stocks/types'
 import { ApiError, type ApiClient } from '@/lib/api-client'
-import type { Settings } from './concentration-model'
+import { readPortfolio, type Portfolio } from '@/features/stock-filters/portfolio'
 
-export type ConcentrationData = { stocks: Stock[]; lists: ListSummary[]; settings: Settings }
+export type ConcentrationData = Portfolio
 
 /** Loader of `/concentration`: the three reads run in parallel. Any failure is the route error page. */
-export const createConcentrationLoader = (api: ApiClient) => async (): Promise<ConcentrationData> => {
-  const [stocks, lists, settings] = await Promise.all([
-    api.get<{ items: Stock[] }>('/stocks'),
-    api.get<{ items: ListSummary[] }>('/lists'),
-    api.get<Settings>('/settings'),
-  ])
-  return { stocks: stocks.items, lists: lists.items, settings }
-}
+export const createConcentrationLoader = (api: ApiClient) => (): Promise<ConcentrationData> => readPortfolio(api)
 
 /** Fields the settings form may send; the dialog sends only the changed ones. */
 export type SettingsChange = { concentrationThreshold?: number; usdThbRate?: string | null }

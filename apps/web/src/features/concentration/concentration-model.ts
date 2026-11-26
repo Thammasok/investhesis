@@ -10,15 +10,13 @@ import {
   type FilterState,
 } from '@investhesis/domain'
 import { filterPairs } from '@/features/stock-filters/filter-address'
+import { readScope, stocksInScope } from '@/features/stock-filters/scope'
+import type { Settings } from '@/features/stock-filters/portfolio'
 import { formatMoney } from '@/lib/number-format'
 import type { ListSummary, Stock } from '@/features/stocks/types'
 
 export type Measure = 'count' | 'value'
-export type Settings = {
-  concentrationThreshold: number
-  usdThbRate: string | null
-  usdThbRateUpdatedAt: string | null
-}
+export type { Settings }
 
 export const DEFAULT_LENS = CONCENTRATION_LENSES[0] as ConcentrationLens
 export const DEFAULT_MEASURE: Measure = 'count'
@@ -36,23 +34,11 @@ export type View = {
 
 /** Reads `?scope=&lens=&measure=` (FR-012). Absent is the default without a note; present but wrong is the default with one. */
 export function readView(params: URLSearchParams, lists: readonly ListSummary[]): View {
-  const notes: string[] = []
+  const { scope, list, notes } = readScope(params, lists)
   const one = (name: string): string | null | undefined => {
     const all = params.getAll(name)
     if (all.length === 0) return undefined
     return all.length === 1 ? (all[0] as string) : null
-  }
-
-  let scope = 'all'
-  let list: ListSummary | null = null
-  const rawScope = one('scope')
-  if (rawScope !== undefined) {
-    const found = rawScope === null ? undefined : lists.find((l) => l.id === rawScope)
-    if (rawScope === 'all' || rawScope === 'held') scope = rawScope
-    else if (found) {
-      scope = found.id
-      list = found
-    } else notes.push('That list no longer exists. Showing all stocks.')
   }
 
   let lens = DEFAULT_LENS
@@ -83,15 +69,9 @@ export function viewSearch(view: Pick<View, 'scope' | 'measure'> & { lens: { key
   return `?${new URLSearchParams(pairs).toString()}`
 }
 
-/** The concentration view of a scope with the given search and filters: the link on the stocks pages (FR-009). */
-export function concentrationHref(scope: string, filters: FilterState): string {
-  return `/concentration${viewSearch({ scope, lens: DEFAULT_LENS, measure: DEFAULT_MEASURE }, filters)}`
-}
-
-export function stocksInScope(stocks: readonly Stock[], scope: string): Stock[] {
-  if (scope === 'all') return [...stocks]
-  if (scope === 'held') return stocks.filter((s) => s.holding !== null)
-  return stocks.filter((s) => s.listIds.includes(scope))
+/** The concentration view of a scope with the given search and filters (and optionally a lens): the link on the stocks and chains pages. */
+export function concentrationHref(scope: string, filters: FilterState, lensKey: string = DEFAULT_LENS.key): string {
+  return `/concentration${viewSearch({ scope, lens: { key: lensKey }, measure: DEFAULT_MEASURE }, filters)}`
 }
 
 export type ValueBlock =
@@ -171,8 +151,4 @@ export function settingsLine(settings: Settings): string {
       ? 'No exchange rate saved'
       : `1 USD = ${formatRate(settings.usdThbRate)} THB${settings.usdThbRateUpdatedAt ? `, saved ${formatSavedDate(settings.usdThbRateUpdatedAt)}` : ''}`
   return `Threshold ${settings.concentrationThreshold}% · ${rate}`
-}
-
-export function scopeName(view: View): string {
-  return view.scope === 'all' ? 'all stocks' : view.scope === 'held' ? 'held stocks' : `list ${view.list?.name ?? ''}`
 }

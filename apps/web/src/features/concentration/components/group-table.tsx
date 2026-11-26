@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { countLabel } from '@/features/stocks/format'
 import type { Stock } from '@/features/stocks/types'
-import { scopeName, thb, type Plan, type Settings, type View } from '../concentration-model'
+import { scopeName } from '@/features/stock-filters/scope'
+import { thb, type Plan, type Settings, type View } from '../concentration-model'
 
 const num = 'text-right tabular-nums'
 
