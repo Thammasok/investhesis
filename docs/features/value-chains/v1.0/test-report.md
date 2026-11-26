@@ -16,7 +16,7 @@ Results of the automated cases of [test-cases.md](test-cases.md) (102 new `TC-A/
 | `pnpm db:start && pnpm db:reset` | ok |
 | `pnpm test:supabase` | 74 passed |
 | `pnpm lint`, `pnpm typecheck` (includes `e2e/`) | clean |
-| `pnpm test` | domain 216, api 514, web 841, all passed |
+| `pnpm test` | domain 216, api 515, web 841, all passed |
 | `pnpm build` | ok |
 | Coverage | domain 98.76 % lines (`chains.ts` 100 %); api `src/modules/chains` 100 % lines (target 85 %); web `src/features` 98.23 % lines (target 70 %) |
 | `pnpm test:e2e` | 307 passed (21.6 min), of which 3 are expected failures (below) |
@@ -57,6 +57,7 @@ One API test (TC-A-917, 30 rounds of opposite merges) timed out at the 5 s defau
 | TC-A-927 | 1 | pass | src/modules/chains/chains.cases.test.ts |
 | TC-A-928 | 1 | pass | src/modules/chains/chains.cases.test.ts |
 | TC-A-929 | 1 | pass | src/modules/chains/chains.cases.test.ts |
+| TC-A-930 | 1 | pass | src/db/client.test.ts |
 | TC-C-900 | 1 | pass | src/features/chains/chains-cases-page.test.tsx |
 | TC-C-901 | 1 | pass | src/features/chains/chains-cases-page.test.tsx |
 | TC-C-902 | 1 | pass | src/features/chains/chains-cases-page.test.tsx |

@@ -18,10 +18,16 @@ describe('createDb', () => {
     process.on('uncaughtException', onUncaught)
     try {
       const client = await handle.pool.connect()
-      const pid = (await client.query('select pg_backend_pid() as pid')).rows[0].pid as number
-      await killer.pool.query('select pg_terminate_backend($1)', [pid])
-      await expect(client.query('select 1')).rejects.toThrow(/terminating connection/)
-      client.release(true)
+      try {
+        const pid = (await client.query('select pg_backend_pid() as pid')).rows[0].pid as number
+        await killer.pool.query('select pg_terminate_backend($1)', [pid])
+        // Let the termination reach the idle client first: that is the case where pg emits 'error' on the client itself
+        // (a query already in flight would take the error instead). The next query then fails as not queryable.
+        await new Promise((resolve) => setTimeout(resolve, 200))
+        await expect(client.query('select 1')).rejects.toThrow(/connection/)
+      } finally {
+        client.release(true)
+      }
       // pg emits 'error' on the client when the socket drops; give the event loop a turn to deliver it.
       await new Promise((resolve) => setTimeout(resolve, 200))
       expect(uncaught).toEqual([])

@@ -36,18 +36,21 @@ describe('scope, filters and search', () => {
     await userEvent.click(screen.getByRole('option', { name: /^Held stocks/ }))
     await waitFor(() => expect(router.state.location.search).toBe('?scope=held'))
     expect(router.state.historyAction).toBe('REPLACE')
-    expect(tickersShown()).not.toContain('AMAT')
-    expect(tickersShown()).not.toContain('INTC')
-    expect(tickersShown()).not.toContain('BCP')
+    // The address changes before the regrouped page is on screen, so wait for the page too.
+    await waitFor(() => {
+      expect(tickersShown()).not.toContain('AMAT')
+      expect(tickersShown()).not.toContain('INTC')
+      expect(tickersShown()).not.toContain('BCP')
+    })
     expect(chainTitles()).toEqual(['AI & Semis', 'Oil & Gas'])
 
     await pickScope(/^Core/)
     await waitFor(() => expect(router.state.location.search).toBe('?scope=L-core'))
-    expect(tickersShown().sort()).toEqual(['ASML', 'PTTEP', 'TSM'])
+    await waitFor(() => expect(tickersShown().sort()).toEqual(['ASML', 'PTTEP', 'TSM']))
 
     await pickScope(/^All stocks/)
     await waitFor(() => expect(router.state.location.search).toBe(''))
-    expect(tickersShown()).toHaveLength(9)
+    await waitFor(() => expect(tickersShown()).toHaveLength(9))
     expect(router.state.historyAction).toBe('REPLACE')
   })
 
