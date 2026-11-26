@@ -20,6 +20,9 @@ export function createDb(config: Pick<Config, 'databaseUrl' | 'dbPoolMax'>): DbH
   const pool = new Pool({ connectionString: config.databaseUrl, max: config.dbPoolMax })
   // An idle client error would otherwise crash the process as an unhandled 'error' event.
   pool.on('error', () => {})
+  // A checked-out client (a transaction in progress) emits 'error' when its backend dies, and without a listener that is an
+  // uncaught exception. The query or transaction rejects on its own, so the request still fails with a 500 and rolls back.
+  pool.on('connect', (client) => client.on('error', () => {}))
   let closing: Promise<void> | undefined
   return {
     db: drizzle({ client: pool, schema }),

@@ -48,11 +48,8 @@ describe('chain rename is all or nothing', () => {
   })
 
   it('TC-A-918 a backend killed before the commit leaves every row as it was', async () => {
-    // Its own pool whose clients swallow the 'error' event of a killed connection (pg emits it on a checked-out client,
-    // which would otherwise be an uncaught exception of the test process).
     const config = loadConfig({ ...baseEnv, DATABASE_URL: testDatabaseUrl })
     const handle = createDb(config)
-    handle.pool.on('connect', (client) => client.on('error', () => {}))
     const userId = newUserId()
     const app = await buildApp({
       config,
