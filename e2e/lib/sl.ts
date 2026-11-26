@@ -58,6 +58,8 @@ export async function apiAs(user: { email: string; password?: string }, origin =
     patchThesis: (stockId: string, id: string, body: Seed) => must<Thesis>('PATCH', `/stocks/${stockId}/theses/${id}`, body),
     deleteThesis: (stockId: string, id: string) => must<Thesis>('DELETE', `/stocks/${stockId}/theses/${id}`),
     restoreThesis: (stockId: string, entry: Thesis) => must<Thesis>('POST', `/stocks/${stockId}/theses/restore`, { entry }),
+    /** Value chains (value-chains T-008): the raw answer of `POST /chains/rename`, so a test can assert 404 and 409 too. */
+    renameChain: (body: Seed) => call<{ name: string; changed: number; merged: boolean } & Seed>('POST', '/chains/rename', body),
     /** A full backup as the API sends it, with the headers (no parsing, so a test can check the bytes). */
     backup: async (kind: 'json' | 'csv', query = '') => {
       const res = await fetch(`${origin}/exports/backup.${kind}${query}`, { headers: { authorization: `Bearer ${session.access_token}` } })

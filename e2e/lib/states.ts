@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 import { F, csv } from '../../apps/api/test/fixtures/imports/build.ts'
 import { seedHoldingsDataset, type HcSeed } from './hc.ts'
+import { seedChainsDataset, type VcSeed } from './vc.ts'
 import { apiAs, chooseTarget, fillStockForm, newUser, openSignedIn, pickFile, saveStock, settled, th, us, type Api, type TestUser } from './sl.ts'
 
 /** A user with data every screen needs: stocks (one with a sector and no cycle, so a Default badge), lists. */
@@ -396,4 +397,108 @@ export async function enterTl(page: Page, state: TlState, ctx: TlCtx) {
   await settled(page)
   await state.run(page, ctx)
   if (!state.noSettle) await settled(page)
+}
+
+// ---- value chains (T-008) --------------------------------------------------------------------
+
+
+/** VC-A with a rate, VC-A with no rate (rate note and left-out lines), a user with stocks but no chain, and an empty user. */
+export type VcCtx = VcSeed & { noRate: VcSeed; plain: TestUser; empty: TestUser }
+
+export async function seedForChains(): Promise<VcCtx> {
+  const seed = await seedChainsDataset()
+  const noRate = await seedChainsDataset({ rate: null })
+  const plain = await newUser('e2e-vc-plain')
+  const plainApi = await apiAs(plain)
+  for (const t of ['PA', 'PB']) await plainApi.stock(us(t, { name: `Plain ${t}` }))
+  return { ...seed, noRate, plain, empty: await newUser('e2e-vc-empty') }
+}
+
+export type VcState = {
+  name: string
+  who?: 'noRate' | 'plain' | 'empty'
+  /** The state needs a route handler (a held or failing answer), so it is dropped before the next one. */
+  run: (page: Page, ctx: VcCtx) => Promise<void>
+}
+
+const chainsDialog = (page: Page) => page.getByRole('dialog', { name: 'Rename chain' })
+const renameOf = (page: Page, title: string) => page.getByRole('region', { name: title }).first().getByRole('button', { name: 'Rename' })
+
+async function openRenameDialog(page: Page, title = 'Oil & Gas') {
+  await page.goto('/chains')
+  await settled(page)
+  await renameOf(page, title).click()
+  await expect(chainsDialog(page)).toBeVisible()
+}
+
+export const VC_STATES: VcState[] = [
+  { name: 'page-filled', run: async (page) => open('/chains')(page) },
+  { name: 'page-rate-and-left-out-notes', who: 'noRate', run: async (page) => open('/chains')(page) },
+  { name: 'page-fallback-note', run: async (page) => open('/chains?scope=nope&market=XX')(page) },
+  { name: 'page-no-chain-note', run: async (page) => open('/chains?market=US')(page) },
+  { name: 'empty-no-stocks', who: 'empty', run: async (page) => open('/chains')(page) },
+  { name: 'empty-no-chains-in-view', who: 'plain', run: async (page) => open('/chains')(page) },
+  { name: 'filtered-to-none', run: async (page) => open('/chains?q=zzzz')(page) },
+  {
+    name: 'filters-sheet-open',
+    run: async (page) => {
+      await open('/chains')(page)
+      await page.getByRole('button', { name: /^Filters/ }).click()
+      await expect(page.getByRole('dialog', { name: 'Filters' })).toBeVisible()
+    },
+  },
+  { name: 'rename-dialog-name-step', run: async (page) => openRenameDialog(page) },
+  {
+    name: 'rename-dialog-merge-step',
+    run: async (page) => {
+      await openRenameDialog(page, 'AI & Semis')
+      await chainsDialog(page).getByRole('textbox', { name: 'Chain name' }).fill('Oil & Gas')
+      await chainsDialog(page).getByRole('button', { name: 'Rename' }).click()
+      await expect(page.getByRole('dialog').getByRole('heading', { name: /^Merge into/ })).toBeVisible()
+    },
+  },
+  {
+    name: 'rename-dialog-field-error',
+    run: async (page) => {
+      await openRenameDialog(page)
+      await chainsDialog(page).getByRole('textbox', { name: 'Chain name' }).fill('')
+      await chainsDialog(page).getByRole('button', { name: 'Rename' }).click()
+      await expect(chainsDialog(page).locator('[aria-invalid="true"]')).toBeVisible()
+    },
+  },
+  {
+    name: 'rename-dialog-gone-alert',
+    run: async (page, c) => {
+      await openRenameDialog(page, 'Oil & Gas')
+      // Another tab renames the chain first; the dialog then meets a 404. Put it back for the states after this one.
+      await c.api.renameChain({ from: 'Oil & Gas', to: 'Oil and Gas' })
+      await chainsDialog(page).getByRole('textbox', { name: 'Chain name' }).fill('Energy')
+      await chainsDialog(page).getByRole('button', { name: 'Rename' }).click()
+      await expect(page.getByRole('dialog').getByText('This chain no longer exists.')).toBeVisible()
+      await c.api.renameChain({ from: 'Oil and Gas', to: 'Oil & Gas' })
+    },
+  },
+  {
+    name: 'rename-dialog-server-error-alert',
+    run: async (page) => {
+      await openRenameDialog(page)
+      await page.route('**/api/chains/rename', (route) => route.fulfill({ status: 500, contentType: 'application/problem+json', body: JSON.stringify({ type: 'about:blank', title: 'x', status: 500, code: 'internal' }) }))
+      await chainsDialog(page).getByRole('textbox', { name: 'Chain name' }).fill('Energy')
+      await chainsDialog(page).getByRole('button', { name: 'Rename' }).click()
+      await expect(chainsDialog(page).getByRole('alert')).toBeVisible()
+    },
+  },
+  { name: 'page-at-md', run: async (page) => { await page.setViewportSize({ width: 768, height: 900 }); await open('/chains')(page) } },
+  { name: 'page-at-360', run: async (page) => { await page.setViewportSize({ width: 360, height: 740 }); await open('/chains')(page) } },
+]
+
+/** Signs the browser in as the user a state needs and runs it (routes of an earlier state are dropped first). */
+export async function enterVc(page: Page, state: VcState, ctx: VcCtx) {
+  await page.unrouteAll({ behavior: 'ignoreErrors' })
+  await page.setViewportSize({ width: 1280, height: 900 })
+  const user = state.who === 'noRate' ? ctx.noRate.user : state.who === 'plain' ? ctx.plain : state.who === 'empty' ? ctx.empty : ctx.user
+  await openSignedIn(page, user, '/stocks')
+  await settled(page)
+  await state.run(page, ctx)
+  await settled(page)
 }
