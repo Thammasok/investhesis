@@ -27,7 +27,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <TrendingUpIcon className="size-4" />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid flex-1 text-left text-sm leading-snug">
                   <span className="truncate font-medium">Investhesis</span>
                   <span className="truncate text-xs">US &amp; Thai watchlist</span>
                 </div>

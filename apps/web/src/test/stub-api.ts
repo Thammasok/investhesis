@@ -13,7 +13,7 @@ export class StubApi {
   private readonly handlers = new Map<string, Handler>()
 
   constructor(routes: Record<string, unknown> = {}) {
-    this.on('GET /me', { id: 'user-1', email: 'investor@example.com', displayName: null })
+    this.on('GET /me', { id: 'user-1', email: 'investor@example.com', displayName: null, language: null })
     for (const [key, value] of Object.entries(routes)) this.on(key, value)
   }
 

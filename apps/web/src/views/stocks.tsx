@@ -1,3 +1,4 @@
+import { useT } from '@/i18n'
 import { useMemo } from 'react'
 import { LineChartIcon, PlusIcon, UploadIcon } from 'lucide-react'
 import { Link, Outlet, useLoaderData } from 'react-router'
@@ -17,6 +18,7 @@ import { countLabel } from '@/features/stocks/format'
 import type { StocksPageData } from '@/features/stocks/stocks-data'
 
 export function Component() {
+  const t = useT()
   const { stocks, lists } = useLoaderData() as StocksPageData
   const filters = useStockFilters(stocks)
   const empty = stocks.length === 0
@@ -31,10 +33,10 @@ export function Component() {
   return (
     <section className="space-y-6">
       {empty ? (
-        <PageHeader title="Stocks" />
+        <PageHeader title={t('nav.stocks')} />
       ) : (
         <PageHeader
-          title="Stocks"
+          title={t('nav.stocks')}
           description={countLabel(stocks.length, 'stock')}
           actions={
             <>

@@ -84,7 +84,7 @@ export function createRoutes(
         stocksRoutes(apiClient),
         {
           path: 'account',
-          handle: { crumb: 'Account' } satisfies RouteHandle,
+          handle: { crumb: 'nav.account' } satisfies RouteHandle,
           lazy: () => import('@/views/account'),
         },
         concentrationRoute(apiClient),
@@ -93,7 +93,7 @@ export function createRoutes(
         importExportRoute(apiClient),
         {
           path: '*',
-          handle: { crumb: 'Not found' } satisfies RouteHandle,
+          handle: { crumb: 'nav.notFound' } satisfies RouteHandle,
           lazy: () => import('@/views/not-found'),
         },
       ],

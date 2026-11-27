@@ -9,12 +9,12 @@ import type { RouteHandle } from '@/routers/route-handle'
 export function importExportRoute(api: ApiClient): RouteObject {
   return {
     path: 'import-export',
-    handle: { crumb: 'Import / export' } satisfies RouteHandle,
+    handle: { crumb: 'nav.importExport' } satisfies RouteHandle,
     lazy: async () => ({ Component: (await import('@/views/import-export')).createImportExportPage(api) }),
     children: [
       {
         path: 'import',
-        handle: { crumb: 'Import' } satisfies RouteHandle,
+        handle: { crumb: 'nav.import' } satisfies RouteHandle,
         lazy: async () => {
           const [{ createImportLoader }, { createImportDialog }] = await Promise.all([import('./imports-data'), import('@/views/import-dialog')])
           return { Component: createImportDialog(api), loader: createImportLoader(api) }
