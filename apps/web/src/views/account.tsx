@@ -1,24 +1,21 @@
 import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useCurrentUser } from '@/features/auth/current-user'
 import { ChangePasswordForm } from '@/features/auth/components/change-password-form'
 
 export function Component() {
   const user = useCurrentUser()
-  const { t } = useTranslation()
-  const title = t('nav.account')
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
-    document.title = `${title} · Investhesis`
+    document.title = 'Account · Investhesis'
     headingRef.current?.focus()
-  }, [title])
+  }, [])
 
   return (
     <section className="space-y-6">
       <div className="space-y-1">
         <h1 ref={headingRef} tabIndex={-1} className="font-heading text-2xl font-semibold outline-none">
-          {title}
+          Account
         </h1>
         {user ? <p className="text-sm text-muted-foreground">Signed in as {user.email}</p> : null}
       </div>

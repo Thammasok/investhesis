@@ -1,25 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach, beforeAll, beforeEach, vi } from 'vitest'
-import { initLanguage, resetLanguage } from '@/i18n'
+import { afterEach, vi } from 'vitest'
 
 afterEach(cleanup)
-
-// Load the Thai chunk once per test file, so a test can switch to Thai at once (`renderApp(..., { language })`).
-beforeAll(async () => {
-  await initLanguage('th')
-  resetLanguage()
-})
-
-// Every test starts in English with nothing saved, so the English assertions hold (i18n T-004).
-beforeEach(() => {
-  resetLanguage()
-  try {
-    localStorage.clear()
-  } catch {
-    // a test that replaced localStorage with a throwing stub
-  }
-})
 
 // jsdom has no matchMedia; the sidebar reads it (hooks/use-mobile.ts). Desktop width by default.
 vi.stubGlobal(

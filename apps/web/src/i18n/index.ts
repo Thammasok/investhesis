@@ -1,7 +1,0 @@
-export { i18n } from './i18n.ts'
-export type { ParseKeys as CatalogueKey, TFunction } from 'i18next'
-export { getLanguage, initLanguage, resetLanguage, setLanguage } from './language.ts'
-export { detect, LANGUAGE_STORAGE_KEY } from './detect.ts'
-export { describeIssue, fieldLabel } from './describe-issue.ts'
-export { formatDate, formatTimestamp } from './format-date.ts'
-export { languageOrder } from './collate.ts'

@@ -1,6 +1,5 @@
 import { ListIcon, PlusIcon } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -11,7 +10,6 @@ import { countLabel } from '@/features/stocks/format'
 import type { ListSummary } from '@/features/stocks/types'
 
 export function Component() {
-  const { t } = useTranslation()
   const { lists } = useLoaderData() as { lists: ListSummary[] }
   const [creating, setCreating] = useState(false)
   const newRef = useRef<HTMLButtonElement>(null)
@@ -26,7 +24,7 @@ export function Component() {
     <section className="space-y-6">
       {lists.length === 0 ? (
         <>
-          <PageHeader title={t('nav.lists')} />
+          <PageHeader title="Lists" />
           <Card className="items-center gap-3 py-12 text-center">
             <ListIcon className="size-8 text-muted-foreground" aria-hidden="true" />
             <h2 className="font-heading text-lg font-semibold">No lists yet</h2>
@@ -36,7 +34,7 @@ export function Component() {
         </>
       ) : (
         <>
-          <PageHeader title={t('nav.lists')} description={countLabel(lists.length, 'list')} actions={newButton} />
+          <PageHeader title="Lists" description={countLabel(lists.length, 'list')} actions={newButton} />
           <ListsTable lists={lists} />
         </>
       )}
