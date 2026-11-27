@@ -269,8 +269,8 @@ test.describe('data that changes elsewhere, and the states of the page', () => {
     await page.getByRole('button', { name: 'Save changes' }).click()
     await expect(toast(page, /updated/i).first()).toBeVisible()
     await page.goto('/chains')
-    expect(await laneTickers(chainCard(page, 'AI & Semis'), 'Midstream')).toEqual(['TSM'])
-    expect((await laneTickers(chainCard(page, 'AI & Semis'), 'Downstream')).sort()).toEqual(['MSFT', 'NVDA'])
+    await expect.poll(() => laneTickers(chainCard(page, 'AI & Semis'), 'Midstream')).toEqual(['TSM'])
+    await expect.poll(async () => (await laneTickers(chainCard(page, 'AI & Semis'), 'Downstream')).sort()).toEqual(['MSFT', 'NVDA'])
 
     // INTC deleted: the Integrated area goes
     await page.goto(`/stocks/${id('INTC')}`)
@@ -284,14 +284,14 @@ test.describe('data that changes elsewhere, and the states of the page', () => {
     // List Core deleted: the chains stay and a stale scope falls back with a note
     await seed.api.deleteList(seed.core.id)
     await page.goto('/chains')
-    expect(await chainTitles(page)).toEqual(['AI & Semis', 'Oil & Gas'])
+    await expect.poll(() => chainTitles(page)).toEqual(['AI & Semis', 'Oil & Gas'])
     await page.goto(`/chains?scope=${seed.core.id}`)
     await expect(page.getByText('That list no longer exists. Showing all stocks.')).toBeVisible()
 
     // The last stock of a chain deleted: the chain goes
     for (const t of ['PTTEP', 'PTT', 'BCP']) await seed.api.deleteStock(id(t))
     await page.goto('/chains')
-    expect(await chainTitles(page)).toEqual(['AI & Semis'])
+    await expect.poll(() => chainTitles(page)).toEqual(['AI & Semis'])
   })
 
   test('TC-E-917: the empty states say what to do and lead on', async ({ page }) => {
