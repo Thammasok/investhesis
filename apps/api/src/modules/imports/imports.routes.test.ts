@@ -283,7 +283,7 @@ describe('GET /imports/template.*', () => {
     expect(xlsxRes.headers['content-disposition']).toBe('attachment; filename="investhesis-stocks-template.xlsx"')
     const wb = new ExcelJS.Workbook()
     await wb.xlsx.load(xlsxRes.rawPayload as unknown as ExcelJS.Buffer)
-    expect(wb.worksheets).toHaveLength(1)
+    expect(wb.worksheets.map((w) => w.name)).toEqual(['Stocks', 'Instructions'])
     expect(((wb.worksheets[0]?.getRow(1).values ?? []) as string[]).slice(1)).toEqual(HEADERS)
   })
 

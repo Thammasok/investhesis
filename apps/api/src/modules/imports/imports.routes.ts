@@ -2,7 +2,7 @@ import type { MultipartFile } from '@fastify/multipart'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
-import { ListName } from '@investhesis/domain'
+import { LANGUAGES, ListName, rule } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
@@ -37,6 +37,10 @@ const PreviewOut = z.object({
       errors: z.array(RowError),
     }),
   ),
+})
+
+const TemplateQuery = z.object({
+  lang: z.enum(LANGUAGES, { error: () => rule('oneOf', { values: LANGUAGES }) }).default('en'),
 })
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -110,10 +114,13 @@ export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined; repo?: Part
 
   r.get(
     '/imports/template.xlsx',
-    { schema: { tags: ['imports'], produces: [XLSX_TYPE] } },
+    { schema: { tags: ['imports'], produces: [XLSX_TYPE], querystring: TemplateQuery } },
     async (req, reply) => {
       requireIdentity(req)
-      return reply.header('content-type', XLSX_TYPE).header('content-disposition', attachment('xlsx')).send(await templateXlsx())
+      return reply
+        .header('content-type', XLSX_TYPE)
+        .header('content-disposition', attachment('xlsx'))
+        .send(await templateXlsx(req.query.lang))
     },
   )
 
