@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
+import { FieldErrorOut } from '../../lib/field-error-schema.ts'
 import { HoldingInput, StockInput, StockPatch } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
@@ -84,7 +85,7 @@ const ProblemOut = z.object({
   status: z.number().int(),
   code: z.string(),
   detail: z.string().optional(),
-  errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
+  errors: z.array(FieldErrorOut).optional(),
   requestId: z.string().optional(),
 })
 const StockExistsOut = ProblemOut.extend({ existingStockId: z.uuid().optional() })

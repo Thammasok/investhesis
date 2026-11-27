@@ -2,9 +2,10 @@ import type { MultipartFile } from '@fastify/multipart'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
+import { FieldErrorOut } from '../../lib/field-error-schema.ts'
 import { LANGUAGES, ListName, rule } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
-import { AppError } from '../../lib/app-error.ts'
+import { AppError, fieldError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
 import * as service from './imports.service.ts'
 import { templateCsv, templateXlsx } from './imports.template.ts'
@@ -15,11 +16,11 @@ const ProblemOut = z.object({
   status: z.number().int(),
   code: z.string(),
   detail: z.string().optional(),
-  errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
+  errors: z.array(FieldErrorOut).optional(),
   requestId: z.string().optional(),
 })
 
-const RowError = z.object({ path: z.string(), message: z.string() })
+const RowError = FieldErrorOut
 const PreviewOut = z.object({
   fileName: z.string(),
   format: z.enum(['csv', 'xlsx']),
@@ -157,7 +158,7 @@ export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined; repo?: Part
         throw new AppError({
           status: 400,
           code: 'validation_failed',
-          errors: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+          errors: parsed.error.issues.map((i) => fieldError(i.path.join('.'), i.message)),
         })
       }
       const { duplicateMode, targetListId, newListName } = parsed.data

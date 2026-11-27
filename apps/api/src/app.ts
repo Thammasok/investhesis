@@ -68,7 +68,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   await app.register(healthPlugin, { db: deps.db })
   await app.register(authenticatePlugin, { resolve: deps.resolveIdentity ?? identityResolverFor(config) })
   await app.register(multipartPlugin)
-  await app.register(meRoutes)
+  await app.register(meRoutes, { db: deps.db?.db })
   await app.register(listsRoutes, { db: deps.db?.db })
   await app.register(stocksRoutes, { db: deps.db?.db })
   await app.register(settingsRoutes, { db: deps.db?.db })

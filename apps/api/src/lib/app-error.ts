@@ -1,4 +1,16 @@
-export type FieldError = { path: string; message: string }
+import { issueRule, issueText, type RuleParams } from '@investhesis/domain'
+
+/** `message` is the English text of `rule`; clients translate from `rule` and `params` (i18n ADR-002). */
+export type FieldError = { path: string; message: string; rule: string; params?: RuleParams }
+
+/**
+ * Builds a FieldError from an issue message: a rule the domain encoded keeps its id and params, any other
+ * text (a Zod built-in message) is the `invalid` rule and keeps its own text.
+ */
+export function fieldError(path: string, issueMessage: string): FieldError {
+  const { rule, params } = issueRule(issueMessage)
+  return { path, message: issueText(issueMessage, 'en'), rule, ...(params !== undefined && { params }) }
+}
 
 export class AppError extends Error {
   readonly status: number

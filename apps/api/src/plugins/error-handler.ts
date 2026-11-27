@@ -1,8 +1,7 @@
 import { hasZodFastifySchemaValidationErrors } from '@fastify/type-provider-zod'
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
-import { issueText } from '@investhesis/domain'
-import { AppError, type FieldError } from '../lib/app-error.ts'
+import { AppError, fieldError, type FieldError } from '../lib/app-error.ts'
 import { PROBLEM_CONTENT_TYPE, problem, type Problem } from '../lib/problem.ts'
 
 const CLIENT_CODES: Record<number, string> = {
@@ -24,7 +23,7 @@ function fieldErrors(error: { validation: readonly unknown[] }): FieldError[] {
   return error.validation.map((v) => {
     const item = v as { instancePath?: string; message?: string; params?: { issue?: { path?: PropertyKey[]; message?: string } } }
     const path = item.params?.issue?.path?.map(String).join('.') ?? (item.instancePath ?? '').replace(/^\//, '').replaceAll('/', '.')
-    return { path, message: issueText(item.params?.issue?.message ?? item.message ?? 'invalid') }
+    return fieldError(path, item.params?.issue?.message ?? item.message ?? 'invalid')
   })
 }
 

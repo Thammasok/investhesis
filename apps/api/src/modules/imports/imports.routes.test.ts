@@ -78,7 +78,7 @@ describe('POST /imports/preview rows', () => {
       expect(body.rows.map((r: { rowNumber: number; status: string }) => [r.rowNumber, r.status])).toEqual([[2, 'new'], [3, 'duplicate'], [4, 'error'], [5, 'error']])
       expect(body.rows[1].existingStockId).toBe(saved)
       expect(body.rows[2].errors).toEqual([expect.objectContaining({ path: 'market' })])
-      expect(body.rows[3].errors).toEqual([{ path: 'ticker', message: expect.stringContaining('row 2') }])
+      expect(body.rows[3].errors).toEqual([expect.objectContaining({ path: 'ticker', message: expect.stringContaining('row 2'), rule: 'repeatsRow' })])
     } finally {
       await t2.cleanup()
     }

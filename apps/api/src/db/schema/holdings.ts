@@ -20,5 +20,6 @@ export const userSettings = app.table('user_settings', {
   concentrationThreshold: smallint('concentration_threshold').notNull().default(40),
   usdThbRate: numeric('usd_thb_rate', { precision: 18, scale: 6 }),
   usdThbRateUpdatedAt: timestamp('usd_thb_rate_updated_at', { withTimezone: true }),
+  language: text('language').$type<'en' | 'th'>(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
