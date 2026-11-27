@@ -75,7 +75,7 @@ read all of them.
   NFR-007.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: review
 - size: L
 ```
 
@@ -881,7 +881,7 @@ unit:
   docs/features/i18n/v1.0/test-cases.md.
 - agent: software-tester-design
 - depends_on: []
-- status: backlog
+- status: done
 - size: M
 ```
 
