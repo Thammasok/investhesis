@@ -1,8 +1,20 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach, vi } from 'vitest'
+import { afterEach, beforeEach, vi } from 'vitest'
+import { i18n } from '@/i18n/i18n'
 
 afterEach(cleanup)
+
+// Every test starts in English with nothing saved, so existing English assertions keep holding.
+beforeEach(async () => {
+  await i18n.changeLanguage('en')
+  document.documentElement.lang = 'en'
+  try {
+    localStorage.clear()
+  } catch {
+    // no storage in this environment
+  }
+})
 
 // jsdom has no matchMedia; the sidebar reads it (hooks/use-mobile.ts). Desktop width by default.
 vi.stubGlobal(

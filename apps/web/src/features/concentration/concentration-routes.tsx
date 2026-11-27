@@ -7,7 +7,7 @@ import { revalidateOnSubmitOrPathChange } from '@/routers/should-revalidate'
 export function concentrationRoute(api: ApiClient): RouteObject {
   return {
     path: 'concentration',
-    handle: { crumb: 'Concentration' } satisfies RouteHandle,
+    handle: { crumb: 'nav.concentration' } satisfies RouteHandle,
     // Scope, lens and measure live in the address, but regrouping is local (NFR-001): only a save
     // (a form submission) or arriving on the page reads the API again.
     shouldRevalidate: revalidateOnSubmitOrPathChange,

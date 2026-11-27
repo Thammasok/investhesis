@@ -20,6 +20,10 @@
           {
             "name": "@supabase/supabase-js",
             "message": "Import the AuthClient port instead; only features/auth/supabase-auth-client.ts may use supabase-js."
+          },
+          {
+            "name": "i18next",
+            "message": "Use react-i18next hooks in components; only src/i18n/ imports i18next."
           }
         ]
       }
@@ -39,7 +43,37 @@
         "src/features/auth/supabase-auth-client.ts"
       ],
       "rules": {
-        "no-restricted-imports": "off"
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "i18next",
+                "message": "Use react-i18next hooks in components; only src/i18n/ imports i18next."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/i18n/**",
+        "src/test/**",
+        "src/routers/route-handle.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@supabase/supabase-js",
+                "message": "Import the AuthClient port instead."
+              }
+            ]
+          }
+        ]
       }
     }
   ]

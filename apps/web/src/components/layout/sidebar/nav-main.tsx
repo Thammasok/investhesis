@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { NavLink, useLocation } from "react-router"
 import {
   SidebarGroup,
@@ -14,6 +15,7 @@ function isActivePath(pathname: string, to: string) {
 }
 
 export function NavMain() {
+  const { t } = useTranslation()
   const { pathname } = useLocation()
   const { isMobile, setOpenMobile } = useSidebar()
 
@@ -21,7 +23,9 @@ export function NavMain() {
     <SidebarGroup>
       <SidebarGroupLabel>Portfolio</SidebarGroupLabel>
       <SidebarMenu>
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {navItems.map(({ to, labelKey, icon: Icon }) => {
+          const label = t(labelKey)
+          return (
           <SidebarMenuItem key={to}>
             <SidebarMenuButton asChild isActive={isActivePath(pathname, to)} tooltip={label}>
               {/* On a phone the sidebar is a sheet; close it once a page is picked. */}
@@ -31,7 +35,8 @@ export function NavMain() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
-        ))}
+          )
+        })}
       </SidebarMenu>
     </SidebarGroup>
   )

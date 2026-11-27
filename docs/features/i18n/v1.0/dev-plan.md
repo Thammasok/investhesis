@@ -404,7 +404,7 @@ unit:
   FR-010, FR-014, NFR-002, NFR-003, NFR-006.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: doing
+- status: review
 - size: L
 ```
 
