@@ -1,6 +1,7 @@
 import {
   canonicaliseRow,
   EXPORT_ONLY_HEADERS,
+  issueText,
   resolveEconomicCycle,
   TEMPLATE_COLUMNS,
   type FieldError,
@@ -94,7 +95,7 @@ async function analyseFile(fileName: string, bytes: Buffer) {
   const rows = file.rows.map((row): Analysed => {
     const cells = cellsOf(row, index)
     const result = canonicaliseRow(cells)
-    if (!result.ok) return { row, cells, errors: result.errors.map(({ path, message }) => ({ path, message })) }
+    if (!result.ok) return { row, cells, errors: result.errors.map(({ path, message }) => ({ path, message: issueText(message) })) }
     const key = `${result.input.market}/${result.input.ticker}`
     const earlier = firstSeen.get(key)
     if (earlier !== undefined) return { row, cells, errors: [{ path: 'ticker', message: `repeats row ${earlier} in this file` }] }

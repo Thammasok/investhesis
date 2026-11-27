@@ -91,11 +91,19 @@ export interface ConcentrationResult {
   totalValue: string
 }
 
+/** Language-aware tie order: groups of equal size sort by the label shown, compared by `compare`. */
+export interface LabelOrder {
+  label: (lens: string, value: string) => string
+  compare: (a: string, b: string) => number
+}
+
 export interface GroupConcentrationArgs {
   stocks: readonly GroupableStock[]
   lens: ConcentrationLens | ConcentrationLens['key']
   usdThbRate: string | null
   threshold: number
+  /** Omitted: ties break by the canonical value in code-unit order. */
+  order?: LabelOrder
 }
 
 // shares (4) + cost (4) + rate (6)
@@ -181,9 +189,11 @@ export function groupConcentration(args: GroupConcentrationArgs): ConcentrationR
     }
   }
 
-  const ordered = [...buckets.values()].sort(
-    (a, b) => b.ids.length - a.ids.length || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0),
-  )
+  const { order } = args
+  const tie = order
+    ? (a: Bucket, b: Bucket) => order.compare(order.label(lens.key, a.label), order.label(lens.key, b.label))
+    : (a: Bucket, b: Bucket) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0)
+  const ordered = [...buckets.values()].sort((a, b) => b.ids.length - a.ids.length || tie(a, b))
   if (notSet) ordered.push(notSet)
 
   const countTotal = BigInt(args.stocks.length)

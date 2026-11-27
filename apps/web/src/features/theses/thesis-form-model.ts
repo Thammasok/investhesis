@@ -1,4 +1,4 @@
-import { MESSAGES, THESIS_TYPES, parseDecimal, thesisInput, type ThesisInput } from '@investhesis/domain'
+import { MESSAGES, THESIS_TYPES, issueText, parseDecimal, thesisInput, type ThesisInput } from '@investhesis/domain'
 import { decimalForInput } from '@/lib/number-format'
 import type { ThesisField } from './thesis-actions'
 import type { Thesis } from './types'
@@ -57,9 +57,9 @@ export function checkValues(values: FormValues, today: string): Checked {
     const key = issue.path[0]
     if (!isField(key) || errors[key]) continue
     errors[key] =
-      key === 'date' && issue.message === MESSAGES.thesisDateFuture
+      key === 'date' && issueText(issue.message) === MESSAGES.thesisDateFuture
         ? "The date can't be in the future."
-        : `${LABEL[key]} ${issue.message}`
+        : `${LABEL[key]} ${issueText(issue.message)}`
   }
   // A blank choice reads "is required", not the enum's "must be one of".
   if (errors.type && values.type === '') errors.type = `${LABEL.type} ${MESSAGES.required}`

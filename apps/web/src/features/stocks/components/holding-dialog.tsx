@@ -1,7 +1,7 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useFetcher } from 'react-router'
-import { HoldingInput } from '@investhesis/domain'
+import { HoldingInput, issueText } from '@investhesis/domain'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -92,7 +92,7 @@ function HoldingForm({
       const next: Errors = {}
       for (const issue of parsed.error.issues) {
         const key = issue.path[0]
-        if ((key === 'shares' || key === 'averageCost') && !next[key]) next[key] = describeProblem(FIELD_LABEL[key], issue.message)
+        if ((key === 'shares' || key === 'averageCost') && !next[key]) next[key] = describeProblem(FIELD_LABEL[key], issueText(issue.message))
       }
       setClientErrors(next)
       ;(next.shares ? sharesRef : costRef).current?.focus()

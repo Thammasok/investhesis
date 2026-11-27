@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import {
   THESIS_TYPES,
+  issueText,
   latestThesisDate,
   parseDecimal,
   thesisInput,
@@ -19,7 +20,7 @@ const notFound = () => new AppError({ status: 404, code: 'not_found' })
 const invalid = (errors: FieldError[]) => new AppError({ status: 400, code: 'validation_failed', errors })
 
 const issues = (error: z.ZodError, prefix = ''): FieldError[] =>
-  error.issues.map((i) => ({ path: prefix + i.path.join('.'), message: i.message }))
+  error.issues.map((i) => ({ path: prefix + i.path.join('.'), message: issueText(i.message) }))
 
 /** Postgres text cannot hold NUL; refuse it here so it is a 400, not a 500. */
 function nulErrors(value: { note?: string | undefined; invalidation?: string | null | undefined }, prefix = ''): FieldError[] {

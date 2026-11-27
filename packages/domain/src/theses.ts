@@ -1,18 +1,14 @@
 import { z } from 'zod'
 import { oneOf } from './fields.ts'
-import { MESSAGES } from './messages.ts'
+import { THESIS_TYPE_LABELS_EN } from './i18n/labels.ts'
+import { rule } from './i18n/rules.ts'
 import { rejectUnknownKeys } from './stock-schema.ts'
 import { charLength } from './vocabulary.ts'
 
 export const THESIS_TYPES = ['buy', 'sell', 'update', 'review'] as const
 export type ThesisType = (typeof THESIS_TYPES)[number]
 
-export const THESIS_TYPE_LABELS: Record<ThesisType, string> = {
-  buy: 'Buy',
-  sell: 'Sell',
-  update: 'Update',
-  review: 'Review',
-}
+export const THESIS_TYPE_LABELS: Record<ThesisType, string> = THESIS_TYPE_LABELS_EN
 
 export const THESIS_NOTE_MAX = 10_000
 export const THESIS_INVALIDATION_MAX = 2_000
@@ -37,21 +33,21 @@ const isRealDate = (s: string): boolean => {
 const normaliseText = (s: string) => s.replaceAll('\r\n', '\n').trim()
 
 const note = z
-  .string({ error: () => MESSAGES.required })
+  .string({ error: () => rule('required') })
   .transform(normaliseText)
   .check((ctx) => {
     const n = charLength(ctx.value)
     if (n < 1 || n > THESIS_NOTE_MAX) {
-      ctx.issues.push({ code: 'custom', message: MESSAGES.thesisNoteLength, input: ctx.value })
+      ctx.issues.push({ code: 'custom', message: rule('thesisNoteLength'), input: ctx.value })
     }
   })
 
 const invalidation = z
-  .string({ error: () => MESSAGES.required })
+  .string({ error: () => rule('required') })
   .transform(normaliseText)
   .check((ctx) => {
     if (charLength(ctx.value) > THESIS_INVALIDATION_MAX) {
-      ctx.issues.push({ code: 'custom', message: MESSAGES.thesisInvalidationLength, input: ctx.value })
+      ctx.issues.push({ code: 'custom', message: rule('thesisInvalidationLength'), input: ctx.value })
     }
   })
   .transform((s) => (s === '' ? null : s))
@@ -59,9 +55,9 @@ const invalidation = z
   .transform((v) => (v === undefined ? undefined : (v ?? null)))
 
 const targetPrice = z
-  .string({ error: () => MESSAGES.decimalString })
+  .string({ error: () => rule('decimalString') })
   .refine((s) => s === '' || (TARGET_PRICE_PATTERN.test(s) && /[1-9]/.test(s)), {
-    error: MESSAGES.thesisTargetPriceFormat,
+    error: rule('thesisTargetPriceFormat'),
   })
   .transform((s) => (s === '' ? null : s))
   .nullish()
@@ -69,9 +65,9 @@ const targetPrice = z
 
 const dateField = (today: string) =>
   z
-    .string({ error: () => MESSAGES.required })
-    .refine(isRealDate, { error: MESSAGES.thesisDateFormat })
-    .refine((s) => !isRealDate(s) || s <= today, { error: MESSAGES.thesisDateFuture })
+    .string({ error: () => rule('required') })
+    .refine(isRealDate, { error: rule('thesisDateFormat') })
+    .refine((s) => !isRealDate(s) || s <= today, { error: rule('thesisDateFuture') })
 
 const shape = (today: string) => ({
   type: oneOf(THESIS_TYPES),

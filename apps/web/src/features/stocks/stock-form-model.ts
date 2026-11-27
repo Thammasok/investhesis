@@ -1,4 +1,4 @@
-import { CURRENCY_BY_MARKET, HoldingInput, MESSAGES, resolveEconomicCycle, StockInput, type GicsSector } from '@investhesis/domain'
+import { CURRENCY_BY_MARKET, HoldingInput, MESSAGES, issueText, resolveEconomicCycle, StockInput, type GicsSector } from '@investhesis/domain'
 import { decimalForInput } from '@/lib/number-format'
 import type { Holding, Stock } from './types'
 
@@ -214,11 +214,11 @@ export function checkValues(values: FormValues): Checked {
   const errors: FieldErrors = {}
   for (const issue of result.error?.issues ?? []) {
     const key = issue.path[0]
-    if (isField(key) && !errors[key]) errors[key] = describeProblem(key, issue.message)
+    if (isField(key) && !errors[key]) errors[key] = describeProblem(key, issueText(issue.message))
   }
   for (const issue of held?.error?.issues ?? []) {
     const key = HOLDING_FIELD[String(issue.path[0])]
-    if (key && !errors[key]) errors[key] = describeProblem(key, issue.message)
+    if (key && !errors[key]) errors[key] = describeProblem(key, issueText(issue.message))
   }
   // A blank choice reads "is required", not the enum's "must be one of".
   for (const key of ['market', 'exchange'] as const) {
