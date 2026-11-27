@@ -4,7 +4,7 @@ import { PageSkeleton } from '@/components/page-skeleton'
 import { AuthLayout } from '@/components/layout/auth-layout'
 import type { AuthClient } from '@/features/auth/auth-client'
 import { AuthClientProvider } from '@/features/auth/auth-client-provider'
-import { loadCurrentUser } from '@/features/auth/current-user'
+import { loadCurrentUser, type AccountLanguageState } from '@/features/auth/current-user'
 import { createGuards, sessionEndedHandler } from '@/features/auth/guards'
 import { createAuthLoaders } from '@/features/auth/loaders'
 import { chainsRoute } from '@/features/chains/chains-routes'
@@ -13,6 +13,7 @@ import { importExportRoute } from '@/features/imports/imports-routes'
 import { listsRoutes } from '@/features/lists/lists-routes'
 import { stocksRoutes } from '@/features/stocks/stocks-routes'
 import { createApiClient, type ApiClient } from '@/lib/api-client'
+import { ApiClientProvider } from '@/lib/api-client-provider'
 import { ConfirmFailed, ConfirmingScreen } from '@/features/auth/components/confirming'
 import { RouteError } from '@/views/route-error'
 import type { RouteHandle } from './route-handle'
@@ -27,6 +28,7 @@ export function createRoutes(
   { apiClient = createApiClient({ authClient, onSessionEnded: () => {} }) }: { apiClient?: ApiClient } = {},
 ): RouteObject[] {
   const { requireSession, redirectIfSignedIn } = createGuards(authClient)
+  const accountLanguage: AccountLanguageState = {}
   const authLoaders = createAuthLoaders(authClient)
   // The pages under /auth read the client from context; the layout route supplies it.
   const AuthShell = () => (
@@ -37,7 +39,9 @@ export function createRoutes(
   // The signed-in area reads the client too (sign out, change password).
   const AppShell = () => (
     <AuthClientProvider client={authClient}>
-      <AppLayout />
+      <ApiClientProvider client={apiClient}>
+        <AppLayout />
+      </ApiClientProvider>
     </AuthClientProvider>
   )
   return [
@@ -70,7 +74,7 @@ export function createRoutes(
       // Middleware, not a loader: matched loaders run in parallel, so only middleware stops a child
       // loader from calling the API before the visitor is known to be signed in.
       middleware: [requireSession],
-      loader: () => loadCurrentUser(apiClient, authClient),
+      loader: () => loadCurrentUser(apiClient, authClient, accountLanguage),
       // The menu's email changes only with the session, so a navigation within one page (a regroup on
       // /concentration changes only the query) does not read /me again; forms and page changes still do.
       shouldRevalidate: ({ currentUrl, nextUrl, formMethod, defaultShouldRevalidate }) =>

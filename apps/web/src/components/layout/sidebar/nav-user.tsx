@@ -1,6 +1,9 @@
 import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { useAuthClient } from "@/features/auth/auth-client-context"
+import { saveLanguage } from "@/features/settings/save-language"
+import { LanguageSwitch } from "@/i18n/language-switch"
+import { useApiClient } from "@/lib/api-client-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -47,6 +50,7 @@ function UserSummary({ user }: { user: SidebarUser }) {
 export function NavUser({ user }: { user: SidebarUser }) {
   const { isMobile } = useSidebar()
   const authClient = useAuthClient()
+  const api = useApiClient()
   const navigate = useNavigate()
 
   async function signOut() {
@@ -88,6 +92,8 @@ export function NavUser({ user }: { user: SidebarUser }) {
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <LanguageSwitch variant="menu" onChosen={(language) => void saveLanguage(api, language)} />
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => void signOut()}>
               <LogOutIcon />

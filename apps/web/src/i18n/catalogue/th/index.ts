@@ -3,6 +3,7 @@ import type { en } from '../en/index'
 import { common_th } from './common'
 import { errors_th } from './errors'
 import { fields_th } from './fields'
+import { language_th } from './language'
 import { nav_th } from './nav'
 import { placeholder_th } from './placeholder'
 
@@ -10,6 +11,7 @@ export const th: Catalogue<typeof en> = {
   common: common_th,
   errors: errors_th,
   fields: fields_th,
+  language: language_th,
   nav: nav_th,
   placeholder: placeholder_th,
 }

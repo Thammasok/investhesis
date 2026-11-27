@@ -526,7 +526,7 @@ instead of loosening TC-U-1028. Do not use `Intl.DateTimeFormat('th')` for dates
   localStorage. Covers FR-001, FR-002, FR-003, NFR-001, NFR-004.
 - agent: react-vite-developer
 - depends_on: [T-004]
-- status: backlog
+- status: review
 - size: M
 ```
 

@@ -1,20 +1,23 @@
 import { Suspense } from "react"
 import { Link, Outlet } from "react-router"
 import { TrendingUpIcon } from "lucide-react"
+import { LanguageAnnouncer, LanguageSwitch } from "@/i18n/language-switch"
 
 /** Shell of the sign-in pages, from shadcn's `login-02` block (form left, panel right). */
 export function AuthLayout() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
+        <div className="flex items-center justify-between gap-2">
           <Link to="/auth/sign-in" className="flex items-center gap-2 font-medium">
             <div className="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <TrendingUpIcon className="size-4" />
             </div>
             Investhesis
           </Link>
+          <LanguageSwitch variant="inline" />
         </div>
+        <LanguageAnnouncer />
         <main className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
             <Suspense>

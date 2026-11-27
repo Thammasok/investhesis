@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useCurrentUser } from "@/features/auth/current-user"
+import { LanguageAnnouncer } from "@/i18n/language-switch"
 import { cn } from "@/lib/utils"
 import { AppBreadcrumb } from "./app-breadcrumb"
 import { AppSidebar } from "./sidebar/app-sidebar"
@@ -22,6 +23,7 @@ export function AppLayout() {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar user={user} />
+        <LanguageAnnouncer />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">
