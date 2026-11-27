@@ -7,7 +7,7 @@ import { revalidateOnSubmitOrPathChange } from '@/routers/should-revalidate'
 export function chainsRoute(api: ApiClient): RouteObject {
   return {
     path: 'chains',
-    handle: { crumb: 'nav.valueChains' } satisfies RouteHandle,
+    handle: { crumb: 'Value chains' } satisfies RouteHandle,
     // Scope, search and filters live in the address but regroup locally (NFR-001): only a save or arriving reads the API.
     shouldRevalidate: revalidateOnSubmitOrPathChange,
     lazy: async () => {

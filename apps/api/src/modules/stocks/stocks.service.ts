@@ -1,7 +1,7 @@
 import { StockInput, resolveEconomicCycle, type HoldingInput, type StockPatch } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import type { LensSource } from '../../db/schema/index.ts'
-import { AppError, fieldError, type FieldError } from '../../lib/app-error.ts'
+import { AppError, type FieldError } from '../../lib/app-error.ts'
 import { uuidv7 } from '../../lib/ids.ts'
 import { addMemberships, findOwnedList, pgError } from '../lists/lists.repository.ts'
 import * as repo from './stocks.repository.ts'
@@ -126,7 +126,7 @@ export async function updateStock(db: Db, userId: string, id: string, patch: Sto
   for (const key of touched) merged[key] = patch[key as keyof StockPatch]
   const parsed = StockInput.safeParse(merged)
   if (!parsed.success) {
-    const errors: FieldError[] = parsed.error.issues.map((i) => fieldError(i.path.join('.'), i.message))
+    const errors: FieldError[] = parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))
     throw new AppError({ status: 400, code: 'validation_failed', errors })
   }
 

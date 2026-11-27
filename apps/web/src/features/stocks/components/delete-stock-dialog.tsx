@@ -1,6 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
 import { useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import {
   AlertDialog,
@@ -30,7 +29,6 @@ type DeleteStockDialogProps = {
 
 /** Confirms deleting a stock; focus starts on Cancel. Success redirects to /stocks from the action. */
 export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, returnFocusTo }: DeleteStockDialogProps) {
-  const { t } = useTranslation()
   const fetcher = useFetcher<DetailActionResult>()
   const submitted = useRef(false)
   const pending = fetcher.state !== 'idle'
@@ -56,11 +54,10 @@ export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, retu
         }}
       >
         <AlertDialogHeader>
-          <AlertDialogTitle>{t('stocks.delete.title', { ticker: stock.ticker })}</AlertDialogTitle>
+          <AlertDialogTitle>Delete {stock.ticker}?</AlertDialogTitle>
           <AlertDialogDescription>
-            {lists > 0 ? t('stocks.delete.removedFromLists', { lists: countLabel(lists, 'list') }) : ''}
-            {thesisSentence(thesisCount, t)}
-            {t('stocks.delete.cantUndo')}
+            {lists > 0 ? `It will be removed from ${countLabel(lists, 'list')}. ` : ''}
+            {thesisSentence(thesisCount)}This can&apos;t be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         {failure ? (
@@ -69,7 +66,7 @@ export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, retu
           </Alert>
         ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             className={SOLID_DESTRUCTIVE_LIGHT}
@@ -77,7 +74,7 @@ export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, retu
             onClick={confirm}
           >
             {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-            {pending ? t('stocks.delete.deleting') : t('common.delete')}
+            {pending ? 'Deleting…' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -86,10 +83,8 @@ export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, retu
 }
 
 /** The thesis log goes with the stock: say so with the count when it is known, generically when it is not. */
-function thesisSentence(count: number | null, t: ReturnType<typeof useTranslation>['t']): string {
-  // The plural key set makes the typed overload too deep for tsc; the keys are checked by the Thai parity test.
-  const text = t as unknown as (key: string, options?: object) => string
-  if (count === null) return text('stocks.delete.thesesUnknown')
+function thesisSentence(count: number | null): string {
+  if (count === null) return 'Any thesis entries for this stock are deleted too. '
   if (count === 0) return ''
-  return text('stocks.delete.thesesKnown', { count })
+  return `This also deletes its ${count} thesis ${count === 1 ? 'entry' : 'entries'}. `
 }

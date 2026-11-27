@@ -6,16 +6,14 @@ export type SettingsRow = {
   concentrationThreshold: number
   usdThbRate: string | null
   usdThbRateUpdatedAt: Date | null
-  language: 'en' | 'th' | null
 }
 
-export type SettingsChange = { concentrationThreshold?: number; usdThbRate?: string | null; language?: 'en' | 'th' }
+export type SettingsChange = { concentrationThreshold?: number; usdThbRate?: string | null }
 
 const columns = {
   concentrationThreshold: userSettings.concentrationThreshold,
   usdThbRate: userSettings.usdThbRate,
   usdThbRateUpdatedAt: userSettings.usdThbRateUpdatedAt,
-  language: userSettings.language,
 }
 
 export async function findSettings(db: DbOrTx, userId: string): Promise<SettingsRow | undefined> {
@@ -31,7 +29,6 @@ export async function upsertSettings(db: Db, userId: string, change: SettingsCha
       usdThbRate: change.usdThbRate,
       usdThbRateUpdatedAt: change.usdThbRate === null ? null : sql`now()`,
     }),
-    ...(change.language !== undefined && { language: change.language }),
     updatedAt: sql`now()`,
   }
   const [row] = await db

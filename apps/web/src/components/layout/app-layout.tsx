@@ -1,29 +1,27 @@
 import { Suspense } from "react"
-import { useTranslation } from "react-i18next"
 import { Outlet, useNavigation } from "react-router"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { useCurrentUser } from "@/features/auth/current-user"
-import { LanguageAnnouncer } from "@/i18n/language-switch"
 import { cn } from "@/lib/utils"
 import { AppBreadcrumb } from "./app-breadcrumb"
 import { AppSidebar } from "./sidebar/app-sidebar"
-import { sidebarUserFromEmail } from "./sidebar/sidebar-user"
+import { sidebarUserFromEmail, type SidebarUser } from "./sidebar/sidebar-user"
+
+// Shown only when neither GET /me nor the session gave an email.
+const unknownUser: SidebarUser = { name: "Account", email: "Account" }
 
 /** Shell of the signed-in area, from shadcn's `sidebar-08` block (inset sidebar). */
 export function AppLayout() {
-  const { t } = useTranslation()
   const navigation = useNavigation()
   const current = useCurrentUser()
-  // Shown only when neither GET /me nor the session gave an email.
-  const user = current ? sidebarUserFromEmail(current.email) : { name: t("nav.account"), email: t("nav.account") }
+  const user = current ? sidebarUserFromEmail(current.email) : unknownUser
 
   return (
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar user={user} />
-        <LanguageAnnouncer />
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center gap-2">
             <div className="flex items-center gap-2 px-4">

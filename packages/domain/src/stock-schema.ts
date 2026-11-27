@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { fields } from './fields.ts'
-import { rule } from './i18n/rules.ts'
+import { MESSAGES } from './messages.ts'
 import { CURRENCY_BY_MARKET, EXCHANGES_BY_MARKET, INDEXES_BY_MARKET } from './vocabulary.ts'
 
 const nullable = <T extends z.ZodType>(schema: T) => schema.nullish().default(null)
@@ -50,7 +50,7 @@ const patchShape = {
 /** Rejects any key outside the shape; the issue path is the key itself. */
 export function rejectUnknownKeys(value: Record<string, unknown>, known: readonly string[], ctx: z.RefinementCtx) {
   for (const key of Object.keys(value)) {
-    if (!known.includes(key)) ctx.addIssue({ code: 'custom', path: [key], message: rule('unknownField') })
+    if (!known.includes(key)) ctx.addIssue({ code: 'custom', path: [key], message: MESSAGES.unknownField })
   }
 }
 
@@ -61,7 +61,7 @@ export const StockInput = z
 
     const exchanges: readonly string[] = EXCHANGES_BY_MARKET[v.market]
     if (!exchanges.includes(v.exchange)) {
-      ctx.addIssue({ code: 'custom', path: ['exchange'], message: rule('exchangeForMarket', { market: v.market, allowed: exchanges }) })
+      ctx.addIssue({ code: 'custom', path: ['exchange'], message: MESSAGES.exchangeForMarket(v.market, exchanges) })
     }
 
     const indexes: readonly string[] = INDEXES_BY_MARKET[v.market]
@@ -69,23 +69,23 @@ export const StockInput = z
       ctx.addIssue({
         code: 'custom',
         path: ['indexMembership'],
-        message: rule('indexForMarket', { market: v.market, allowed: indexes }),
+        message: MESSAGES.indexForMarket(v.market, indexes),
       })
     }
 
     if (v.market === 'TH') {
       if (v.setIndustryGroup && !v.gicsSector) {
-        ctx.addIssue({ code: 'custom', path: ['gicsSector'], message: rule('thNeedsGics') })
+        ctx.addIssue({ code: 'custom', path: ['gicsSector'], message: MESSAGES.thNeedsGics })
       }
       if (v.gicsSector && !v.setIndustryGroup) {
-        ctx.addIssue({ code: 'custom', path: ['setIndustryGroup'], message: rule('thNeedsSetGroup') })
+        ctx.addIssue({ code: 'custom', path: ['setIndustryGroup'], message: MESSAGES.thNeedsSetGroup })
       }
     } else if (v.setIndustryGroup) {
-      ctx.addIssue({ code: 'custom', path: ['setIndustryGroup'], message: rule('usNoSetGroup') })
+      ctx.addIssue({ code: 'custom', path: ['setIndustryGroup'], message: MESSAGES.usNoSetGroup })
     }
 
     if (v.valueChainPosition && v.valueChainPosition !== 'None' && !v.valueChain) {
-      ctx.addIssue({ code: 'custom', path: ['valueChain'], message: rule('chainNeedsName') })
+      ctx.addIssue({ code: 'custom', path: ['valueChain'], message: MESSAGES.chainNeedsName })
     }
   })
   .transform((v) => ({

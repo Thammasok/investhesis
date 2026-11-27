@@ -1,21 +1,17 @@
-import { NOT_SET_LABELS, lensValueLabel } from '@investhesis/domain'
 import type { ReactNode } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { fieldLabelOf, type FieldName } from '../stock-form-model'
-import { useLanguage } from '../use-language'
+import { FIELD_LABELS, type FieldName } from '../stock-form-model'
 import { errorProps, NONE } from './form-field-props'
 
 /** Visible `*` for the eye, "required" for a screen reader. */
 export function Required() {
-  const { t } = useTranslation()
   return (
     <>
       <span aria-hidden="true">*</span>
-      <span className="sr-only">{t('stocks.form.required')}</span>
+      <span className="sr-only">required</span>
     </>
   )
 }
@@ -27,8 +23,6 @@ export function FieldMessage({ name, error }: { name: FieldName; error: string |
 type SelectFieldProps = {
   name: FieldName
   label?: string
-  /** The lens whose labels name the options (Thai shows the label, the English value is the hover title); none for plain values such as exchanges. */
-  lens?: string
   options: readonly string[]
   value: string
   onChange: (value: string) => void
@@ -48,8 +42,7 @@ type SelectFieldProps = {
 /** A labelled single-choice select with an optional "Not set" item. */
 export function SelectField({
   name,
-  label: labelProp,
-  lens,
+  label = FIELD_LABELS[name],
   options,
   value,
   onChange,
@@ -62,9 +55,6 @@ export function SelectField({
   badge,
   className,
 }: SelectFieldProps) {
-  const lang = useLanguage()
-  const label = labelProp ?? fieldLabelOf(name, lang)
-  const optionLabel = (option: string) => (lens ? lensValueLabel(lens, option, lang) : option)
   const id = `stock-${name}`
   const shown = value || shownValue || (placeholder ? '' : NONE)
   return (
@@ -87,12 +77,12 @@ export function SelectField({
         <SelectContent>
           {placeholder ? null : (
             <SelectItem value={NONE} className="text-muted-foreground">
-              {NOT_SET_LABELS[lang]}
+              Not set
             </SelectItem>
           )}
           {options.map((option) => (
-            <SelectItem key={option} value={option} disabled={disabledOptions.includes(option)} title={optionLabel(option) === option ? undefined : option}>
-              {optionLabel(option)}
+            <SelectItem key={option} value={option} disabled={disabledOptions.includes(option)}>
+              {option}
             </SelectItem>
           ))}
         </SelectContent>
@@ -104,7 +94,6 @@ export function SelectField({
 
 type CheckGroupProps = {
   name: FieldName
-  lens?: string
   options: readonly string[]
   value: string[]
   onChange: (value: string[]) => void
@@ -114,12 +103,11 @@ type CheckGroupProps = {
 }
 
 /** A fieldset of checkboxes for a multi-value lens. */
-export function CheckGroup({ name, lens, options, value, onChange, error, empty, className }: CheckGroupProps) {
-  const lang = useLanguage()
+export function CheckGroup({ name, options, value, onChange, error, empty, className }: CheckGroupProps) {
   const toggle = (option: string, on: boolean) => onChange(on ? [...value, option] : value.filter((v) => v !== option))
   return (
     <FieldSet className={className} {...(error ? { 'aria-describedby': `stock-${name}-error` } : {})}>
-      <FieldLegend variant="label">{fieldLabelOf(name, lang)}</FieldLegend>
+      <FieldLegend variant="label">{FIELD_LABELS[name]}</FieldLegend>
       {options.length === 0 && empty ? <p className="text-sm text-muted-foreground">{empty}</p> : null}
       <div className="flex flex-wrap gap-x-6 gap-y-2">
         {options.map((option, index) => {
@@ -133,8 +121,8 @@ export function CheckGroup({ name, lens, options, value, onChange, error, empty,
                 onCheckedChange={(on) => toggle(option, on === true)}
                 {...(index === 0 ? errorProps(name, error) : {})}
               />
-              <FieldLabel htmlFor={id} className="font-normal" title={lens && lensValueLabel(lens, option, lang) !== option ? option : undefined}>
-                {lens ? lensValueLabel(lens, option, lang) : option}
+              <FieldLabel htmlFor={id} className="font-normal">
+                {option}
               </FieldLabel>
             </Field>
           )

@@ -1,12 +1,12 @@
 import { InfoIcon, Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useRevalidator } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { checkListName } from '@/features/lists/list-name'
+import { countLabel } from '@/features/stocks/format'
 import type { ListSummary } from '@/features/stocks/types'
 import { ApiError, type ApiClient } from '@/lib/api-client'
 import { DropZone } from './components/drop-zone'
@@ -17,6 +17,10 @@ import { SummaryPanel } from './components/summary-panel'
 import { TemplateLinks } from './components/template-links'
 import { importProblemMessage } from './problem-message'
 import type { DuplicateMode, ImportSummary, PreviewResponse } from './types'
+
+const STEP_HEADINGS: Record<WizardStep, string> = { file: 'Choose file', review: 'Review', done: 'Done' }
+const NAME_TAKEN = 'A list with this name already exists.'
+const LIST_GONE = 'That list no longer exists. Choose another list.'
 
 type ImportWizardProps = {
   api: ApiClient
@@ -32,7 +36,6 @@ type ImportWizardProps = {
  * (design.md §Web); the calls go through the api client rather than a route action.
  */
 export function ImportWizard({ api, lists, initialListId, inDialog = false }: ImportWizardProps) {
-  const { t } = useTranslation()
   const revalidator = useRevalidator()
   const [step, setStep] = useState<WizardStep>('file')
   const [file, setFile] = useState<File | null>(null)
@@ -127,10 +130,10 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
       void revalidator.revalidate()
     } catch (error) {
       if (error instanceof ApiError && error.status === 409 && error.code === 'list_name_taken') {
-        setNameError(t('imports.nameTaken'))
+        setNameError(NAME_TAKEN)
         document.getElementById('import-new-list')?.focus()
       } else if (error instanceof ApiError && error.status === 404) {
-        setConfirmError(t('imports.listGone'))
+        setConfirmError(LIST_GONE)
         setTarget('')
         void revalidator.revalidate()
       } else {
@@ -146,10 +149,10 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
     <>
       {/* Announced politely: "Checking file…" and "Importing…". */}
       <div aria-live="polite" className="sr-only">
-        {busy === 'checking' ? t('imports.status.checking') : busy === 'importing' ? t('imports.status.importing') : ''}
+        {busy === 'checking' ? 'Checking file…' : busy === 'importing' ? 'Importing…' : ''}
       </div>
       <h2 ref={headingRef} tabIndex={-1} className="font-heading text-lg font-semibold outline-none">
-        {t(`imports.headings.${step}`)}
+        {STEP_HEADINGS[step]}
       </h2>
 
       {step === 'file' ? (
@@ -168,15 +171,15 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
       {step === 'review' && preview ? (
         <form onSubmit={confirm} noValidate className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="break-all font-medium">{`${preview.fileName} · ${t('imports.rowCount', { count: preview.rows.length, n: preview.rows.length.toLocaleString('en-US') })}`}</p>
+            <p className="break-all font-medium">{`${preview.fileName} · ${countLabel(preview.rows.length, 'row')}`}</p>
             <Button type="button" variant="outline" size="sm" onClick={restart}>
-              {t('imports.chooseAnother')}
+              Choose another
             </Button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary" className="tabular-nums">{t('imports.counts.new', { count: preview.counts.new })}</Badge>
-            <Badge variant="outline" className="tabular-nums">{t('imports.counts.duplicate', { count: preview.counts.duplicate })}</Badge>
-            <Badge variant="destructive" className="tabular-nums text-foreground">{t('imports.counts.error', { count: preview.counts.error })}</Badge>
+            <Badge variant="secondary" className="tabular-nums">{`${preview.counts.new} new`}</Badge>
+            <Badge variant="outline" className="tabular-nums">{`${preview.counts.duplicate} duplicate`}</Badge>
+            <Badge variant="destructive" className="tabular-nums text-foreground">{`${preview.counts.error} error`}</Badge>
           </div>
           {preview.headerWarnings.length > 0 ? (
             <Alert role="status">
@@ -193,16 +196,16 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
               <InfoIcon aria-hidden="true" />
               <AlertDescription>
                 <p>
-                  {t('imports.ignoredLead')}{' '}
+                  Lists and holdings columns are not imported:{' '}
                   {preview.ignoredColumns.flatMap((name, i) => [
                     i > 0 ? ', ' : '',
                     <span key={name} className="font-mono">
                       {name}
                     </span>,
                   ])}
-                  {t('imports.ignoredEnd')}
+                  .
                 </p>
-                <p>{t('imports.ignoredAdvice')}</p>
+                <p>Add the stocks to lists and mark holdings in the app after the import.</p>
               </AlertDescription>
             </Alert>
           ) : null}
@@ -224,7 +227,7 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
             />
             {preview.counts.duplicate > 0 ? <DuplicateModeGroup value={duplicateMode} onChange={setDuplicateMode} /> : null}
             <p className="text-sm">
-              {importable === 0 ? t('imports.nothingToImport') : t('imports.errorRowsSkipped')}
+              {importable === 0 ? 'Nothing to import — fix the file and choose it again' : 'Error rows are not imported.'}
             </p>
           </div>
           {confirmError ? (
@@ -235,16 +238,16 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
           ) : null}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={restart}>
-              {t('common.cancel')}
+              Cancel
             </Button>
             <Button type="submit" disabled={!canSubmit}>
               {busy === 'importing' ? (
                 <>
                   <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                  {t('imports.status.importing')}
+                  Importing…
                 </>
               ) : (
-                t('imports.importButton', { stocks: t('imports.stockCount', { count: importable, n: importable.toLocaleString('en-US') }) })
+                `Import ${countLabel(importable, 'stock')}`
               )}
             </Button>
           </div>
@@ -266,7 +269,7 @@ export function ImportWizard({ api, lists, initialListId, inDialog = false }: Im
   return (
     <Card className="max-w-5xl">
       <CardHeader className="space-y-3">
-        <CardTitle>{t('imports.title')}</CardTitle>
+        <CardTitle>Import stocks</CardTitle>
         <StepIndicator current={step} />
       </CardHeader>
       <CardContent className="space-y-4">{content}</CardContent>

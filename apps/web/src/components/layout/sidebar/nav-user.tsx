@@ -1,10 +1,6 @@
-import { useTranslation } from "react-i18next"
 import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { useAuthClient } from "@/features/auth/auth-client-context"
-import { saveLanguage } from "@/features/settings/save-language"
-import { LanguageSwitch } from "@/i18n/language-switch"
-import { useApiClient } from "@/lib/api-client-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -36,7 +32,7 @@ function UserSummary({ user }: { user: SidebarUser }) {
       <Avatar className="size-8 rounded-full">
         <AvatarFallback className="rounded-full">{initials(user.name)}</AvatarFallback>
       </Avatar>
-      <div className="grid flex-1 text-left text-sm leading-snug">
+      <div className="grid flex-1 text-left text-sm leading-tight">
         <span className="truncate font-medium">{user.name}</span>
         {user.email !== user.name ? <span className="truncate text-xs">{user.email}</span> : null}
       </div>
@@ -49,10 +45,8 @@ function UserSummary({ user }: { user: SidebarUser }) {
  * entry with the sign-in page, so Back can't return to the app.
  */
 export function NavUser({ user }: { user: SidebarUser }) {
-  const { t } = useTranslation()
   const { isMobile } = useSidebar()
   const authClient = useAuthClient()
-  const api = useApiClient()
   const navigate = useNavigate()
 
   async function signOut() {
@@ -67,7 +61,7 @@ export function NavUser({ user }: { user: SidebarUser }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              aria-label={t("shell.accountMenu")}
+              aria-label="Account menu"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <UserSummary user={user} />
@@ -90,16 +84,14 @@ export function NavUser({ user }: { user: SidebarUser }) {
               <DropdownMenuItem asChild>
                 <Link to="/account">
                   <UserIcon />
-                  {t("nav.account")}
+                  Account
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <LanguageSwitch variant="menu" onChosen={(language) => void saveLanguage(api, language)} />
-            <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => void signOut()}>
               <LogOutIcon />
-              {t("shell.signOut")}
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

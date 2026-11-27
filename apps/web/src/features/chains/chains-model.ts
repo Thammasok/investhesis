@@ -2,12 +2,8 @@ import { applyStockFilters, chainKey, ChainRename, groupChains, type ChainsResul
 import { filterSearch } from '@/features/stock-filters/filter-address'
 import { readScope, stocksInScope, type ScopeRead } from '@/features/stock-filters/scope'
 import { thb } from '@/features/concentration/concentration-model'
-import { i18n } from '@/i18n/i18n'
+import { countLabel } from '@/features/stocks/format'
 import type { ListSummary, Stock } from '@/features/stocks/types'
-
-/** `3 stocks`, in the current language. */
-export const stocksLabel = (count: number): string =>
-  i18n.t('chains.stockCount', { count, n: count.toLocaleString('en-US') })
 
 export { concentrationHref } from '@/features/concentration/concentration-model'
 
@@ -54,11 +50,11 @@ export function chainStocksHref(scope: string, filters: FilterState, chain: stri
 export function leftOutText(leftOut: { noAmount: number; needsRate: number }): string | null {
   const { noAmount, needsRate } = leftOut
   if (noAmount === 0 && needsRate === 0) return null
-  const amount = i18n.t('chains.leftOut.amount', { count: noAmount, n: noAmount })
-  if (needsRate === 0) return i18n.t('chains.leftOut.single', { count: noAmount, what: amount })
-  const rate = i18n.t('chains.leftOut.usd', { count: needsRate, n: needsRate })
-  if (noAmount === 0) return i18n.t('chains.leftOut.single', { count: needsRate, what: rate })
-  return i18n.t('chains.leftOut.both', { amount, needs: i18n.t('chains.leftOut.needs', { count: needsRate, n: needsRate }) })
+  const amount = `${noAmount} held ${noAmount === 1 ? 'stock has' : 'stocks have'} no shares or cost`
+  if (needsRate === 0) return `${amount} and ${noAmount === 1 ? 'is' : 'are'} left out of the value.`
+  const rate = `${needsRate} USD ${needsRate === 1 ? 'holding needs' : 'holdings need'} a rate`
+  if (noAmount === 0) return `${rate} and ${needsRate === 1 ? 'is' : 'are'} left out of the value.`
+  return `${amount}, ${needsRate} ${needsRate === 1 ? 'needs' : 'need'} a rate, and they are left out of the value.`
 }
 
 /**
@@ -66,16 +62,15 @@ export function leftOutText(leftOut: { noAmount: number; needsRate: number }): s
  * The value shows only when a held stock was valued, never the domain's `0.00` for none (G-FR-005).
  */
 export function countsText(counts: { count: number; held: number; value: string; valued: boolean; share?: string | null }): string {
-  const parts = [
-    stocksLabel(counts.count),
-    counts.held === 0 ? i18n.t('chains.counts.noneHeld') : i18n.t('chains.counts.held', { n: counts.held }),
-  ]
+  const parts = [countLabel(counts.count, 'stock'), counts.held === 0 ? 'none held' : `${counts.held} held`]
   if (counts.valued) {
     parts.push(thb(counts.value))
     if (counts.share) parts.push(`${counts.share}%`)
   }
   return parts.join(' · ')
 }
+
+export const RENAME_NAME_ERROR = 'Enter a name of 1 to 60 characters.'
 
 /** A chain as the rename dialog needs it: its title and every stock the investor has in it, in view or not. */
 export type RenameTarget = { key: string; title: string; count: number }

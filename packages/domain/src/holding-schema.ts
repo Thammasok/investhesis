@@ -1,20 +1,19 @@
 import { z } from 'zod'
-import { rule } from './i18n/rules.ts'
+import { MESSAGES } from './messages.ts'
 import { oneOf } from './fields.ts'
-import { LANGUAGES } from './i18n/languages.ts'
 import { rejectUnknownKeys } from './stock-schema.ts'
 
 const SHARES_PATTERN = /^\d{1,14}(\.\d{1,4})?$/
 const RATE_PATTERN = /^\d{1,12}(\.\d{1,6})?$/
 const isPositive = (s: string) => /[1-9]/.test(s)
 
-const decimalText = z.string({ error: () => rule('decimalString') })
+const decimalText = z.string({ error: () => MESSAGES.decimalString })
 
 const holdingShape = {
   shares: decimalText
-    .refine((s) => SHARES_PATTERN.test(s) && isPositive(s), { error: rule('sharesFormat') })
+    .refine((s) => SHARES_PATTERN.test(s) && isPositive(s), { error: MESSAGES.sharesFormat })
     .nullish(),
-  averageCost: decimalText.refine((s) => SHARES_PATTERN.test(s), { error: rule('averageCostFormat') }).nullish(),
+  averageCost: decimalText.refine((s) => SHARES_PATTERN.test(s), { error: MESSAGES.averageCostFormat }).nullish(),
   costCurrency: oneOf(['USD', 'THB']).optional(),
 }
 
@@ -26,15 +25,14 @@ export type HoldingInput = z.output<typeof HoldingInput>
 
 const settingsShape = {
   concentrationThreshold: z
-    .number({ error: () => rule('thresholdRange') })
-    .int({ error: rule('thresholdRange') })
-    .min(1, { error: rule('thresholdRange') })
-    .max(100, { error: rule('thresholdRange') })
+    .number({ error: () => MESSAGES.thresholdRange })
+    .int({ error: MESSAGES.thresholdRange })
+    .min(1, { error: MESSAGES.thresholdRange })
+    .max(100, { error: MESSAGES.thresholdRange })
     .optional(),
   usdThbRate: decimalText
-    .refine((s) => RATE_PATTERN.test(s) && isPositive(s), { error: rule('usdThbRateFormat') })
+    .refine((s) => RATE_PATTERN.test(s) && isPositive(s), { error: MESSAGES.usdThbRateFormat })
     .nullish(),
-  language: oneOf(LANGUAGES).optional(),
 }
 
 /** Absent = unchanged; usdThbRate null clears the rate. */

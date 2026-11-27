@@ -8,7 +8,6 @@ export type { FieldError, RowResult, TemplateColumn } from './template.ts'
 export { MESSAGES, LENS_LABELS, NOT_SET_LABEL } from './messages.ts'
 export { HoldingInput, SettingsPatch } from './holding-schema.ts'
 export { atLeastPercent, formatDecimal, parseDecimal, percentOneDecimal } from './decimal.ts'
-export * from './i18n/index.ts'
 export { CONCENTRATION_LENSES, VALUE_SCALE, groupConcentration, valueAtCost } from './concentration.ts'
 export type {
   ConcentrationGroup,
@@ -16,14 +15,12 @@ export type {
   ConcentrationResult,
   GroupConcentrationArgs,
   GroupableStock,
-  LabelOrder,
   ValueAtCost,
 } from './concentration.ts'
 export { STOCK_FILTERS, applyStockFilters, filterOptions, foldText } from './filters.ts'
 export type {
   FilterKey,
   FilterOption,
-  FilterOptionsArgs,
   FilterState,
   FilterableStock,
   LensFilterKey,

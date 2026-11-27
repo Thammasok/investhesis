@@ -1,5 +1,4 @@
 import { CircleCheckIcon, DownloadIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -11,18 +10,17 @@ export const ERROR_ROWS_FILENAME = 'investhesis-import-errors.csv'
 
 /** Step 3: the counts, a link to the target list and (when rows failed) the error-rows CSV built here. */
 export function SummaryPanel({ summary, onAnother }: { summary: ImportSummary; onAnother: () => void }) {
-  const { t } = useTranslation()
   const { targetList, created, skipped, updated, failed } = summary
   return (
     <div className="space-y-4">
       <Alert role="status">
         <CircleCheckIcon aria-hidden="true" />
-        <AlertTitle>{t('imports.summary.finished', { name: targetList.name })}</AlertTitle>
-        <AlertDescription>{t('imports.summary.counts', { created, skipped, updated, failed })}</AlertDescription>
+        <AlertTitle>{`Import finished into "${targetList.name}"`}</AlertTitle>
+        <AlertDescription>{`${created} created · ${skipped} skipped · ${updated} updated · ${failed} failed`}</AlertDescription>
       </Alert>
       <div className="flex flex-wrap gap-2">
         <Button asChild className="w-full sm:w-auto">
-          <Link to={`/lists/${encodeURIComponent(targetList.id)}`}>{t('imports.summary.open', { name: targetList.name })}</Link>
+          <Link to={`/lists/${encodeURIComponent(targetList.id)}`}>{`Open ${targetList.name}`}</Link>
         </Button>
         {failed > 0 ? (
           <Button
@@ -31,11 +29,11 @@ export function SummaryPanel({ summary, onAnother }: { summary: ImportSummary; o
             onClick={() => saveFile(new Blob([buildErrorCsv(summary.errorRows)], { type: 'text/csv;charset=utf-8' }), ERROR_ROWS_FILENAME)}
           >
             <DownloadIcon aria-hidden="true" />
-            {t('imports.summary.downloadErrors')}
+            Download error rows (CSV)
           </Button>
         ) : null}
         <Button variant="ghost" className="w-full sm:w-auto" onClick={onAnother}>
-          {t('imports.summary.another')}
+          Import another
         </Button>
       </div>
     </div>

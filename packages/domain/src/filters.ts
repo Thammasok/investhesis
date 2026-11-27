@@ -1,4 +1,4 @@
-import { CONCENTRATION_LENSES, type GroupableStock, type LabelOrder } from './concentration.ts'
+import { CONCENTRATION_LENSES, type GroupableStock } from './concentration.ts'
 import { ALL_EXCHANGES, ALL_INDEXES, LENS_VALUES, MARKETS } from './vocabulary.ts'
 import { foldText } from './fold-text.ts'
 
@@ -125,32 +125,12 @@ export function applyStockFilters<T extends FilterableStock>(stocks: readonly T[
 
 const collator = new Intl.Collator('en')
 
-/** Lenses whose vocabulary has a natural order (small to large, high to low), kept even with a label order. */
-const ORDINAL_LENSES: ReadonlySet<FilterKey> = new Set([
-  'valueChainPosition',
-  'size',
-  'economicCycle',
-  'lifeCycle',
-  'volatility',
-])
-
-export interface FilterOptionsArgs {
-  /**
-   * Sorts the options of every lens without a natural order (and free-text lenses) by the label
-   * shown. "Not set" stays last. Omitted: today's order.
-   */
-  order?: LabelOrder
-}
-
 /**
  * For every filter: its options with the number of the given stocks having each, in vocabulary
  * order (free text: distinct values, case-insensitive, first spelling kept, sorted), then "Not
  * set". Counts are over the stocks passed in, not over a filtered result.
  */
-export function filterOptions(
-  stocks: readonly FilterableStock[],
-  { order }: FilterOptionsArgs = {},
-): Record<FilterKey, FilterOption[]> {
+export function filterOptions(stocks: readonly FilterableStock[]): Record<FilterKey, FilterOption[]> {
   const result = {} as Record<FilterKey, FilterOption[]>
   for (const filter of STOCK_FILTERS) {
     const fromData = filter.vocabulary === 'fromData'
@@ -173,17 +153,6 @@ export function filterOptions(
           .map(([key, count]) => ({ value: spelling.get(key) ?? key, count }))
           .sort((a, b) => collator.compare(a.value as string, b.value as string))
       : (filter.vocabulary as readonly string[]).map((value) => ({ value, count: counts.get(value) ?? 0 }))
-    const byLabel =
-      order !== undefined &&
-      filter.key !== 'market' &&
-      filter.key !== 'held' &&
-      filter.key !== 'exchange' &&
-      !ORDINAL_LENSES.has(filter.key)
-    if (byLabel) {
-      options.sort((a, b) =>
-        order.compare(order.label(filter.key, a.value as string), order.label(filter.key, b.value as string)),
-      )
-    }
     if (filter.allowNotSet) options.push({ value: null, count: notSet })
     result[filter.key] = options
   }

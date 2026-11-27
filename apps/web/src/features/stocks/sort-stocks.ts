@@ -1,5 +1,4 @@
-import { lensValueLabel, parseDecimal, type Language } from '@investhesis/domain'
-import { getLanguage } from '@/i18n/language'
+import { parseDecimal } from '@investhesis/domain'
 import type { Stock } from './types'
 
 export const SORTABLE_COLUMNS = ['ticker', 'name', 'market', 'sector', 'held'] as const
@@ -18,9 +17,8 @@ export function nextSort(current: SortState, column: SortColumn): SortState {
 
 // Case-insensitive; Thai sorts after Latin by the root collation, the same on every machine.
 const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true })
-const thaiCollator = new Intl.Collator('th', { sensitivity: 'base', numeric: true })
 
-function keyOf(stock: Stock, column: SortColumn, lang: Language): string | null {
+function keyOf(stock: Stock, column: SortColumn): string | null {
   switch (column) {
     case 'ticker':
       return stock.ticker
@@ -29,8 +27,7 @@ function keyOf(stock: Stock, column: SortColumn, lang: Language): string | null 
     case 'market':
       return stock.market
     case 'sector':
-      // The label the column shows, so the order reads right in Thai ("Not set" stays last).
-      return stock.gicsSector === null ? null : lensValueLabel('gicsSector', stock.gicsSector, lang)
+      return stock.gicsSector
     case 'held':
       return null // sorted by heldRank in sortStocks
   }
@@ -50,13 +47,7 @@ const tieBreak = (a: Stock, b: Stock) => collator.compare(a.ticker, b.ticker) ||
  * A sorted copy. Equal keys fall back to the ticker, then the id, so the order is stable. A stock with
  * no value for the column goes last in both directions.
  */
-export function sortStocks(
-  stocks: readonly Stock[],
-  column: SortColumn,
-  direction: SortDirection,
-  lang: Language = getLanguage(),
-): Stock[] {
-  const labelCollator = lang === 'th' ? thaiCollator : collator
+export function sortStocks(stocks: readonly Stock[], column: SortColumn, direction: SortDirection): Stock[] {
   const sign = direction === 'asc' ? 1 : -1
   if (column === 'held') {
     // Descending is the natural reading: held first, most shares first; ties by ticker either way.
@@ -67,11 +58,11 @@ export function sortStocks(
     })
   }
   return [...stocks].sort((a, b) => {
-    const ka = keyOf(a, column, lang)
-    const kb = keyOf(b, column, lang)
+    const ka = keyOf(a, column)
+    const kb = keyOf(b, column)
     if (ka === null && kb === null) return tieBreak(a, b)
     if (ka === null) return 1
     if (kb === null) return -1
-    return sign * (column === 'sector' ? labelCollator : collator).compare(ka, kb) || tieBreak(a, b)
+    return sign * collator.compare(ka, kb) || tieBreak(a, b)
   })
 }

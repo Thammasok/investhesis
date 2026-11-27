@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { LineChartIcon, PlusIcon, UploadIcon } from 'lucide-react'
 import { Link, Outlet, useLoaderData } from 'react-router'
@@ -18,15 +17,13 @@ import { countLabel } from '@/features/stocks/format'
 import type { StocksPageData } from '@/features/stocks/stocks-data'
 
 export function Component() {
-  const { t, i18n } = useTranslation()
-  const language = i18n.language === 'th' ? 'th' : 'en'
   const { stocks, lists } = useLoaderData() as StocksPageData
   const filters = useStockFilters(stocks)
   const empty = stocks.length === 0
   // What the table shows, in the order it shows it: the rows the Export menu writes.
   const ordered = useMemo(
-    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction, language),
-    [filters.shown, filters.sort, language],
+    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction),
+    [filters.shown, filters.sort],
   )
 
   // One tree for both states, with the Outlet (the Add stock dialog) always in the same slot: when the
@@ -34,23 +31,23 @@ export function Component() {
   return (
     <section className="space-y-6">
       {empty ? (
-        <PageHeader title={t("nav.stocks")} />
+        <PageHeader title="Stocks" />
       ) : (
         <PageHeader
-          title={t("nav.stocks")}
-          description={countLabel(stocks.length, 'stock', language)}
+          title="Stocks"
+          description={countLabel(stocks.length, 'stock')}
           actions={
             <>
               <Button variant="outline" className="w-full sm:w-auto" asChild>
                 <Link to="/import-export/import">
                   <UploadIcon aria-hidden="true" />
-                  {t('stocks.page.import')}
+                  Import
                 </Link>
               </Button>
               <Button className="w-full sm:w-auto" asChild>
                 <Link to="/stocks/new">
                   <PlusIcon aria-hidden="true" />
-                  {t('stocks.page.addStock')}
+                  Add stock
                 </Link>
               </Button>
             </>
@@ -60,19 +57,19 @@ export function Component() {
       {empty ? (
         <Card className="items-center gap-3 py-12 text-center">
           <LineChartIcon className="size-8 text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold">{t('stocks.page.emptyTitle')}</h2>
-          <p className="text-sm text-muted-foreground">{t('stocks.page.emptyBody')}</p>
+          <h2 className="font-heading text-lg font-semibold">No stocks yet</h2>
+          <p className="text-sm text-muted-foreground">Add your first stock, or import a CSV or Excel file.</p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>
               <Link to="/stocks/new">
                 <PlusIcon aria-hidden="true" />
-                {t('stocks.page.addStock')}
+                Add stock
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
-                {t('stocks.page.importFromFile')}
+                Import from file
               </Link>
             </Button>
           </div>

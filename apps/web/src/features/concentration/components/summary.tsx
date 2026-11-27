@@ -1,27 +1,23 @@
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { groupText, settingsLine, type Plan, type Settings } from '../concentration-model'
+import { settingsLine, type Plan, type Settings } from '../concentration-model'
 
 /** The flagged-groups summary. `role="status"`, not an alert: a regroup that changes the flags is announced politely. */
-export function FlagSummary({ plan, settings, lensKey }: { plan: Plan; settings: Settings; lensKey: string }) {
-  const { t } = useTranslation()
-  const by = plan.measure === 'value' ? t('concentration.summary.byValue') : t('concentration.summary.byCount')
+export function FlagSummary({ plan, settings }: { plan: Plan; settings: Settings }) {
+  const by = plan.measure === 'value' ? 'value at cost' : 'the stocks'
   const threshold = settings.concentrationThreshold
   const n = plan.flagged.length
   return (
     <Alert role="status">
       {n === 0 ? <CircleCheckIcon aria-hidden="true" /> : <TriangleAlertIcon aria-hidden="true" className="text-destructive" />}
       <AlertTitle>
-        {n === 0
-          ? t('concentration.summary.none', { threshold, by })
-          : t('concentration.summary.flagged', { count: n, threshold, by })}
+        {n === 0 ? `No group at ${threshold}% or more of ${by}` : `${n} ${n === 1 ? 'group' : 'groups'} at ${threshold}% or more of ${by}`}
       </AlertTitle>
       <AlertDescription>
         {n > 0 ? (
           <ul>
             {plan.flagged.map((g) => (
-              <li key={g.label}>{`${groupText(lensKey, g)} — ${plan.measure === 'value' ? g.valueShare : g.countShare}%`}</li>
+              <li key={g.label}>{`${g.label} — ${plan.measure === 'value' ? g.valueShare : g.countShare}%`}</li>
             ))}
           </ul>
         ) : null}

@@ -1,7 +1,7 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
+import { THESIS_TYPE_LABELS } from '@investhesis/domain'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   AlertDialog,
@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { SOLID_DESTRUCTIVE_LIGHT } from '@/lib/solid-destructive'
-import { formatEntryDate, typeLabel } from '../format'
+import { formatEntryDate } from '../format'
 import type { ThesisActionResult } from '../thesis-actions'
 import type { Thesis } from '../types'
 
@@ -39,7 +39,6 @@ export function ThesisDeleteDialog({ entry, open, onOpenChange, onDeleted, onClo
 }
 
 function DeleteForm({ entry, onDeleted }: { entry: Thesis; onDeleted: (deleted: Thesis) => void }) {
-  const { t } = useTranslation()
   const fetcher = useFetcher<ThesisActionResult>()
   const sending = useRef(false)
   const handled = useRef<unknown>(null)
@@ -67,9 +66,9 @@ function DeleteForm({ entry, onDeleted }: { entry: Thesis; onDeleted: (deleted: 
   return (
     <>
       <AlertDialogHeader>
-        <AlertDialogTitle>{t('theses.deleteDialog.title')}</AlertDialogTitle>
+        <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
         <AlertDialogDescription>
-          {t('theses.deleteDialog.body', { type: typeLabel(entry.type), date: formatEntryDate(entry.date) })}
+          The {THESIS_TYPE_LABELS[entry.type]} entry of {formatEntryDate(entry.date)} will be deleted.
         </AlertDialogDescription>
       </AlertDialogHeader>
       {failure ? (
@@ -78,10 +77,10 @@ function DeleteForm({ entry, onDeleted }: { entry: Thesis; onDeleted: (deleted: 
         </Alert>
       ) : null}
       <AlertDialogFooter>
-        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
         <AlertDialogAction variant="destructive" className={SOLID_DESTRUCTIVE_LIGHT} aria-disabled={pending} onClick={confirm}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          {pending ? t('theses.deleteDialog.deleting') : t('common.delete')}
+          {pending ? 'Deleting…' : 'Delete'}
         </AlertDialogAction>
       </AlertDialogFooter>
     </>

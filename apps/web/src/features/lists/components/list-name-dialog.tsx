@@ -1,6 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -38,7 +37,6 @@ export function ListNameDialog({ mode, list, open, onOpenChange, returnFocusTo }
 }
 
 function NameForm({ mode, list, onDone }: { mode: 'create' | 'rename'; list?: { id: string; name: string }; onDone: () => void }) {
-  const { t } = useTranslation()
   const fetcher = useFetcher<ListActionResult>()
   const inputRef = useRef<HTMLInputElement>(null)
   const sending = useRef(false)
@@ -77,7 +75,7 @@ function NameForm({ mode, list, onDone }: { mode: 'create' | 'rename'; list?: { 
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>{mode === 'create' ? t('lists.nameDialog.createTitle') : t('lists.nameDialog.renameTitle')}</DialogTitle>
+        <DialogTitle>{mode === 'create' ? 'New list' : 'Rename list'}</DialogTitle>
       </DialogHeader>
       {formError ? (
         <Alert variant="destructive">
@@ -85,7 +83,7 @@ function NameForm({ mode, list, onDone }: { mode: 'create' | 'rename'; list?: { 
         </Alert>
       ) : null}
       <Field data-invalid={fieldError ? true : undefined}>
-        <FieldLabel htmlFor="list-name">{t('lists.nameDialog.label')}</FieldLabel>
+        <FieldLabel htmlFor="list-name">Name</FieldLabel>
         <Input
           id="list-name"
           name="name"
@@ -102,17 +100,11 @@ function NameForm({ mode, list, onDone }: { mode: 'create' | 'rename'; list?: { 
       </Field>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onDone}>
-          {t('common.cancel')}
+          Cancel
         </Button>
         <Button type="submit" disabled={pending}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          {mode === 'create'
-            ? pending
-              ? t('lists.nameDialog.creating')
-              : t('lists.nameDialog.create')
-            : pending
-              ? t('lists.nameDialog.saving')
-              : t('common.save')}
+          {mode === 'create' ? (pending ? 'Creating…' : 'Create') : pending ? 'Saving…' : 'Save'}
         </Button>
       </DialogFooter>
     </form>

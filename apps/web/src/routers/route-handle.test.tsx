@@ -23,7 +23,7 @@ describe('route handle crumb', () => {
           children: [
             {
               path: 'stocks',
-              handle: { crumb: 'nav.stocks' } satisfies RouteHandle,
+              handle: { crumb: 'Stocks' } satisfies RouteHandle,
               children: [
                 {
                   path: ':id',

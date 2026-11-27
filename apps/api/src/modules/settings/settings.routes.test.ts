@@ -28,7 +28,7 @@ describe('settings', () => {
     for (let i = 0; i < 3; i++) {
       const res = await get(a)
       expect(res.statusCode).toBe(200)
-      expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
+      expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
     }
     expect(await rows(u)).toBe(0)
   })
@@ -58,7 +58,7 @@ describe('settings', () => {
     await patch({ usdThbRate: '36.25' }, a)
     const res = await patch({ usdThbRate: null }, a)
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
+    expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
   })
 
   it('TC-A-418 the rate date moves on every rate save, not on other changes', async () => {
@@ -142,7 +142,7 @@ describe('settings', () => {
     const a = await t.appFor(u)
     const res = await patch({}, a)
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
+    expect(res.json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
     expect(await rows(u)).toBe(0)
     await patch({ concentrationThreshold: 20 }, a)
     expect((await patch({}, a)).json().concentrationThreshold).toBe(20)
@@ -195,13 +195,13 @@ describe('settings', () => {
     await patch({ concentrationThreshold: 25, usdThbRate: '36.482917' }, aU)
     const uDate = (await get(aU)).json().usdThbRateUpdatedAt
     const v = await t.appFor(V)
-    expect((await get(v)).json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
+    expect((await get(v)).json()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
     expect(await rows(V)).toBe(0)
     expect((await patch({ concentrationThreshold: 90 }, v)).json()).toMatchObject({ concentrationThreshold: 90, usdThbRate: null })
     const total = Number((await t.handle.pool.query('select count(*) n from app.user_settings where user_id = any($1)', [[U, V]])).rows[0].n)
     expect(total).toBe(2)
-    expect((await get(v)).json()).toEqual({ concentrationThreshold: 90, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
-    expect((await get(aU)).json()).toEqual({ concentrationThreshold: 25, usdThbRate: '36.482917', usdThbRateUpdatedAt: uDate, language: null })
+    expect((await get(v)).json()).toEqual({ concentrationThreshold: 90, usdThbRate: null, usdThbRateUpdatedAt: null })
+    expect((await get(aU)).json()).toEqual({ concentrationThreshold: 25, usdThbRate: '36.482917', usdThbRateUpdatedAt: uDate })
     const sneaky = await patch({ userId: U, concentrationThreshold: 10 }, v)
     expect(sneaky.statusCode).toBe(400)
     expect(sneaky.json().errors.map((e: { path: string }) => e.path)).toContain('userId')

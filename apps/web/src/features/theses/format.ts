@@ -1,21 +1,18 @@
-import { THESIS_TYPE_LABELS_EN, THESIS_TYPE_LABELS_TH, type Language } from '@investhesis/domain'
-import { formatDate, formatTimestamp } from '@/i18n/format-date'
-import { i18n } from '@/i18n/i18n'
-import { getLanguage } from '@/i18n/language'
-import type { Thesis, ThesisType } from './types'
+import type { Thesis } from './types'
 
-/** The label of an entry type (glossary: Buy ซื้อ, Sell ขาย, Update อัปเดต, Review ทบทวน). The stored value stays `buy` and so on. */
-export const typeLabel = (type: ThesisType, lang: Language = getLanguage()): string =>
-  (lang === 'th' ? THESIS_TYPE_LABELS_TH : THESIS_TYPE_LABELS_EN)[type]
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-/** `"2026-11-20"` to `20 Nov 2026` / `20 พ.ย. 2026`. Read from the text, never through a `Date`, so no time zone can move the day. */
-export function formatEntryDate(date: string, lang: Language = getLanguage()): string {
-  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? formatDate(date, lang) : date
+/** `"2026-11-20"` to `20 Nov 2026`. Read from the text, never through a `Date`, so no time zone can move the day. */
+export function formatEntryDate(date: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  if (!m) return date
+  return `${Number(m[3])} ${MONTHS[Number(m[2]) - 1] ?? ''} ${m[1]}`
 }
 
 /** The calendar day of an instant in the browser's time zone, as `5 Oct 2026`. */
-export function formatEditedDate(iso: string, lang: Language = getLanguage()): string {
-  return formatTimestamp(iso, lang)
+export function formatEditedDate(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getDate()} ${MONTHS[d.getMonth()] ?? ''} ${d.getFullYear()}`
 }
 
 /** FR-004: an entry is edited once its last change is later than its creation. */
@@ -29,4 +26,4 @@ export const NOTE_CLAMP_CHARS = 600
 export const needsClamp = (note: string): boolean =>
   note.split('\n').length > NOTE_CLAMP_LINES || [...note].length > NOTE_CLAMP_CHARS
 
-export const entryCount = (count: number): string => i18n.t('theses.section.count', { count, n: count.toLocaleString('en-US') })
+export const entryCount = (n: number): string => `${n.toLocaleString('en-US')} ${n === 1 ? 'entry' : 'entries'}`

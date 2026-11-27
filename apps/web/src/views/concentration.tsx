@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { ChartPieIcon, PlusIcon, SlidersHorizontalIcon, UploadIcon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useLoaderData, useSearchParams } from 'react-router'
@@ -12,7 +11,6 @@ import { ConcentrationSettingsDialog } from '@/features/concentration/components
 import { FallbackNotes, FlagSummary } from '@/features/concentration/components/summary'
 import type { ConcentrationData } from '@/features/concentration/concentration-data'
 import { planView, readView, type Measure } from '@/features/concentration/concentration-model'
-import { getLanguage } from '@/i18n/language'
 import { stocksInScope } from '@/features/stock-filters/scope'
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
@@ -20,26 +18,24 @@ import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
 import { NoMatches } from '@/features/stock-filters/no-matches'
 import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 
+const DESCRIPTION = 'How your stocks are spread across each lens.'
 /** Parameters of this page that the filters leave alone. */
 const KEEP = ['scope', 'lens', 'measure'] as const
 
 export function Component() {
-  const { t } = useTranslation()
-  const lang = getLanguage()
   const { stocks, lists, settings } = useLoaderData() as ConcentrationData
   const [params] = useSearchParams()
   const [settingsFocus, setSettingsFocus] = useState<'threshold' | 'rate' | null>(null)
   const settingsButton = useRef<HTMLButtonElement>(null)
   const openerRef = useRef<HTMLElement | null>(null)
 
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
-  const view = useMemo(() => readView(params, lists), [params, lists, lang])
+  const view = useMemo(() => readView(params, lists), [params, lists])
   const scoped = useMemo(() => stocksInScope(stocks, view.scope), [stocks, view.scope])
   // Search and filters work inside the scope: the options count over it, and the grouping uses what passes.
   const filters = useStockFilters(scoped, { keep: KEEP, sort: false })
   const plan = useMemo(
-    () => planView({ stocks, view, settings, filters: filters.deferredState, lang }),
-    [stocks, view, settings, filters.deferredState, lang],
+    () => planView({ stocks, view, settings, filters: filters.deferredState }),
+    [stocks, view, settings, filters.deferredState],
   )
 
   const change = useCallback(
@@ -61,22 +57,22 @@ export function Component() {
   if (stocks.length === 0) {
     return (
       <section className="space-y-6">
-        <PageHeader title={t('nav.concentration')} description={t('concentration.description')} />
+        <PageHeader title="Concentration" description={DESCRIPTION} />
         <Card className="items-center gap-3 py-12 text-center">
           <ChartPieIcon className="size-8 text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold">{t('concentration.empty.title')}</h2>
-          <p className="text-sm text-muted-foreground">{t('concentration.empty.hint')}</p>
+          <h2 className="font-heading text-lg font-semibold">Nothing to group yet</h2>
+          <p className="text-sm text-muted-foreground">Add stocks to see how they are spread across each lens.</p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>
               <Link to="/stocks/new">
                 <PlusIcon aria-hidden="true" />
-                {t('concentration.empty.addStock')}
+                Add stock
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/import-export">
                 <UploadIcon aria-hidden="true" />
-                {t('concentration.empty.import')}
+                Import
               </Link>
             </Button>
           </div>
@@ -92,8 +88,8 @@ export function Component() {
   return (
     <section className="space-y-6">
       <PageHeader
-        title={t('nav.concentration')}
-        description={t('concentration.description')}
+        title="Concentration"
+        description={DESCRIPTION}
         actions={
           <Button
             ref={settingsButton}
@@ -103,7 +99,7 @@ export function Component() {
             onClick={(e) => openSettings('threshold', e.currentTarget)}
           >
             <SlidersHorizontalIcon aria-hidden="true" />
-            {t('concentration.settingsButton')}
+            Settings
           </Button>
         }
       />
@@ -112,23 +108,23 @@ export function Component() {
       {emptyScope ? null : (
         <div className="space-y-3">
           <AddressNotes notes={filters.notes} />
-          <FilterToolbar filters={filters} countSuffix={t('concentration.inScope')} />
+          <FilterToolbar filters={filters} countSuffix=" in scope" />
         </div>
       )}
 
       {emptyScope && view.list ? (
         <Card className="items-center gap-3 py-10 text-center">
-          <h2 className="font-heading text-lg font-semibold">{t('concentration.emptyScope.listEmpty', { name: view.list.name })}</h2>
+          <h2 className="font-heading text-lg font-semibold">{`${view.list.name} has no stocks yet.`}</h2>
           <Button variant="outline" asChild>
-            <Link to={`/lists/${view.list.id}`}>{t('concentration.emptyScope.openList', { name: view.list.name })}</Link>
+            <Link to={`/lists/${view.list.id}`}>{`Open ${view.list.name}`}</Link>
           </Button>
         </Card>
       ) : emptyScope ? (
         <Card className="items-center gap-3 py-10 text-center">
           <p className="text-sm">
-            {t('concentration.emptyScope.noHeld')}{' '}
+            No stock is marked as held yet.{' '}
             <Link to="/stocks" className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-              {t('concentration.emptyScope.markHoldings')}
+              Mark holdings on a stock's page.
             </Link>
           </p>
         </Card>
@@ -141,9 +137,9 @@ export function Component() {
         />
       ) : (
         <>
-          <FlagSummary plan={plan} settings={settings} lensKey={view.lens.key} />
+          <FlagSummary plan={plan} settings={settings} />
           {plan.measure === 'value' && plan.value.available && plan.value.zeroTotal ? (
-            <p className="text-sm text-muted-foreground">{t('concentration.zeroTotal')}</p>
+            <p className="text-sm text-muted-foreground">Every valued stock has a cost of 0, so there are no shares.</p>
           ) : null}
           <GroupTable plan={plan} view={view} stocks={stocks} settings={settings} />
           {plan.result.multiValue ? <MultiValueNote lensKey={view.lens.key} /> : null}

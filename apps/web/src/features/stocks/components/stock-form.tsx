@@ -3,16 +3,12 @@ import {
   EXCHANGES_BY_MARKET,
   INDEXES_BY_MARKET,
   LENS_VALUES,
-  MARKET_LABELS,
-  type Language,
   type Market,
 } from '@investhesis/domain'
 import { Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link, useFetcher } from 'react-router'
 import { toast } from 'sonner'
-import { i18n as i18nInstance } from '@/i18n/i18n'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,9 +32,7 @@ import {
   type FieldErrors,
   type FieldName,
   type FormValues,
-  fieldLabelOf,
 } from '../stock-form-model'
-import { useLanguage } from '../use-language'
 import type { ListSummary, Stock } from '../types'
 import { CheckGroup, FieldMessage, Required, SelectField } from './form-controls'
 import { errorProps } from './form-field-props'
@@ -54,7 +48,7 @@ type Focus = { target: FieldName | 'alert'; n: number }
 const half = 'md:col-span-2'
 
 /** What the form shows for an answer that was not a success. */
-function interpret(result: StockFormResult, mode: StockFormProps['mode'], lang: Language): { alert: FormAlert | null; errors?: FieldErrors; focus: FieldName | 'alert' } {
+function interpret(result: StockFormResult, mode: StockFormProps['mode']): { alert: FormAlert | null; errors?: FieldErrors; focus: FieldName | 'alert' } {
   if (result.code === 'stock_exists' && result.existingStockId) {
     return { alert: { kind: 'exists', existingStockId: result.existingStockId }, focus: 'alert' }
   }
@@ -63,12 +57,12 @@ function interpret(result: StockFormResult, mode: StockFormProps['mode'], lang: 
       alert:
         mode === 'edit'
           ? { kind: 'missing' }
-          : { kind: 'message', text: i18nInstance.t('stocks.form.listGone', { lng: lang }) },
+          : { kind: 'message', text: 'One of the selected lists no longer exists. Reload the page and try again.' },
       focus: 'alert',
     }
   }
   if (result.status === 400 && result.errors.length > 0) {
-    const { fields, rest } = splitServerErrors(result.errors, lang)
+    const { fields, rest } = splitServerErrors(result.errors)
     return {
       alert: rest.length > 0 ? { kind: 'message', text: rest.join('. ') } : null,
       errors: fields,
@@ -77,15 +71,13 @@ function interpret(result: StockFormResult, mode: StockFormProps['mode'], lang: 
   }
   const text =
     result.status === 0
-      ? i18nInstance.t('stocks.form.offline', { lng: lang })
-      : i18nInstance.t('stocks.form.saveFailed', { lng: lang })
+      ? "Couldn't reach the server. Check your connection and try again."
+      : "Couldn't save the stock. Try again."
   return { alert: { kind: 'message', text }, focus: 'alert' }
 }
 
 /** Add stock and Edit stock (ux-design.md): one form, the market and ticker locked in edit mode. */
 export function StockForm(props: StockFormProps) {
-  const { t } = useTranslation()
-  const lang = useLanguage()
   const stock = props.mode === 'edit' ? props.stock : undefined
   const fetcher = useFetcher<StockFormResult>()
   const formRef = useRef<HTMLFormElement>(null)
@@ -114,7 +106,7 @@ export function StockForm(props: StockFormProps) {
 
   // A new answer from the action becomes the form's alert and field errors (adjusted during render, not in an effect).
   if (fetcher.data && fetcher.data !== answered) {
-    const outcome = interpret(fetcher.data, props.mode, lang)
+    const outcome = interpret(fetcher.data, props.mode)
     setAnswered(fetcher.data)
     setAlert(outcome.alert)
     if (outcome.errors) setErrors(outcome.errors)
@@ -146,7 +138,7 @@ export function StockForm(props: StockFormProps) {
     event.preventDefault()
     if (sending.current) return
     setAlert(null)
-    const checked = checkValues(values, lang)
+    const checked = checkValues(values)
     if (!checked.ok) {
       setErrors(checked.errors)
       const first = firstInvalid(checked.errors)
@@ -158,7 +150,7 @@ export function StockForm(props: StockFormProps) {
       ? patchBody(checked.input, values, stock, checked.holding)
       : createBody(checked.input, values, values.economicCycle !== '', checked.holding)
     if (stock && Object.keys(body).length === 0) {
-      toast(t('stocks.form.noChanges'))
+      toast('No changes to save')
       return
     }
     sending.current = true
@@ -180,16 +172,16 @@ export function StockForm(props: StockFormProps) {
           <AlertDescription>
             {alert.kind === 'exists' ? (
               <>
-                {t('stocks.form.alreadySaved', { ticker, market })}{' '}
+                {ticker} ({market}) is already saved.{' '}
                 <Link to={`/stocks/${encodeURIComponent(alert.existingStockId)}`} className="underline">
-                  {t('stocks.form.open', { ticker })}
+                  Open {ticker}
                 </Link>
               </>
             ) : alert.kind === 'missing' ? (
               <>
-                {t('stocks.form.gone')}{' '}
+                This stock no longer exists. It may have been deleted.{' '}
                 <Link to="/stocks" className="underline">
-                  {t('stocks.form.goToStocks')}
+                  Go to stocks
                 </Link>
               </>
             ) : (
@@ -202,7 +194,7 @@ export function StockForm(props: StockFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>{t('stocks.form.identity')}</h2>
+            <h2>Identity</h2>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -210,20 +202,20 @@ export function StockForm(props: StockFormProps) {
             {stock ? (
               <>
                 <div className="space-y-0.5">
-                  <p className="text-sm font-medium">{fieldLabelOf('market', lang)}</p>
-                  <p className="text-sm">{MARKET_LABELS[lang][stock.market]}</p>
+                  <p className="text-sm font-medium">Market</p>
+                  <p className="text-sm">{stock.market}</p>
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-sm font-medium">{fieldLabelOf('ticker', lang)}</p>
+                  <p className="text-sm font-medium">Ticker</p>
                   <p className="font-mono text-sm">{stock.ticker}</p>
                 </div>
-                <FieldDescription className={half}>{t('stocks.form.lockedNote')}</FieldDescription>
+                <FieldDescription className={half}>To change market or ticker, delete this stock and add it again.</FieldDescription>
               </>
             ) : (
               <>
                 <FieldSet data-invalid={errors.market ? true : undefined}>
                   <FieldLegend variant="label" id="stock-market-legend">
-                    {fieldLabelOf('market', lang)}
+                    Market
                     <Required />
                   </FieldLegend>
                   <RadioGroup
@@ -238,7 +230,7 @@ export function StockForm(props: StockFormProps) {
                       <Field key={m} orientation="horizontal" className="w-auto">
                         <RadioGroupItem value={m} id={`stock-market-${m}`} data-field={index === 0 ? 'market' : undefined} />
                         <FieldLabel htmlFor={`stock-market-${m}`} className="font-normal">
-                          {MARKET_LABELS[lang][m]}
+                          {m}
                         </FieldLabel>
                       </Field>
                     ))}
@@ -247,7 +239,7 @@ export function StockForm(props: StockFormProps) {
                 </FieldSet>
                 <Field data-invalid={errors.ticker ? true : undefined}>
                   <FieldLabel htmlFor="stock-ticker">
-                    {fieldLabelOf('ticker', lang)}
+                    Ticker
                     <Required />
                   </FieldLabel>
                   <Input
@@ -272,17 +264,17 @@ export function StockForm(props: StockFormProps) {
               options={exchanges}
               value={values.exchange}
               onChange={(v) => set('exchange', v)}
-              placeholder={market ? t('stocks.form.selectExchange') : t('stocks.form.chooseMarketFirst')}
+              placeholder={market ? 'Select exchange' : 'Choose a market first'}
               disabled={!market}
               error={errors.exchange}
             />
             <div className="space-y-0.5">
-              <p className="text-sm font-medium">{t('stocks.form.currency')}</p>
-              <p className="text-sm">{market ? <span>{CURRENCY_BY_MARKET[market]}</span> : <span className="text-muted-foreground">{t('stocks.form.setFromMarket')}</span>}</p>
+              <p className="text-sm font-medium">Currency</p>
+              <p className="text-sm">{market ? <span>{CURRENCY_BY_MARKET[market]}</span> : <span className="text-muted-foreground">Set from market</span>}</p>
             </div>
             <Field data-invalid={errors.name ? true : undefined} className={half}>
               <FieldLabel htmlFor="stock-name">
-                {fieldLabelOf('name', lang)}
+                Company name
                 <Required />
               </FieldLabel>
               <Input
@@ -298,12 +290,11 @@ export function StockForm(props: StockFormProps) {
             </Field>
             <CheckGroup
               name="indexMembership"
-              lens="indexMembership"
               options={indexes}
               value={values.indexMembership}
               onChange={(v) => set('indexMembership', v)}
               error={errors.indexMembership}
-              empty={t('stocks.form.chooseMarketForIndexes')}
+              empty="Choose a market to see its indexes."
               className={half}
             />
           </FieldGroup>
@@ -313,15 +304,14 @@ export function StockForm(props: StockFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>{t('stocks.form.classification')}</h2>
+            <h2>Classification</h2>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <FieldGroup className="grid gap-4 md:grid-cols-2">
             <SelectField
               name="gicsSector"
-              label={t('stocks.form.gicsSectorLabel')}
-              lens="gicsSector"
+              label="Sector (GICS)"
               options={LENS_VALUES.gicsSector}
               value={values.gicsSector}
               onChange={(v) => set('gicsSector', v)}
@@ -330,7 +320,6 @@ export function StockForm(props: StockFormProps) {
             {market === 'TH' ? (
               <SelectField
                 name="setIndustryGroup"
-                lens="setIndustryGroup"
                 options={LENS_VALUES.setIndustryGroup}
                 value={values.setIndustryGroup}
                 onChange={(v) => set('setIndustryGroup', v)}
@@ -339,7 +328,6 @@ export function StockForm(props: StockFormProps) {
             ) : null}
             <SelectField
               name="economicCycle"
-              lens="economicCycle"
               options={LENS_VALUES.economicCycle}
               value={values.economicCycle}
               shownValue={cycleDefault}
@@ -348,16 +336,15 @@ export function StockForm(props: StockFormProps) {
               badge={
                 cycleDefault ? (
                   <Badge variant="outline" className="text-xs">
-                    {t('stocks.form.default')}
+                    Default
                   </Badge>
                 ) : null
               }
             />
-            <SelectField name="size" lens="size" options={LENS_VALUES.size} value={values.size} onChange={(v) => set('size', v)} error={errors.size} />
-            <SelectField name="style" lens="style" options={LENS_VALUES.style} value={values.style} onChange={(v) => set('style', v)} error={errors.style} />
+            <SelectField name="size" options={LENS_VALUES.size} value={values.size} onChange={(v) => set('size', v)} error={errors.size} />
+            <SelectField name="style" options={LENS_VALUES.style} value={values.style} onChange={(v) => set('style', v)} error={errors.style} />
             <SelectField
               name="volatility"
-              lens="volatility"
               options={LENS_VALUES.volatility}
               value={values.volatility}
               onChange={(v) => set('volatility', v)}
@@ -365,7 +352,6 @@ export function StockForm(props: StockFormProps) {
             />
             <SelectField
               name="lynchType"
-              lens="lynchType"
               options={LENS_VALUES.lynchType}
               value={values.lynchType}
               onChange={(v) => set('lynchType', v)}
@@ -373,15 +359,14 @@ export function StockForm(props: StockFormProps) {
             />
             <SelectField
               name="lifeCycle"
-              lens="lifeCycle"
               options={LENS_VALUES.lifeCycle}
               value={values.lifeCycle}
               onChange={(v) => set('lifeCycle', v)}
               error={errors.lifeCycle}
             />
-            <SelectField name="moat" lens="moat" options={LENS_VALUES.moat} value={values.moat} onChange={(v) => set('moat', v)} error={errors.moat} />
+            <SelectField name="moat" options={LENS_VALUES.moat} value={values.moat} onChange={(v) => set('moat', v)} error={errors.moat} />
             <Field data-invalid={errors.valueChain ? true : undefined}>
-              <FieldLabel htmlFor="stock-valueChain">{fieldLabelOf('valueChain', lang)}</FieldLabel>
+              <FieldLabel htmlFor="stock-valueChain">Value chain</FieldLabel>
               <Input
                 id="stock-valueChain"
                 data-field="valueChain"
@@ -395,7 +380,6 @@ export function StockForm(props: StockFormProps) {
             </Field>
             <SelectField
               name="valueChainPosition"
-              lens="valueChainPosition"
               options={LENS_VALUES.valueChainPosition}
               value={values.valueChainPosition}
               onChange={(v) => set('valueChainPosition', v)}
@@ -404,7 +388,6 @@ export function StockForm(props: StockFormProps) {
             />
             <CheckGroup
               name="customers"
-              lens="customers"
               options={LENS_VALUES.customers}
               value={values.customers}
               onChange={(v) => set('customers', v)}
@@ -413,7 +396,6 @@ export function StockForm(props: StockFormProps) {
             />
             <CheckGroup
               name="revenueTypes"
-              lens="revenueTypes"
               options={LENS_VALUES.revenueTypes}
               value={values.revenueTypes}
               onChange={(v) => set('revenueTypes', v)}
@@ -421,11 +403,11 @@ export function StockForm(props: StockFormProps) {
               className={half}
             />
             <Field data-invalid={errors.themes ? true : undefined} className={half}>
-              <FieldLabel htmlFor="stock-themes">{fieldLabelOf('themes', lang)}</FieldLabel>
+              <FieldLabel htmlFor="stock-themes">Themes</FieldLabel>
               <TagInput
                 id="stock-themes"
                 dataField="themes"
-                label={fieldLabelOf('themes', lang)}
+                label="Themes"
                 value={values.themes}
                 onChange={(v) => set('themes', v)}
                 invalid={Boolean(errors.themes)}
@@ -440,7 +422,7 @@ export function StockForm(props: StockFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2>{t('stocks.form.holding')}</h2>
+            <h2>Holding</h2>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -454,13 +436,13 @@ export function StockForm(props: StockFormProps) {
                 onCheckedChange={(on) => set('held', on === true)}
               />
               <FieldLabel htmlFor="stock-held" className="font-normal">
-                {t('holdings.iHold')}
+                I hold this stock
               </FieldLabel>
             </Field>
             {values.held ? (
               <>
                 <Field data-invalid={errors.holdingShares ? true : undefined}>
-                  <FieldLabel htmlFor="stock-holdingShares">{t('holdings.sharesOptional')}</FieldLabel>
+                  <FieldLabel htmlFor="stock-holdingShares">Shares (optional)</FieldLabel>
                   <Input
                     id="stock-holdingShares"
                     data-field="holdingShares"
@@ -476,7 +458,7 @@ export function StockForm(props: StockFormProps) {
                   <FieldMessage name="holdingShares" error={errors.holdingShares} />
                 </Field>
                 <Field data-invalid={errors.holdingAverageCost ? true : undefined}>
-                  <FieldLabel htmlFor="stock-holdingAverageCost">{t('holdings.averageCostOptional')}</FieldLabel>
+                  <FieldLabel htmlFor="stock-holdingAverageCost">Average cost per share (optional)</FieldLabel>
                   <InputGroup>
                     <InputGroupAddon>
                       <span aria-hidden="true">{costCurrency === 'THB' ? '฿' : '$'}</span>
@@ -498,7 +480,7 @@ export function StockForm(props: StockFormProps) {
                 </Field>
                 <FieldSet className={half}>
                   <FieldLegend variant="label" id="stock-costCurrency-legend">
-                    {t('holdings.costCurrency')}
+                    Cost currency
                   </FieldLegend>
                   <RadioGroup
                     value={costCurrency}
@@ -517,7 +499,7 @@ export function StockForm(props: StockFormProps) {
                     ))}
                   </RadioGroup>
                 </FieldSet>
-                <FieldDescription className={half}>{t('holdings.leaveEmpty')}</FieldDescription>
+                <FieldDescription className={half}>Leave shares or cost empty if you don&apos;t want to track the amount.</FieldDescription>
               </>
             ) : null}
           </FieldGroup>
@@ -528,22 +510,22 @@ export function StockForm(props: StockFormProps) {
         <Card>
           <CardHeader>
             <CardTitle>
-              <h2>{t('stocks.form.lists')}</h2>
+              <h2>Lists</h2>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {lists.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                {t('stocks.form.noListsYet')}{' '}
+                No lists yet — you can create one on the{' '}
                 <Link to="/lists" className="underline">
-                  {t('stocks.form.listsPage')}
+                  Lists page
                 </Link>
                 .
               </p>
             ) : (
               <FieldSet>
                 <FieldLegend variant="label" className="sr-only">
-                  {t('stocks.form.addToLists')}
+                  Add to lists
                 </FieldLegend>
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
                   {lists.map((list) => (
@@ -576,16 +558,16 @@ export function StockForm(props: StockFormProps) {
       >
         {props.onCancel ? (
           <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={props.onCancel}>
-            {t('stocks.form.cancel')}
+            Cancel
           </Button>
         ) : (
           <Button variant="outline" asChild className="w-full sm:w-auto">
-            <Link to={stock ? `/stocks/${stock.id}` : '/stocks'}>{t('stocks.form.cancel')}</Link>
+            <Link to={stock ? `/stocks/${stock.id}` : '/stocks'}>Cancel</Link>
           </Button>
         )}
         <Button type="submit" disabled={pending} className="w-full sm:w-auto">
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          {pending ? t('stocks.form.saving') : stock ? t('stocks.form.saveChanges') : t('stocks.form.saveStock')}
+          {pending ? 'Saving…' : stock ? 'Save changes' : 'Save stock'}
         </Button>
       </div>
     </form>

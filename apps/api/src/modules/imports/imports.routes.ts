@@ -2,10 +2,9 @@ import type { MultipartFile } from '@fastify/multipart'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
-import { FieldErrorOut } from '../../lib/field-error-schema.ts'
-import { LANGUAGES, ListName, rule } from '@investhesis/domain'
+import { ListName } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
-import { AppError, fieldError } from '../../lib/app-error.ts'
+import { AppError } from '../../lib/app-error.ts'
 import { requireIdentity } from '../../plugins/authenticate.ts'
 import * as service from './imports.service.ts'
 import { templateCsv, templateXlsx } from './imports.template.ts'
@@ -16,11 +15,11 @@ const ProblemOut = z.object({
   status: z.number().int(),
   code: z.string(),
   detail: z.string().optional(),
-  errors: z.array(FieldErrorOut).optional(),
+  errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
   requestId: z.string().optional(),
 })
 
-const RowError = FieldErrorOut
+const RowError = z.object({ path: z.string(), message: z.string() })
 const PreviewOut = z.object({
   fileName: z.string(),
   format: z.enum(['csv', 'xlsx']),
@@ -38,10 +37,6 @@ const PreviewOut = z.object({
       errors: z.array(RowError),
     }),
   ),
-})
-
-const TemplateQuery = z.object({
-  lang: z.enum(LANGUAGES, { error: () => rule('oneOf', { values: LANGUAGES }) }).default('en'),
 })
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -115,13 +110,10 @@ export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined; repo?: Part
 
   r.get(
     '/imports/template.xlsx',
-    { schema: { tags: ['imports'], produces: [XLSX_TYPE], querystring: TemplateQuery } },
+    { schema: { tags: ['imports'], produces: [XLSX_TYPE] } },
     async (req, reply) => {
       requireIdentity(req)
-      return reply
-        .header('content-type', XLSX_TYPE)
-        .header('content-disposition', attachment('xlsx'))
-        .send(await templateXlsx(req.query.lang))
+      return reply.header('content-type', XLSX_TYPE).header('content-disposition', attachment('xlsx')).send(await templateXlsx())
     },
   )
 
@@ -158,7 +150,7 @@ export const importsRoutes: FastifyPluginAsync<{ db: Db | undefined; repo?: Part
         throw new AppError({
           status: 400,
           code: 'validation_failed',
-          errors: parsed.error.issues.map((i) => fieldError(i.path.join('.'), i.message)),
+          errors: parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
         })
       }
       const { duplicateMode, targetListId, newListName } = parsed.data

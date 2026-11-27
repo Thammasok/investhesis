@@ -75,7 +75,7 @@ test.describe('privacy and isolation in the browser', () => {
 
     // Assert: nothing of U's anywhere in V's world, and U's data is untouched
     expect(direct).toBe(404)
-    expect(settingsV).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
+    expect(settingsV).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
     const everything = [...seen, ...bodies].join('\n')
     for (const secret of ['NVDA', 'NVIDIA', 'U core', '7351', '7,351', '9182', '9,182', '36.4829', '36.48']) expect(everything, secret).not.toContain(secret)
     expect((await apiU.getStock(nvda.id)).holding).toEqual({ shares: '7351.2468', averageCost: '9182.7364', costCurrency: 'USD' })

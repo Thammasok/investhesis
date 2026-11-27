@@ -1,13 +1,13 @@
 import {
   canonicaliseRow,
   EXPORT_ONLY_HEADERS,
-  rule,
   resolveEconomicCycle,
   TEMPLATE_COLUMNS,
+  type FieldError,
   type StockInput,
 } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
-import { AppError, fieldError, type FieldError as ApiFieldError } from '../../lib/app-error.ts'
+import { AppError } from '../../lib/app-error.ts'
 import { uuidv7 } from '../../lib/ids.ts'
 import * as listRepo from '../lists/lists.repository.ts'
 import * as stocks from '../stocks/stocks.repository.ts'
@@ -26,7 +26,7 @@ export type PreviewRow = {
   name: string
   status: 'new' | 'duplicate' | 'error'
   existingStockId?: string
-  errors: ApiFieldError[]
+  errors: Pick<FieldError, 'path' | 'message'>[]
 }
 
 export type Preview = {
@@ -73,7 +73,7 @@ export function mapHeaders(header: readonly string[]): {
       status: 422,
       code: 'file_missing_headers',
       detail: `Missing columns: ${missing.join(', ')}`,
-      errors: missing.map((path) => fieldError(path, rule('columnMissing'))),
+      errors: missing.map((path) => ({ path, message: 'column is missing' })),
     })
   }
   return { index, warnings, ignoredColumns }
@@ -82,7 +82,7 @@ export function mapHeaders(header: readonly string[]): {
 export const cellsOf = (row: FileRow, index: ReadonlyMap<string, number>): Record<string, string> =>
   Object.fromEntries([...index].map(([header, i]) => [header, row.cells[i] ?? '']))
 
-type RowError = ApiFieldError
+type RowError = Pick<FieldError, 'path' | 'message'>
 type Analysed = { row: FileRow; cells: Record<string, string>; input?: StockInput; errors: RowError[] }
 
 /** Reads the file and validates every row, including repeats of an earlier row's (market, ticker) (FR-016..FR-019). */
@@ -94,10 +94,10 @@ async function analyseFile(fileName: string, bytes: Buffer) {
   const rows = file.rows.map((row): Analysed => {
     const cells = cellsOf(row, index)
     const result = canonicaliseRow(cells)
-    if (!result.ok) return { row, cells, errors: result.errors.map(({ path, message }) => fieldError(path, message)) }
+    if (!result.ok) return { row, cells, errors: result.errors.map(({ path, message }) => ({ path, message })) }
     const key = `${result.input.market}/${result.input.ticker}`
     const earlier = firstSeen.get(key)
-    if (earlier !== undefined) return { row, cells, errors: [fieldError('ticker', rule('repeatsRow', { row: earlier }))] }
+    if (earlier !== undefined) return { row, cells, errors: [{ path: 'ticker', message: `repeats row ${earlier} in this file` }] }
     firstSeen.set(key, row.rowNumber)
     return { row, cells, input: result.input, errors: [] }
   })

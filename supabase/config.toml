@@ -254,11 +254,11 @@ otp_expiry = 3600
 
 # Uncomment to customize email template
 [auth.email.template.confirmation]
-subject = "ยืนยันบัญชี Investhesis / Confirm your Investhesis account"
+subject = "Confirm your Investhesis account"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "รีเซ็ตรหัสผ่าน Investhesis / Reset your Investhesis password"
+subject = "Reset your Investhesis password"
 content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template

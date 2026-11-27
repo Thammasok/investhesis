@@ -1,13 +1,11 @@
 import { PencilIcon, PlusIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { parseDecimal } from '@investhesis/domain'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { i18n } from '@/i18n/i18n'
 import { formatMoney, formatShares, formatUnitMoney } from '@/lib/number-format'
 import type { HoldingActionResult } from '../stocks-data'
 import type { Holding, Stock } from '../types'
@@ -26,7 +24,6 @@ const UNDO_MS = 5000
 
 /** The Holding card: not held, held without amounts, or held with figures. Edits happen in a dialog. */
 export function HoldingCard({ stock }: { stock: Stock }) {
-  const { t } = useTranslation()
   const undoFetcher = useFetcher<HoldingActionResult>()
   const [open, setOpen] = useState(false)
   const opener = useRef<HTMLButtonElement | null>(null)
@@ -47,7 +44,7 @@ export function HoldingCard({ stock }: { stock: Stock }) {
     const result = undoFetcher.data
     if (!result || handledUndo.current === result) return
     handledUndo.current = result
-    if (!result.ok) toast.error(i18n.t('holdings.restoreFailed'))
+    if (!result.ok) toast.error("Couldn't restore the holding. Mark it as held again.")
   }, [undoFetcher.data])
 
   const openFrom = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -58,12 +55,12 @@ export function HoldingCard({ stock }: { stock: Stock }) {
 
   const done = (result: Extract<HoldingActionResult, { ok: true }>, previous: Holding | null) => {
     if (result.intent === 'set-holding') {
-      toast.success(previous ? i18n.t('holdings.saved') : i18n.t('holdings.markedHeld', { ticker: result.ticker }))
+      toast.success(previous ? 'Holding saved' : `${result.ticker} marked as held`)
     } else {
-      toast(i18n.t('holdings.noLongerHeld', { ticker: result.ticker }), {
+      toast(`${result.ticker} no longer held`, {
         duration: UNDO_MS,
         action: {
-          label: i18n.t('common.undo'),
+          label: 'Undo',
           onClick: () =>
             undoFetcher.submit(
               {
@@ -90,13 +87,13 @@ export function HoldingCard({ stock }: { stock: Stock }) {
     <Card>
       <CardHeader>
         <CardTitle>
-          <h2>{t('holdings.title')}</h2>
+          <h2>Holding</h2>
         </CardTitle>
         {holding ? (
           <CardAction>
             <Button ref={editRef} type="button" variant="outline" size="sm" onClick={openFrom}>
               <PencilIcon aria-hidden="true" />
-              {t('holdings.edit')}
+              Edit
             </Button>
           </CardAction>
         ) : null}
@@ -104,27 +101,27 @@ export function HoldingCard({ stock }: { stock: Stock }) {
       <CardContent className="space-y-3 text-sm">
         {holding ? (
           <>
-            <Badge variant="secondary" className="whitespace-nowrap">{t('holdings.held')}</Badge>
+            <Badge variant="secondary">Held</Badge>
             {shares !== null || average !== null ? (
               <dl className="grid grid-cols-[minmax(7rem,auto)_1fr] gap-x-4 gap-y-2">
-                {shares !== null ? <Row label={t('holdings.shares')} value={shares} /> : null}
-                {average !== null ? <Row label={t('holdings.averageCost')} value={average} /> : null}
-                {cost !== null ? <Row label={t('holdings.cost')} value={cost} /> : null}
+                {shares !== null ? <Row label="Shares" value={shares} /> : null}
+                {average !== null ? <Row label="Average cost" value={average} /> : null}
+                {cost !== null ? <Row label="Cost" value={cost} /> : null}
               </dl>
             ) : null}
             {cost === null ? (
               <p className="text-muted-foreground">
-                {shares === null && average === null ? <span className="block text-foreground">{t('holdings.amountNotEntered')}</span> : null}
-                {t('holdings.addFigures')}
+                {shares === null && average === null ? <span className="block text-foreground">Amount not entered.</span> : null}
+                Add shares and cost to include it in value weights.
               </p>
             ) : null}
           </>
         ) : (
           <>
-            <p>{t('holdings.notHeld')}</p>
+            <p>Not held</p>
             <Button ref={markRef} type="button" variant="outline" size="sm" onClick={openFrom}>
               <PlusIcon aria-hidden="true" />
-              {t('holdings.markAsHeld')}
+              Mark as held
             </Button>
           </>
         )}

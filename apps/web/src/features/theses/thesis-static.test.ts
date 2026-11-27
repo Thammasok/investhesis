@@ -33,6 +33,6 @@ describe('thesis text is never run as markup', () => {
     const dialog = read(join(import.meta.dirname, 'components', 'thesis-dialog.tsx'))
     for (const token of ['sm:max-w-lg', 'max-h-[90svh]', 'overflow-y-auto']) expect(dialog).toContain(token)
     const section = read(join(import.meta.dirname, 'components', 'thesis-section.tsx'))
-    expect(section).toMatch(/<PlusIcon aria-hidden="true" \/>\s*\{t\(.theses\.section\.addEntry.\)\}/)
+    expect(section).toMatch(/<PlusIcon aria-hidden="true" \/>\s*Add entry/)
   })
 })

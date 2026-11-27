@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { CircleAlertIcon, MailIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -20,7 +19,6 @@ type CheckEmailPanelProps = {
 }
 
 export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
-  const { t } = useTranslation()
   const authClient = useAuthClient()
   const cooldown = useCooldown(justSent ? 60 : 0)
   const [sentAgain, setSentAgain] = useState(false)
@@ -42,7 +40,7 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
     }
   }
 
-  const label = cooldown.remaining > 0 ? t('auth.resendIn', { seconds: cooldown.remaining }) : t('auth.resendEmail')
+  const label = cooldown.remaining > 0 ? `Resend in ${cooldown.remaining}s` : 'Resend email'
 
   function handleFieldSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -54,8 +52,15 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
       <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
         <MailIcon aria-hidden="true" className="size-6" />
       </div>
-      <AuthHeading title={t('auth.checkEmail.heading')}>
-        {email ? t('auth.checkEmail.sentTo', { email }) : t('auth.checkEmail.askEmail')}
+      <AuthHeading title="Check your email">
+        {email ? (
+          <>
+            We sent a confirmation link to {email}. Open it to finish signing up. The link works once and expires in 1
+            hour.
+          </>
+        ) : (
+          'Enter your email and we will send the confirmation link again.'
+        )}
       </AuthHeading>
       {error ? (
         <Alert variant="destructive">
@@ -64,11 +69,11 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
         </Alert>
       ) : null}
       <div role="status" className="text-center text-sm text-muted-foreground empty:hidden">
-        {sentAgain ? t('auth.checkEmail.sentAgain') : null}
+        {sentAgain ? 'Sent again.' : null}
       </div>
       {email ? (
         <p className="text-center text-sm text-muted-foreground">
-          {t('auth.checkEmail.noMail')}{' '}
+          Didn&apos;t get it? Check spam, or{' '}
           <Button
             type="button"
             variant="link"
@@ -83,7 +88,7 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
         <form onSubmit={handleFieldSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="email">{t('auth.email')}</FieldLabel>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 name="email"
@@ -92,7 +97,7 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
                 inputMode="email"
                 autoCapitalize="none"
                 spellCheck={false}
-                placeholder={t('auth.emailPlaceholder')}
+                placeholder="you@example.com"
                 required
                 className="bg-background"
               />
@@ -107,7 +112,7 @@ export function CheckEmailPanel({ email, justSent }: CheckEmailPanelProps) {
       )}
       <p className="text-center text-sm">
         <Link to="/auth/sign-in" className="underline underline-offset-4 hover:text-primary">
-          {t('auth.backToSignIn')}
+          Back to sign in
         </Link>
       </p>
     </div>

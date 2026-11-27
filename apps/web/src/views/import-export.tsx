@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { UploadIcon } from 'lucide-react'
 import { Link, Outlet } from 'react-router'
 import { PageHeader } from '@/components/page-header'
@@ -10,20 +9,19 @@ import type { ApiClient } from '@/lib/api-client'
 /** `/import-export`: where Import (a dialog, in the outlet) starts and where the full backup is downloaded. */
 export function createImportExportPage(api: ApiClient) {
   return function ImportExportPage() {
-    const { t } = useTranslation()
     return (
       <section className="space-y-6">
-        <PageHeader title={t('nav.importExport')} description={t('imports.pageDescription')} />
+        <PageHeader title="Import / export" description="Import stocks from CSV or Excel, or download all your data." />
         <Card className="max-w-5xl">
           <CardHeader>
-            <CardTitle>{t('imports.pageCardTitle')}</CardTitle>
-            <CardDescription>{t('imports.pageCardDescription')}</CardDescription>
+            <CardTitle>Import</CardTitle>
+            <CardDescription>Add many stocks at once from a CSV or Excel file.</CardDescription>
           </CardHeader>
           <div className="px-4">
             <Button asChild>
               <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
-                {t('imports.title')}
+                Import stocks
               </Link>
             </Button>
           </div>

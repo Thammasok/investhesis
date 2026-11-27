@@ -1,12 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 type PagePlaceholderProps = { title: string; description: string }
 
 /** Stand-in for a page that isn't built yet. Focuses its heading so route changes are announced. */
 export function PagePlaceholder({ title, description }: PagePlaceholderProps) {
-  const { t } = useTranslation()
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -21,11 +19,11 @@ export function PagePlaceholder({ title, description }: PagePlaceholderProps) {
       </h1>
       <Card>
         <CardHeader>
-          <CardTitle>{t('placeholder.comingSoon')}</CardTitle>
+          <CardTitle>Coming soon</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          {t('placeholder.body')}
+          This page is a placeholder until its feature is planned and built.
         </CardContent>
       </Card>
     </section>

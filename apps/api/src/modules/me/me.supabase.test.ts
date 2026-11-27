@@ -44,13 +44,13 @@ describe('GET /me in supabase mode', () => {
     await start()
     const res = await me(bearer(await signTestToken(keys)))
     expect(res.statusCode).toBe(200)
-    expect(res.json()).toEqual({ id: USER_U, email: 'a@x.io', displayName: null, language: null })
+    expect(res.json()).toEqual({ id: USER_U, email: 'a@x.io', displayName: null })
   })
 
   it('G-1 a token without an email still resolves, with a null email', async () => {
     await start()
     const res = await me(bearer(await signTestToken(keys, { email: undefined })))
-    expect(res.json()).toEqual({ id: USER_U, email: null, displayName: null, language: null })
+    expect(res.json()).toEqual({ id: USER_U, email: null, displayName: null })
   })
 
   it('TC-U-012 / TC-A-014 concurrent users never cross identities', async () => {

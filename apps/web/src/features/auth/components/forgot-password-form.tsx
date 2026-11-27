@@ -1,6 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { CircleAlertIcon, MailIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -27,7 +26,6 @@ type ForgotPasswordFormProps = {
  * `rate_limited` and `unavailable` (and unexpected failures) show an error.
  */
 export function ForgotPasswordForm({ initialEmail, initiallySent, next }: ForgotPasswordFormProps) {
-  const { t } = useTranslation()
   const authClient = useAuthClient()
   const cooldown = useCooldown(initiallySent && initialEmail ? 60 : 0)
   const [sentTo, setSentTo] = useState<string | null>(initiallySent && initialEmail ? initialEmail : null)
@@ -66,7 +64,7 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
   const backToSignIn = (
     <p className="text-center text-sm">
       <Link to={withNext('/auth/sign-in', next)} className="underline underline-offset-4 hover:text-primary">
-        {t('auth.backToSignIn')}
+        Back to sign in
       </Link>
     </p>
   )
@@ -77,10 +75,12 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
         <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
           <MailIcon aria-hidden="true" className="size-6" />
         </div>
-        <AuthHeading title={t('auth.forgot.sentHeading')}>{t('auth.forgot.sentBody', { email: sentTo })}</AuthHeading>
+        <AuthHeading title="Check your email">
+          If an account exists for {sentTo}, we sent a link to reset its password. It expires in 1 hour.
+        </AuthHeading>
         {alert}
         <p className="text-center text-sm text-muted-foreground">
-          {t('auth.forgot.noMail')}{' '}
+          Didn&apos;t get it?{' '}
           <Button
             type="button"
             variant="link"
@@ -88,7 +88,7 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
             disabled={cooldown.remaining > 0 || sending}
             onClick={() => void request(sentTo)}
           >
-            {cooldown.remaining > 0 ? t('auth.resendIn', { seconds: cooldown.remaining }) : t('auth.resendEmail')}
+            {cooldown.remaining > 0 ? `Resend in ${cooldown.remaining}s` : 'Resend email'}
           </Button>
         </p>
         {backToSignIn}
@@ -99,12 +99,12 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <FieldGroup>
-        <AuthHeading title={t('auth.forgot.heading')} docTitle={t('auth.forgot.docTitle')}>
-          {t('auth.forgot.lead')}
+        <AuthHeading title="Reset your password" docTitle="Forgot password">
+          Enter your account&apos;s email and we&apos;ll send you a reset link.
         </AuthHeading>
         {alert}
         <Field>
-          <FieldLabel htmlFor="email">{t('auth.email')}</FieldLabel>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
             name="email"
@@ -113,7 +113,7 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
             inputMode="email"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder={t('auth.emailPlaceholder')}
+            placeholder="you@example.com"
             defaultValue={initialEmail}
             required
             className="bg-background"
@@ -122,7 +122,7 @@ export function ForgotPasswordForm({ initialEmail, initiallySent, next }: Forgot
         <Field>
           <Button type="submit" disabled={sending} aria-busy={sending}>
             {sending ? <Spinner /> : null}
-            {sending ? t('auth.forgot.submitting') : t('auth.forgot.submit')}
+            {sending ? 'Sending…' : 'Send reset link'}
           </Button>
         </Field>
       </FieldGroup>

@@ -3,13 +3,12 @@ import {
   THESIS_TYPES,
   latestThesisDate,
   parseDecimal,
-  rule,
   thesisInput,
   thesisPatch,
   type Thesis,
 } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
-import { AppError, fieldError, type FieldError } from '../../lib/app-error.ts'
+import { AppError, type FieldError } from '../../lib/app-error.ts'
 import { uuidv7 } from '../../lib/ids.ts'
 import { pgError } from '../lists/lists.repository.ts'
 import * as repo from './theses.repository.ts'
@@ -20,13 +19,13 @@ const notFound = () => new AppError({ status: 404, code: 'not_found' })
 const invalid = (errors: FieldError[]) => new AppError({ status: 400, code: 'validation_failed', errors })
 
 const issues = (error: z.ZodError, prefix = ''): FieldError[] =>
-  error.issues.map((i) => fieldError(prefix + i.path.join('.'), i.message))
+  error.issues.map((i) => ({ path: prefix + i.path.join('.'), message: i.message }))
 
 /** Postgres text cannot hold NUL; refuse it here so it is a 400, not a 500. */
 function nulErrors(value: { note?: string | undefined; invalidation?: string | null | undefined }, prefix = ''): FieldError[] {
   const out: FieldError[] = []
   for (const key of ['note', 'invalidation'] as const) {
-    if (value[key]?.includes('\u0000')) out.push(fieldError(prefix + key, 'must not contain a NUL character'))
+    if (value[key]?.includes('\u0000')) out.push({ path: prefix + key, message: 'must not contain a NUL character' })
   }
   return out
 }
@@ -142,20 +141,20 @@ const Stamps = z.object({ id: z.uuid(), stockId: z.string(), createdAt: z.iso.da
 export async function restore(db: Db, now: Clock, userId: string, stockId: string, body: unknown): Promise<Thesis> {
   const entry = (body as { entry?: unknown } | null)?.entry
   if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
-    throw invalid([fieldError('entry', rule('required'))])
+    throw invalid([{ path: 'entry', message: 'is required' }])
   }
   const raw = entry as Record<string, unknown>
   const errors: FieldError[] = Object.keys(raw)
     .filter((k) => !RESTORE_KEYS.includes(k))
-    .map((k) => fieldError(`entry.${k}`, rule('unknownField')))
+    .map((k) => ({ path: `entry.${k}`, message: 'is not an accepted field' }))
 
   const stamps = Stamps.safeParse(raw)
   if (!stamps.success) errors.push(...issues(stamps.error, 'entry.'))
   else {
     const { createdAt, updatedAt } = stamps.data
-    if (stamps.data.stockId !== stockId) errors.push(fieldError('entry.stockId', 'must match the stock in the address'))
-    if (Date.parse(createdAt) > Date.parse(updatedAt)) errors.push(fieldError('entry.updatedAt', 'must not be before createdAt'))
-    if (Date.parse(updatedAt) > now().getTime()) errors.push(fieldError('entry.updatedAt', rule('thesisDateFuture')))
+    if (stamps.data.stockId !== stockId) errors.push({ path: 'entry.stockId', message: 'must match the stock in the address' })
+    if (Date.parse(createdAt) > Date.parse(updatedAt)) errors.push({ path: 'entry.updatedAt', message: 'must not be before createdAt' })
+    if (Date.parse(updatedAt) > now().getTime()) errors.push({ path: 'entry.updatedAt', message: "can't be in the future" })
   }
 
   const fields = Object.fromEntries(Object.entries(raw).filter(([k]) => ['type', 'date', 'note', 'targetPrice', 'invalidation'].includes(k)))

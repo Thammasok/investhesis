@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { ZodTypeProvider } from '@fastify/type-provider-zod'
 import { z } from 'zod'
-import { FieldErrorOut } from '../../lib/field-error-schema.ts'
 import { SettingsPatch } from '@investhesis/domain'
 import type { Db } from '../../db/client.ts'
 import { AppError } from '../../lib/app-error.ts'
@@ -12,7 +11,6 @@ const SettingsOut = z.object({
   concentrationThreshold: z.number().int(),
   usdThbRate: z.string().nullable(),
   usdThbRateUpdatedAt: z.string().nullable(),
-  language: z.enum(['en', 'th']).nullable(),
 })
 
 const ProblemOut = z.object({
@@ -21,7 +19,7 @@ const ProblemOut = z.object({
   status: z.number().int(),
   code: z.string(),
   detail: z.string().optional(),
-  errors: z.array(FieldErrorOut).optional(),
+  errors: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
   requestId: z.string().optional(),
 })
 

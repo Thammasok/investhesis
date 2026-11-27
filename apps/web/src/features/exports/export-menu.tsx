@@ -1,5 +1,4 @@
 import { ChevronDownIcon, CopyIcon, DatabaseIcon, DownloadIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -11,14 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { i18n } from '@/i18n/i18n'
+import { countLabel } from '@/features/stocks/format'
 import type { ListSummary, Stock } from '@/features/stocks/types'
 import { saveFile } from '@/lib/save-file'
 import { exportFileName } from './export-file-name'
 import { csvOfRows, listNameMap, tableOfRows } from './export-rows'
 
-const stocksLabel = (count: number) => i18n.t('exports.menu.stockCount', { count, n: count.toLocaleString('en-US') })
-const rowsLabel = (count: number) => i18n.t('exports.menu.rowCount', { count, n: count.toLocaleString('en-US') })
+const COPY_REFUSED = "Couldn't copy: your browser blocked the clipboard. Use Download CSV instead."
 
 type ExportMenuProps = {
   /** The rows on screen, in the order on screen (filtered and sorted). */
@@ -31,7 +29,6 @@ type ExportMenuProps = {
 
 /** Export of the rows shown: Download CSV, Copy as table, and a way to the full backup (ux-design.md: Stocks). */
 export function ExportMenu({ stocks, lists, listName = null }: ExportMenuProps) {
-  const { t } = useTranslation()
   const none = stocks.length === 0
 
   const download = () => {
@@ -43,8 +40,8 @@ export function ExportMenu({ stocks, lists, listName = null }: ExportMenuProps) 
   // refuse the clipboard once the user gesture is over.
   const copy = () => {
     const text = tableOfRows(stocks, listNameMap(lists))
-    const done = () => toast.success(t('exports.menu.copied', { rows: rowsLabel(stocks.length) }))
-    const refused = () => toast.error(t('exports.menu.copyRefused'))
+    const done = () => toast.success(`Copied ${countLabel(stocks.length, 'row')}`)
+    const refused = () => toast.error(COPY_REFUSED)
     try {
       const write = navigator.clipboard?.writeText(text)
       if (!write) refused()
@@ -59,27 +56,27 @@ export function ExportMenu({ stocks, lists, listName = null }: ExportMenuProps) 
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
           <DownloadIcon aria-hidden="true" />
-          {t('exports.menu.trigger')}
+          Export
           <ChevronDownIcon aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {none ? <DropdownMenuLabel>{t('exports.menu.none')}</DropdownMenuLabel> : null}
+        {none ? <DropdownMenuLabel>No stocks to export</DropdownMenuLabel> : null}
         <DropdownMenuItem disabled={none} onSelect={download}>
           <DownloadIcon aria-hidden="true" />
-          {t('exports.menu.downloadCsv')}
-          <span className="text-muted-foreground">({stocksLabel(stocks.length)})</span>
+          Download CSV
+          <span className="text-muted-foreground">({countLabel(stocks.length, 'stock')})</span>
         </DropdownMenuItem>
         <DropdownMenuItem disabled={none} onSelect={copy}>
           <CopyIcon aria-hidden="true" />
-          {t('exports.menu.copyTable')}
-          <span className="text-muted-foreground">({rowsLabel(stocks.length)})</span>
+          Copy as table
+          <span className="text-muted-foreground">({countLabel(stocks.length, 'row')})</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/import-export">
             <DatabaseIcon aria-hidden="true" />
-            {t('exports.menu.backup')}
+            Back up all data…
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

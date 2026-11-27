@@ -1,6 +1,5 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -42,7 +41,6 @@ export function DeleteListDialog({ list, open, onOpenChange, returnFocusTo }: De
 }
 
 function Body({ list, onDone }: { list: DeleteListDialogProps['list']; onDone: () => void }) {
-  const { t } = useTranslation()
   const fetcher = useFetcher<ListActionResult>()
   const sending = useRef(false)
   const handled = useRef<unknown>(null)
@@ -67,7 +65,7 @@ function Body({ list, onDone }: { list: DeleteListDialogProps['list']; onDone: (
   return (
     <>
       <AlertDialogHeader>
-        <AlertDialogTitle>{t('lists.deleteDialog.title', { name: list.name })}</AlertDialogTitle>
+        <AlertDialogTitle>Delete {list.name}?</AlertDialogTitle>
         <AlertDialogDescription>{staysSaved(list.stockCount)}</AlertDialogDescription>
       </AlertDialogHeader>
       {result && !result.ok ? (
@@ -76,10 +74,10 @@ function Body({ list, onDone }: { list: DeleteListDialogProps['list']; onDone: (
         </Alert>
       ) : null}
       <AlertDialogFooter>
-        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
         <AlertDialogAction variant="destructive" className={SOLID_DESTRUCTIVE_LIGHT} disabled={pending} onClick={confirm}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          {pending ? t('lists.deleteDialog.deleting') : t('common.delete')}
+          {pending ? 'Deleting…' : 'Delete'}
         </AlertDialogAction>
       </AlertDialogFooter>
     </>

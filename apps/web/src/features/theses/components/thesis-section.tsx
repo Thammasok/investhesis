@@ -1,6 +1,5 @@
 import { Loader2Icon, PlusIcon, TriangleAlertIcon } from 'lucide-react'
 import { Suspense, useEffect, useId, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Await, useAsyncError, useRevalidator } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -23,7 +22,6 @@ type Shell = {
 
 /** The card around every state, so the heading stays put while the entries load. */
 function ThesisCard({ count, onAdd, addRef, headingRef, children }: Shell) {
-  const { t } = useTranslation()
   const titleId = useId()
   const countId = useId()
   // The count and Add entry show once there is something to count; the empty state has its own button.
@@ -33,7 +31,7 @@ function ThesisCard({ count, onAdd, addRef, headingRef, children }: Shell) {
       <CardHeader>
         <CardTitle className="flex flex-wrap items-baseline gap-x-2">
           <h2 id={titleId} ref={headingRef} tabIndex={-1} aria-describedby={loaded ? countId : undefined}>
-            {t('theses.section.title')}
+            Thesis
           </h2>
           {!loaded ? null : (
             <span id={countId} className="text-sm font-normal text-muted-foreground">
@@ -45,7 +43,7 @@ function ThesisCard({ count, onAdd, addRef, headingRef, children }: Shell) {
           <CardAction>
             <Button ref={addRef} type="button" variant="outline" size="sm" onClick={onAdd}>
               <PlusIcon aria-hidden="true" />
-              {t('theses.section.addEntry')}
+              Add entry
             </Button>
           </CardAction>
         ) : null}
@@ -56,11 +54,10 @@ function ThesisCard({ count, onAdd, addRef, headingRef, children }: Shell) {
 }
 
 export function ThesisSkeleton() {
-  const { t } = useTranslation()
   return (
     <ThesisCard count={null}>
       <div aria-busy="true" className="space-y-3">
-        <span className="sr-only">{t('theses.section.loading')}</span>
+        <span className="sr-only">Loading thesis entries</span>
         <Skeleton className="h-4 w-[30%] motion-reduce:animate-none" />
         <Skeleton className="h-4 w-[90%] motion-reduce:animate-none" />
         <Skeleton className="h-4 w-[60%] motion-reduce:animate-none" />
@@ -71,7 +68,6 @@ export function ThesisSkeleton() {
 
 /** The entries failed to load: the rest of the page keeps working, and Retry re-runs the loaders. */
 export function ThesisLoadError() {
-  const { t } = useTranslation()
   const revalidator = useRevalidator()
   // Read the failure so it counts as handled; the section never shows its text (it may name a server).
   useAsyncError()
@@ -81,7 +77,7 @@ export function ThesisLoadError() {
       <Alert>
         <TriangleAlertIcon aria-hidden="true" />
         <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
-          <span>{t('theses.section.loadError')}</span>
+          <span>Couldn&apos;t load the thesis entries.</span>
           <Button
             type="button"
             variant="outline"
@@ -92,7 +88,7 @@ export function ThesisLoadError() {
             }}
           >
             {retrying ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-            {t('common.retry')}
+            Retry
           </Button>
         </AlertDescription>
       </Alert>
@@ -121,7 +117,6 @@ export type FocusRequest = { id: string; target: 'add' | 'edit'; updatedAt: stri
 
 /** The loaded section: the entries, newest first as the API sorts them, or the empty state. */
 export function ThesisSection({ entries, currency, onAdd, addRef, headingRef, renderActions, focusRequest, onFocusDone }: ThesisSectionProps) {
-  const { t } = useTranslation()
   useEffect(() => {
     if (!focusRequest) return
     const saved = entries.find((e) => e.id === focusRequest.id)
@@ -144,16 +139,16 @@ export function ThesisSection({ entries, currency, onAdd, addRef, headingRef, re
     <ThesisCard count={entries.length} onAdd={onAdd} addRef={addRef} headingRef={headingRef}>
       {(titleId) => (
         <>
-      <p className="text-xs text-muted-foreground">{t('theses.section.advice')}</p>
+      <p className="text-xs text-muted-foreground">Your own reasoning, not advice.</p>
       {entries.length === 0 ? (
         <div className="py-8 text-center">
-          <h3 className="font-medium">{t('theses.section.emptyTitle')}</h3>
+          <h3 className="font-medium">No thesis yet</h3>
           <p className="mx-auto mt-1 max-w-prose text-sm text-muted-foreground">
-            {t('theses.section.emptyBody')}
+            Write down why you hold or watch this stock, so you can check it later.
           </p>
           <Button ref={addRef} type="button" size="sm" className="mt-4" onClick={onAdd}>
             <PlusIcon aria-hidden="true" />
-            {t('theses.section.addFirst')}
+            Add first entry
           </Button>
         </div>
       ) : (

@@ -1,6 +1,5 @@
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link, useLoaderData, useRouteLoaderData } from 'react-router'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -16,7 +15,6 @@ import { ThesisPanel } from '@/features/theses/components/thesis-panel'
 import { STOCK_ROUTE_ID } from '@/routers/route-ids'
 
 export function Component() {
-  const { t, i18n } = useTranslation()
   // The `:id` route loads the stock (it also gives the breadcrumb its ticker); this page loads the lists.
   const stock = useRouteLoaderData(STOCK_ROUTE_ID) as Stock
   const { lists, theses } = useLoaderData() as StockDetailData
@@ -34,25 +32,25 @@ export function Component() {
             <span className="font-normal break-words">{stock.name}</span>
           </>
         }
-        description={identityLine(stock, i18n.language === 'th' ? 'th' : 'en')}
+        description={identityLine(stock)}
         actions={
           <>
             <Button variant="outline" asChild>
               <Link to={`/stocks/${stock.id}/edit`}>
                 <PencilIcon aria-hidden="true" />
-                {t('stocks.detail.edit')}
+                Edit
               </Link>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button ref={moreRef} variant="ghost" size="icon" aria-label={t('stocks.detail.moreActions')}>
+                <Button ref={moreRef} variant="ghost" size="icon" aria-label="More actions">
                   <MoreHorizontalIcon aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem variant="destructive" onSelect={() => setConfirmOpen(true)}>
                   <Trash2Icon aria-hidden="true" />
-                  {t('stocks.detail.delete')}
+                  Delete
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

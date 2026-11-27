@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next'
 import { ChartPieIcon } from 'lucide-react'
 import { chainKey, groupChains } from '@investhesis/domain'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -14,10 +13,10 @@ import { NoChainsCard, NoStocksCard } from '@/features/chains/components/chains-
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
 import { ScopeSelect } from '@/features/stock-filters/scope-select'
-import { getLanguage } from '@/i18n/language'
 import { stocksInScope } from '@/features/stock-filters/scope'
 import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 
+const DESCRIPTION = 'Your stocks along each chain, from upstream to downstream.'
 /** Parameters of this page that the filters leave alone. */
 const KEEP = ['scope'] as const
 
@@ -28,12 +27,9 @@ const renameButtonOf = (key: string) =>
   Array.from(document.querySelectorAll<HTMLElement>('[data-chain-rename]')).find((b) => b.dataset.chainRename === key)
 
 export function Component() {
-  const { t } = useTranslation()
   const { stocks, lists, settings } = useLoaderData() as ChainsData
   const [params] = useSearchParams()
-  const lang = getLanguage()
-  // oxlint-disable-next-line react-hooks/exhaustive-deps
-  const view = useMemo(() => readChainsView(params, lists), [params, lists, lang])
+  const view = useMemo(() => readChainsView(params, lists), [params, lists])
   const scoped = useMemo(() => stocksInScope(stocks, view.scope), [stocks, view.scope])
   // Search and filters work inside the scope: the options count over it, and the grouping uses what passes.
   const filters = useStockFilters(scoped, { keep: KEEP, sort: false })
@@ -86,13 +82,13 @@ export function Component() {
 
   const header = (
     <PageHeader
-      title={t('nav.valueChains')}
-      description={t('chains.description')}
+      title="Value chains"
+      description={DESCRIPTION}
       actions={
         <Button variant="outline" className="w-full sm:w-auto" asChild>
           <Link to={concentrationHref(view.scope, filters.state, 'valueChain')}>
             <ChartPieIcon aria-hidden="true" />
-            {t('chains.seeConcentration')}
+            See concentration
           </Link>
         </Button>
       }

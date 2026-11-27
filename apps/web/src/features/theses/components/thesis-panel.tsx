@@ -1,12 +1,11 @@
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
-import { i18n } from '@/i18n/i18n'
+import { THESIS_TYPE_LABELS } from '@investhesis/domain'
 import { Button } from '@/components/ui/button'
-import { formatEntryDate, typeLabel } from '../format'
-import type { ThesisActionResult } from '../thesis-actions'
+import { formatEntryDate } from '../format'
+import { RESTORE_FAILED, type ThesisActionResult } from '../thesis-actions'
 import type { Thesis } from '../types'
 import { ThesisDeleteDialog } from './thesis-delete-dialog'
 import { ThesisDialog, type ThesisSaved } from './thesis-dialog'
@@ -24,7 +23,6 @@ type Props = {
 
 /** The Thesis section with its add, edit and delete dialogs, and Undo for a delete. */
 export function ThesisPanel({ stock, theses, onCount }: Props) {
-  const { t } = useTranslation()
   const addRef = useRef<HTMLButtonElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Where focus goes when a dialog closes without a save. The list is re-read after any action, which remounts its
@@ -54,8 +52,8 @@ export function ThesisPanel({ stock, theses, onCount }: Props) {
     const result = restoreFetcher.data
     if (!result || handledRestore.current === result) return
     handledRestore.current = result
-    if (result.ok) toast.success(i18n.t('theses.toast.restored'))
-    else toast.error(i18n.t('theses.errors.restoreFailed'))
+    if (result.ok) toast.success('Entry restored')
+    else toast.error(RESTORE_FAILED)
   }, [restoreFetcher.data])
 
   const openFrom = (from: string | 'add') => {
@@ -71,9 +69,9 @@ export function ThesisPanel({ stock, theses, onCount }: Props) {
   }
 
   const saved = (result: ThesisSaved) => {
-    if (result.kind === 'unchanged') toast(i18n.t('theses.toast.noChanges'))
+    if (result.kind === 'unchanged') toast('No changes to save')
     else {
-      toast.success(i18n.t(result.kind === 'added' ? 'theses.toast.added' : 'theses.toast.updated'))
+      toast.success(result.kind === 'added' ? 'Entry added' : 'Entry updated')
       // The opener may be replaced when the list is re-read, so the section places focus once it shows the entry.
       skipReturn.current = true
       setFocusRequest({
@@ -90,10 +88,10 @@ export function ThesisPanel({ stock, theses, onCount }: Props) {
     // The Delete button is gone with its entry, so focus moves to the Thesis heading once the list is re-read.
     setFocusRequest({ id: entry.id, target: 'heading' })
     setDeleting((d) => ({ ...d, open: false }))
-    toast(i18n.t('theses.toast.deleted'), {
+    toast('Entry deleted', {
       duration: UNDO_MS,
       action: {
-        label: i18n.t('common.undo'),
+        label: 'Undo',
         onClick: () =>
           restoreFetcher.submit({ intent: 'restore-thesis', thesisId: '', payload: JSON.stringify({ entry }) }, { method: 'post' }),
       },
@@ -114,7 +112,7 @@ export function ThesisPanel({ stock, theses, onCount }: Props) {
         focusRequest={focusRequest}
         onFocusDone={clearFocusRequest}
         renderActions={(entry) => {
-          const name = t('theses.entry.name', { type: typeLabel(entry.type), date: formatEntryDate(entry.date) })
+          const name = `${THESIS_TYPE_LABELS[entry.type]} entry of ${formatEntryDate(entry.date)}`
           return (
             <>
               <Button
@@ -122,28 +120,28 @@ export function ThesisPanel({ stock, theses, onCount }: Props) {
                 variant="ghost"
                 size="sm"
                 data-thesis-edit={entry.id}
-                aria-label={t('theses.entry.editLabel', { name })}
+                aria-label={`Edit ${name}`}
                 onClick={() => {
                   openFrom(`[data-thesis-edit="${CSS.escape(entry.id)}"]`)
                   setEntryDialog({ open: true, mode: 'edit', entry })
                 }}
               >
                 <PencilIcon aria-hidden="true" />
-                {t('common.edit')}
+                Edit
               </Button>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 data-thesis-delete={entry.id}
-                aria-label={t('theses.entry.deleteLabel', { name })}
+                aria-label={`Delete ${name}`}
                 onClick={() => {
                   openFrom(`[data-thesis-delete="${CSS.escape(entry.id)}"]`)
                   setDeleting({ open: true, entry })
                 }}
               >
                 <Trash2Icon aria-hidden="true" />
-                {t('common.delete')}
+                Delete
               </Button>
             </>
           )

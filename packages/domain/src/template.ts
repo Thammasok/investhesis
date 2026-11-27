@@ -1,5 +1,5 @@
 import { ALL_EXCHANGES, ALL_INDEXES, LENS_VALUES, MARKETS, type Market } from './vocabulary.ts'
-import { rule } from './i18n/rules.ts'
+import { MESSAGES } from './messages.ts'
 import { StockInput } from './stock-schema.ts'
 
 export type TemplateColumn = {
@@ -118,7 +118,7 @@ export function canonicaliseRow(cells: Readonly<Record<string, string>>): RowRes
   const seen = new Set<string>()
   for (const issue of parsed.error.issues) {
     const path = String(issue.path[0] ?? '')
-    const message = issue.message || rule('rowBadValue')
+    const message = issue.message || MESSAGES.rowBadValue
     const key = `${path}\u0000${message}`
     if (seen.has(key)) continue
     seen.add(key)

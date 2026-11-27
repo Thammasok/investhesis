@@ -1,30 +1,28 @@
 import { ChevronRightIcon, TriangleAlertIcon } from 'lucide-react'
 import { Fragment, useId, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { countLabel } from '@/features/stocks/format'
 import type { Stock } from '@/features/stocks/types'
 import { scopeName } from '@/features/stock-filters/scope'
-import { groupText, lensName, thb, type Plan, type Settings, type View } from '../concentration-model'
+import { thb, type Plan, type Settings, type View } from '../concentration-model'
 
 const num = 'text-right tabular-nums'
 
 function FlagBadge({ threshold }: { threshold: number }) {
-  const { t } = useTranslation()
   return (
     // The outline badge's own border is 1.3:1 on the page, so it gets a visible one (TC-E-416: at least 3:1 in both themes).
-    <Badge variant="outline" className="border-muted-foreground whitespace-nowrap text-foreground">
+    <Badge variant="outline" className="border-muted-foreground text-foreground">
       <TriangleAlertIcon aria-hidden="true" className="text-destructive" />
-      {t('concentration.table.over', { threshold })}
+      Over {threshold}%
     </Badge>
   )
 }
 
 /** The only figure on the page: a table whose Share cells carry a decorative bar (NFR-006). */
 export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view: View; stocks: readonly Stock[]; settings: Settings }) {
-  const { t } = useTranslation()
   const idBase = useId()
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set())
   const byId = new Map(stocks.map((s) => [s.id, s]))
@@ -41,19 +39,15 @@ export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view:
     <div className="rounded-lg border">
       <Table>
         <TableCaption className="sr-only">
-          {t('concentration.table.caption', {
-            lens: lensName(view.lens),
-            measure: isValue ? t('concentration.table.byValue') : t('concentration.table.byCount'),
-            scope: scopeName(view),
-          })}
+          {`Stocks grouped by ${view.lens.label}, ${isValue ? 'by value at cost' : 'by number of stocks'}, ${scopeName(view)}`}
         </TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead scope="col">{t('concentration.table.group')}</TableHead>
-            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>{t('concentration.table.valueThb')}</TableHead> : null}
-            {isValue ? null : <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>{t('concentration.table.stocks')}</TableHead>}
-            <TableHead scope="col" className={num}>{t('concentration.table.share')}</TableHead>
-            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>{t('concentration.table.stocks')}</TableHead> : <TableHead scope="col">{t('concentration.table.flag')}</TableHead>}
+            <TableHead scope="col">Group</TableHead>
+            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Value (THB)</TableHead> : null}
+            {isValue ? null : <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Stocks</TableHead>}
+            <TableHead scope="col" className={num}>Share</TableHead>
+            {isValue ? <TableHead scope="col" className={`hidden sm:table-cell ${num}`}>Stocks</TableHead> : <TableHead scope="col">Flag</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,8 +56,7 @@ export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view:
             const flagged = isValue ? group.valueFlag : group.countFlag
             const expanded = open.has(group.label)
             const subId = `${idBase}-group-${index}`
-            const stockLabel = t('concentration.stockCount', { count: group.count, n: group.count.toLocaleString('en-US') })
-            const label = groupText(view.lens.key, group)
+            const stockLabel = countLabel(group.count, 'stock')
             return (
               <Fragment key={group.label}>
                 <TableRow>
@@ -74,7 +67,7 @@ export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view:
                       className="-ml-2 h-auto min-h-8 max-w-full justify-start whitespace-normal text-left"
                       aria-expanded={expanded}
                       aria-controls={subId}
-                      aria-label={t('concentration.table.showStocks', { label })}
+                      aria-label={`Show stocks in ${group.label}`}
                       onClick={() => toggle(group.label)}
                     >
                       <ChevronRightIcon
@@ -82,7 +75,7 @@ export function GroupTable({ plan, view, stocks, settings }: { plan: Plan; view:
                         data-state={expanded ? 'open' : 'closed'}
                         className="transition-transform data-[state=open]:rotate-90 motion-reduce:transition-none"
                       />
-                      <span title={group.notSet || label === group.label ? undefined : group.label}>{label}</span>
+                      {group.label}
                     </Button>
                     <div className="pl-6 text-xs text-muted-foreground sm:hidden">
                       {isValue ? `${thb(group.value)} · ${stockLabel}` : stockLabel}

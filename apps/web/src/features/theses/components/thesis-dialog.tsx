@@ -1,8 +1,7 @@
 import { Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Link, useFetcher } from 'react-router'
-import { THESIS_NOTE_MAX, THESIS_INVALIDATION_MAX, THESIS_TYPES } from '@investhesis/domain'
+import { THESIS_NOTE_MAX, THESIS_INVALIDATION_MAX, THESIS_TYPES, THESIS_TYPE_LABELS } from '@investhesis/domain'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -12,7 +11,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { typeLabel } from '../format'
 import type { ThesisActionResult, ThesisField } from '../thesis-actions'
 import {
   checkValues,
@@ -56,11 +54,10 @@ export function ThesisDialog({ mode, stock, entry, open, onOpenChange, onSaved, 
 const count = (s: string) => [...s].length
 
 function Counter({ id, value, max }: { id: string; value: string; max: number }) {
-  const { t } = useTranslation()
   const n = count(value)
   return (
     <p id={id} aria-live="off" className={cn('text-right text-xs tabular-nums text-muted-foreground', n > max && 'font-medium text-foreground')}>
-      {t('theses.dialog.counter', { n: n.toLocaleString('en-US'), max: max.toLocaleString('en-US') })}
+      {n.toLocaleString('en-US')} / {max.toLocaleString('en-US')}
     </p>
   )
 }
@@ -72,7 +69,6 @@ function ThesisForm({
   onSaved,
   onCancel,
 }: Pick<ThesisDialogProps, 'mode' | 'stock' | 'entry' | 'onSaved'> & { onCancel: () => void }) {
-  const { t } = useTranslation()
   const fetcher = useFetcher<ThesisActionResult>()
   const formRef = useRef<HTMLFormElement>(null)
   const sending = useRef(false)
@@ -159,7 +155,7 @@ function ThesisForm({
     }
   }
 
-  const label = mode === 'add' ? t('theses.dialog.addTitle') : t('theses.dialog.editTitle')
+  const label = mode === 'add' ? 'Add thesis entry' : 'Edit thesis entry'
   const prefix = stock.currency === 'THB' ? '฿' : '$'
   const checkedType = values.type || undefined
 
@@ -167,9 +163,9 @@ function ThesisForm({
     <form ref={formRef} onSubmit={onSubmit} onKeyDown={onKeyDown} noValidate className="space-y-4">
       <DialogHeader>
         <DialogTitle>
-          {t('theses.dialog.titleWith', { title: label, ticker: stock.ticker })}
+          {label} · {stock.ticker}
         </DialogTitle>
-        <DialogDescription className="sr-only">{t('theses.dialog.description')}</DialogDescription>
+        <DialogDescription className="sr-only">Fields marked optional can be left empty.</DialogDescription>
       </DialogHeader>
       {alert ? (
         <Alert variant="destructive">
@@ -178,7 +174,7 @@ function ThesisForm({
             <span>{alert}</span>
             {gone ? (
               <Link to="/stocks" className="underline underline-offset-4">
-                {t('theses.dialog.backToStocks')}
+                Back to stocks
               </Link>
             ) : null}
           </AlertDescription>
@@ -187,7 +183,7 @@ function ThesisForm({
 
       <FieldSet data-invalid={errors.type ? true : undefined}>
         <FieldLegend variant="label" id="thesis-type-legend">
-          {t('theses.dialog.type')}
+          Type
         </FieldLegend>
         <RadioGroup
           value={values.type}
@@ -198,15 +194,15 @@ function ThesisForm({
           disabled={pending}
           className="flex flex-wrap gap-x-4 gap-y-2"
         >
-          {THESIS_TYPES.map((type: ThesisType, i) => (
-            <Field key={type} orientation="horizontal" className="w-auto">
+          {THESIS_TYPES.map((t: ThesisType, i) => (
+            <Field key={t} orientation="horizontal" className="w-auto">
               <RadioGroupItem
-                value={type}
-                id={`thesis-type-${type}`}
-                autoFocus={checkedType ? checkedType === type : i === 0}
+                value={t}
+                id={`thesis-type-${t}`}
+                autoFocus={checkedType ? checkedType === t : i === 0}
               />
-              <FieldLabel htmlFor={`thesis-type-${type}`} className="font-normal">
-                {typeLabel(type)}
+              <FieldLabel htmlFor={`thesis-type-${t}`} className="font-normal">
+                {THESIS_TYPE_LABELS[t]}
               </FieldLabel>
             </Field>
           ))}
@@ -215,7 +211,7 @@ function ThesisForm({
       </FieldSet>
 
       <Field data-invalid={errors.date ? true : undefined}>
-        <FieldLabel htmlFor="thesis-date">{t('theses.dialog.date')}</FieldLabel>
+        <FieldLabel htmlFor="thesis-date">Date</FieldLabel>
         <Input
           id="thesis-date"
           ref={dateRef}
@@ -232,7 +228,7 @@ function ThesisForm({
       </Field>
 
       <Field data-invalid={errors.note ? true : undefined}>
-        <FieldLabel htmlFor="thesis-note">{t('theses.dialog.note')}</FieldLabel>
+        <FieldLabel htmlFor="thesis-note">Thesis</FieldLabel>
         <Textarea
           id="thesis-note"
           ref={noteRef}
@@ -248,7 +244,7 @@ function ThesisForm({
       </Field>
 
       <Field data-invalid={errors.targetPrice ? true : undefined}>
-        <FieldLabel htmlFor="thesis-target-price">{t('theses.dialog.targetPrice')}</FieldLabel>
+        <FieldLabel htmlFor="thesis-target-price">Target price (optional)</FieldLabel>
         <InputGroup className="w-48">
           <InputGroupAddon>
             <span aria-hidden="true">{prefix}</span>
@@ -271,13 +267,13 @@ function ThesisForm({
       </Field>
 
       <Field data-invalid={errors.invalidation ? true : undefined}>
-        <FieldLabel htmlFor="thesis-invalidation">{t('theses.dialog.invalidation')}</FieldLabel>
+        <FieldLabel htmlFor="thesis-invalidation">Invalidation conditions (optional)</FieldLabel>
         <Textarea
           id="thesis-invalidation"
           ref={invalidationRef}
           value={values.invalidation}
           disabled={pending}
-          placeholder={t('theses.dialog.invalidationPlaceholder')}
+          placeholder="What would prove this thesis wrong?"
           onChange={(e) => set('invalidation', e.target.value)}
           className="min-h-24"
           aria-invalid={errors.invalidation ? true : undefined}
@@ -289,11 +285,11 @@ function ThesisForm({
 
       <DialogFooter className="gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
-          {t('common.cancel')}
+          Cancel
         </Button>
         <Button type="submit" aria-disabled={pending}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          {mode === 'add' ? t('theses.dialog.addEntry') : t('common.save')}
+          {mode === 'add' ? 'Add entry' : 'Save'}
         </Button>
       </DialogFooter>
     </form>

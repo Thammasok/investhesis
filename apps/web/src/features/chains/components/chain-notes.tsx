@@ -1,20 +1,18 @@
 import { InfoIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Alert } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { stocksLabel } from '../chains-model'
+import { countLabel } from '@/features/stocks/format'
 
 /** FR-006: how many stocks in view have no chain, and a link to them. */
 export function NoChainNote({ count, href }: { count: number; href: string }) {
-  const { t } = useTranslation()
   return (
     <Alert role="status">
       <InfoIcon aria-hidden="true" />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p>{t('chains.notes.noChain', { count, stocks: stocksLabel(count) })}</p>
+        <p>{`${countLabel(count, 'stock')} in view ${count === 1 ? 'has' : 'have'} no value chain.`}</p>
         <Button variant="link" size="sm" className="h-auto p-0" asChild>
-          <Link to={href}>{t('chains.notes.showThem')}</Link>
+          <Link to={href}>Show them</Link>
         </Button>
       </div>
     </Alert>
@@ -23,14 +21,13 @@ export function NoChainNote({ count, href }: { count: number; href: string }) {
 
 /** FR-005: a held USD stock with amounts has no rate to value it, so it is left out. Shown once for the page. */
 export function RateNote() {
-  const { t } = useTranslation()
   return (
     <Alert role="status">
       <InfoIcon aria-hidden="true" />
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <p>{t('chains.notes.rate')}</p>
+        <p>USD holdings are left out of values until you save a rate.</p>
         <Button variant="link" size="sm" className="h-auto p-0" asChild>
-          <Link to="/concentration">{t('chains.notes.setRate')}</Link>
+          <Link to="/concentration">Set rate on Concentration</Link>
         </Button>
       </div>
     </Alert>
@@ -39,6 +36,5 @@ export function RateNote() {
 
 /** FR-013: the brief's constraint, as on the concentration page. */
 export function AdviceNote() {
-  const { t } = useTranslation()
-  return <p className="text-sm text-muted-foreground">{t('chains.notes.advice')}</p>
+  return <p className="text-sm text-muted-foreground">These chains and costs are your own classifications, not advice.</p>
 }

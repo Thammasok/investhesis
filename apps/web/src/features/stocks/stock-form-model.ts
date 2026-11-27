@@ -1,18 +1,4 @@
-import {
-  CURRENCY_BY_MARKET,
-  HoldingInput,
-  MESSAGE_KEYS,
-  formatRule,
-  issueText,
-  resolveEconomicCycle,
-  StockInput,
-  type GicsSector,
-  type Language,
-  type MessageKey,
-  type RuleParams,
-} from '@investhesis/domain'
-import { i18n } from '@/i18n/i18n'
-import { getLanguage } from '@/i18n/language'
+import { CURRENCY_BY_MARKET, HoldingInput, MESSAGES, resolveEconomicCycle, StockInput, type GicsSector } from '@investhesis/domain'
 import { decimalForInput } from '@/lib/number-format'
 import type { Holding, Stock } from './types'
 
@@ -75,9 +61,29 @@ export const FIELD_ORDER: readonly FieldName[] = [
   'holdingAverageCost',
 ]
 
-/** The label of a form field in a language (the same text the form shows above the control). */
-export const fieldLabelOf = (field: FieldName, lang: Language = getLanguage()): string =>
-  i18n.t(`stocks.form.label.${field}`, { lng: lang })
+export const FIELD_LABELS: Record<FieldName, string> = {
+  market: 'Market',
+  ticker: 'Ticker',
+  exchange: 'Exchange',
+  name: 'Company name',
+  indexMembership: 'Index membership',
+  gicsSector: 'Sector',
+  setIndustryGroup: 'SET industry group',
+  economicCycle: 'Economic cycle',
+  size: 'Size',
+  style: 'Style',
+  volatility: 'Volatility',
+  lynchType: 'Peter Lynch type',
+  lifeCycle: 'Life cycle',
+  moat: 'Moat',
+  valueChain: 'Value chain',
+  valueChainPosition: 'Position',
+  customers: 'Customers',
+  revenueTypes: 'Revenue types',
+  themes: 'Themes',
+  holdingShares: 'Shares',
+  holdingAverageCost: 'Average cost',
+}
 
 export type FieldErrors = Partial<Record<FieldName, string>>
 
@@ -193,34 +199,13 @@ const HOLDING_FIELD: Record<string, FieldName | undefined> = { shares: 'holdingS
 
 const isField = (key: unknown): key is FieldName => typeof key === 'string' && (FIELD_ORDER as readonly string[]).includes(key)
 
-/** A problem as the form meets it: a client issue (domain-encoded `message`) or a server error (`rule` and `params`). */
-export type FieldProblemLike = { message: string; rule?: string | undefined; params?: RuleParams | undefined }
-
-const isRule = (value: string): value is MessageKey => (MESSAGE_KEYS as readonly string[]).includes(value)
-
-/** The rule text of a problem in `lang`. A server rule the client does not know reads as the generic invalid text. */
-function problemText(label: string, problem: FieldProblemLike, lang: Language): string {
-  const { rule, params, message } = problem
-  if (rule === undefined) return issueText(message, lang)
-  if (rule === 'invalid' || !isRule(rule)) return i18n.t('errors.invalidField', { field: label, lng: lang })
-  return formatRule(rule, params, lang)
-}
-
-/** `Ticker is required` / `สัญลักษณ์หุ้น จำเป็นต้องกรอก`: the field's label, then the rule text. */
-export function describeProblem(field: FieldName, problem: FieldProblemLike, lang: Language = getLanguage()): string {
-  const label = fieldLabelOf(field, lang)
-  const text = problemText(label, problem, lang)
-  return isGeneric(problem) ? text : `${label} ${text}`
-}
-
-const isGeneric = (problem: FieldProblemLike) =>
-  problem.rule !== undefined && (problem.rule === 'invalid' || !isRule(problem.rule))
+export const describeProblem = (field: FieldName, message: string) => `${FIELD_LABELS[field]} ${message}`
 
 /** `holding` is `null` while the box is unticked. */
 export type Checked = { ok: true; input: StockInput; holding: Holding | null } | { ok: false; errors: FieldErrors }
 
 /** Validates the whole form with the domain schema. In edit mode this is the stored stock merged with the edits (market and ticker come from the stock). */
-export function checkValues(values: FormValues, lang: Language = getLanguage()): Checked {
+export function checkValues(values: FormValues): Checked {
   const result = StockInput.safeParse(candidate(values))
   const held = values.held ? HoldingInput.safeParse(holdingCandidate(values)) : null
   if (result.success && (!held || held.success)) {
@@ -229,15 +214,15 @@ export function checkValues(values: FormValues, lang: Language = getLanguage()):
   const errors: FieldErrors = {}
   for (const issue of result.error?.issues ?? []) {
     const key = issue.path[0]
-    if (isField(key) && !errors[key]) errors[key] = describeProblem(key, { message: issue.message }, lang)
+    if (isField(key) && !errors[key]) errors[key] = describeProblem(key, issue.message)
   }
   for (const issue of held?.error?.issues ?? []) {
     const key = HOLDING_FIELD[String(issue.path[0])]
-    if (key && !errors[key]) errors[key] = describeProblem(key, { message: issue.message }, lang)
+    if (key && !errors[key]) errors[key] = describeProblem(key, issue.message)
   }
   // A blank choice reads "is required", not the enum's "must be one of".
   for (const key of ['market', 'exchange'] as const) {
-    if (errors[key] && !values[key]) errors[key] = describeProblem(key, { message: 'required' }, lang)
+    if (errors[key] && !values[key]) errors[key] = describeProblem(key, MESSAGES.required)
   }
   return { ok: false, errors }
 }
@@ -306,19 +291,15 @@ export function patchBody(input: StockInput, values: FormValues, stock: Stock, h
 }
 
 /** Splits a server problem's `errors[]` into field messages and the rest (shown in the form alert). */
-export function splitServerErrors(
-  problems: (FieldProblemLike & { path: string })[],
-  lang: Language = getLanguage(),
-): { fields: FieldErrors; rest: string[] } {
+export function splitServerErrors(problems: { path: string; message: string }[]): { fields: FieldErrors; rest: string[] } {
   const fields: FieldErrors = {}
   const rest: string[] = []
-  for (const problem of problems) {
-    const { path } = problem
+  for (const { path, message } of problems) {
     const [head, part] = path.split('.')
     const key = head === 'holding' ? HOLDING_FIELD[part ?? ''] : head
     if (isField(key)) {
-      if (!fields[key]) fields[key] = describeProblem(key, problem, lang)
-    } else rest.push(isGeneric(problem) ? problemText(path, problem, lang) : `${path || i18n.t('stocks.request', { lng: lang })} ${problemText(path, problem, lang)}`)
+      if (!fields[key]) fields[key] = describeProblem(key, message)
+    } else rest.push(`${path || 'Request'} ${message}`)
   }
   return { fields, rest }
 }

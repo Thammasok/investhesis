@@ -78,7 +78,7 @@ describe('POST /imports/preview rows', () => {
       expect(body.rows.map((r: { rowNumber: number; status: string }) => [r.rowNumber, r.status])).toEqual([[2, 'new'], [3, 'duplicate'], [4, 'error'], [5, 'error']])
       expect(body.rows[1].existingStockId).toBe(saved)
       expect(body.rows[2].errors).toEqual([expect.objectContaining({ path: 'market' })])
-      expect(body.rows[3].errors).toEqual([expect.objectContaining({ path: 'ticker', message: expect.stringContaining('row 2'), rule: 'repeatsRow' })])
+      expect(body.rows[3].errors).toEqual([{ path: 'ticker', message: expect.stringContaining('row 2') }])
     } finally {
       await t2.cleanup()
     }
@@ -283,7 +283,7 @@ describe('GET /imports/template.*', () => {
     expect(xlsxRes.headers['content-disposition']).toBe('attachment; filename="investhesis-stocks-template.xlsx"')
     const wb = new ExcelJS.Workbook()
     await wb.xlsx.load(xlsxRes.rawPayload as unknown as ExcelJS.Buffer)
-    expect(wb.worksheets.map((w) => w.name)).toEqual(['Stocks', 'Instructions'])
+    expect(wb.worksheets).toHaveLength(1)
     expect(((wb.worksheets[0]?.getRow(1).values ?? []) as string[]).slice(1)).toEqual(HEADERS)
   })
 

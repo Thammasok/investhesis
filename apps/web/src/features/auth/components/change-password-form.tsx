@@ -1,9 +1,7 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
 import { CircleAlertIcon } from 'lucide-react'
 import { flushSync } from 'react-dom'
-import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { i18n } from '@/i18n/i18n'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,7 +17,6 @@ type FieldErrors = PasswordErrors & { current?: string }
 
 /** Change password for the signed-in user (FR-013), in a card on the Account page. */
 export function ChangePasswordForm() {
-  const { t } = useTranslation()
   const authClient = useAuthClient()
   const titleId = useId()
   const [errors, setErrors] = useState<FieldErrors>({})
@@ -59,7 +56,7 @@ export function ChangePasswordForm() {
 
     if (result.ok) {
       formRef.current?.reset()
-      toast.success(i18n.t('auth.changePassword.changed'))
+      toast.success('Password changed.')
       focusLater(currentRef)
       return
     }
@@ -79,8 +76,8 @@ export function ChangePasswordForm() {
     <Card className="max-w-lg">
       <form ref={formRef} aria-labelledby={titleId} onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle id={titleId}>{t('auth.changePassword.title')}</CardTitle>
-          <CardDescription>{t('auth.changePassword.lead')}</CardDescription>
+          <CardTitle id={titleId}>Change password</CardTitle>
+          <CardDescription>Use at least 8 characters.</CardDescription>
         </CardHeader>
         <CardContent className="mt-6">
           <FieldGroup>
@@ -91,7 +88,7 @@ export function ChangePasswordForm() {
               </Alert>
             ) : null}
             <Field data-invalid={errors.current ? true : undefined}>
-              <FieldLabel htmlFor="current">{t('auth.currentPassword')}</FieldLabel>
+              <FieldLabel htmlFor="current">Current password</FieldLabel>
               <PasswordInput
                 id="current"
                 name="current"
@@ -105,7 +102,7 @@ export function ChangePasswordForm() {
               {errors.current ? <FieldError id="current-error">{errors.current}</FieldError> : null}
             </Field>
             <Field data-invalid={errors.password ? true : undefined}>
-              <FieldLabel htmlFor="password">{t('auth.newPassword')}</FieldLabel>
+              <FieldLabel htmlFor="password">New password</FieldLabel>
               <PasswordInput
                 id="password"
                 name="password"
@@ -118,7 +115,7 @@ export function ChangePasswordForm() {
               {errors.password ? <FieldError id="password-error">{errors.password}</FieldError> : null}
             </Field>
             <Field data-invalid={errors.confirm ? true : undefined}>
-              <FieldLabel htmlFor="confirm">{t('auth.confirmNewPassword')}</FieldLabel>
+              <FieldLabel htmlFor="confirm">Confirm new password</FieldLabel>
               <PasswordInput
                 id="confirm"
                 name="confirm"
@@ -135,7 +132,7 @@ export function ChangePasswordForm() {
         <CardFooter className="mt-6 justify-end">
           <Button type="submit" className="w-full sm:w-auto" disabled={submitting} aria-busy={submitting}>
             {submitting ? <Spinner /> : null}
-            {submitting ? t('auth.changePassword.submitting') : t('auth.changePassword.submit')}
+            {submitting ? 'Saving…' : 'Change password'}
           </Button>
         </CardFooter>
       </form>

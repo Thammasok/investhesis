@@ -15,7 +15,7 @@ describe('GET /me', () => {
     const res = await app.inject('/me')
     expect(res.statusCode).toBe(200)
     expect(res.headers['cache-control']).toBe('no-store')
-    expect(res.json()).toEqual({ id: MOCK_USER_ID, email: 'investor@example.com', displayName: 'Test Investor', language: null })
+    expect(res.json()).toEqual({ id: MOCK_USER_ID, email: 'investor@example.com', displayName: 'Test Investor' })
   })
 
   it('returns nulls when the optional mock fields are unset', async () => {
@@ -23,7 +23,7 @@ describe('GET /me', () => {
       config: loadConfig({ ...baseEnv, MOCK_USER_EMAIL: '', MOCK_USER_NAME: '' }),
       logStream: quiet,
     })
-    expect((await app.inject('/me')).json()).toEqual({ id: MOCK_USER_ID, email: null, displayName: null, language: null })
+    expect((await app.inject('/me')).json()).toEqual({ id: MOCK_USER_ID, email: null, displayName: null })
   })
 
   it('uses an injected resolver, so real auth can replace the mock', async () => {

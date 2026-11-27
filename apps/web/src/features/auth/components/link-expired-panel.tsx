@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react'
 import { CircleAlertIcon, TriangleAlertIcon } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -13,6 +12,8 @@ import type { LinkType } from '../loaders'
 import { AuthHeading } from './auth-heading'
 import { Spinner } from './spinner'
 
+const EXPIRY_NOTE = 'Links work once and expire after 1 hour.'
+
 function StatusIcon() {
   return (
     <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-muted">
@@ -22,8 +23,6 @@ function StatusIcon() {
 }
 
 export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn: boolean }) {
-  const { t } = useTranslation()
-  const expiryNote = t('auth.linkExpired.expiryNote')
   const authClient = useAuthClient()
   const navigate = useNavigate()
   const [error, setError] = useState<AuthErrorCode | null>(null)
@@ -33,11 +32,11 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
     return (
       <div className="flex flex-col gap-6">
         <StatusIcon />
-        <AuthHeading title={t('auth.linkExpired.alreadySignedIn')} docTitle={t('auth.linkExpired.docTitle')}>
-          {expiryNote}
+        <AuthHeading title="You're already signed in." docTitle="Link expired">
+          {EXPIRY_NOTE}
         </AuthHeading>
         <Button asChild>
-          <Link to="/stocks">{t('auth.linkExpired.goToStocks')}</Link>
+          <Link to="/stocks">Go to Stocks</Link>
         </Button>
       </div>
     )
@@ -72,8 +71,8 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <StatusIcon />
       <FieldGroup>
-        <AuthHeading title={t('auth.linkExpired.heading')} docTitle={t('auth.linkExpired.docTitle')}>
-          {expiryNote}
+        <AuthHeading title="This link has expired or was already used" docTitle="Link expired">
+          {EXPIRY_NOTE}
         </AuthHeading>
         {error ? (
           <Alert variant="destructive">
@@ -82,7 +81,7 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
           </Alert>
         ) : null}
         <Field>
-          <FieldLabel htmlFor="email">{t('auth.email')}</FieldLabel>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
           <Input
             id="email"
             name="email"
@@ -91,7 +90,7 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
             inputMode="email"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder={t('auth.emailPlaceholder')}
+            placeholder="you@example.com"
             required
             className="bg-background"
           />
@@ -108,7 +107,7 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
                   if (form?.reportValidity()) void send('confirmation', emailOf(event.currentTarget))
                 }}
               >
-                {t('auth.linkExpired.resendConfirmation')}
+                Resend confirmation
               </Button>
               <Button
                 type="button"
@@ -119,20 +118,20 @@ export function LinkExpiredPanel({ type, signedIn }: { type: LinkType; signedIn:
                   if (form?.reportValidity()) void send('reset', emailOf(event.currentTarget))
                 }}
               >
-                {t('auth.linkExpired.resetPassword')}
+                Reset password
               </Button>
             </>
           ) : (
             <Button type="submit" disabled={sending} aria-busy={sending}>
               {sending ? <Spinner /> : null}
-              {t('auth.linkExpired.sendNew')}
+              Send a new link
             </Button>
           )}
         </Field>
       </FieldGroup>
       <p className="text-center text-sm">
         <Link to="/auth/sign-in" className="underline underline-offset-4 hover:text-primary">
-          {t('auth.backToSignIn')}
+          Back to sign in
         </Link>
       </p>
     </form>

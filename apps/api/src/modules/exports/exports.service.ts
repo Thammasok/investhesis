@@ -25,9 +25,7 @@ async function snapshot(db: Db, userId: string): Promise<Snapshot> {
       const stocks = (await listOwnedStocks(tx, userId)).map(view).sort(byMarketThenTicker)
       const lists = await listLists(tx, userId)
       const memberships = await listMembershipsForUser(tx, userId)
-      // The language is an interface preference, not portfolio data: it stays out of the backup (ADR-007).
-      const { concentrationThreshold, usdThbRate, usdThbRateUpdatedAt } = await getSettings(tx, userId)
-      const settings = { concentrationThreshold, usdThbRate, usdThbRateUpdatedAt }
+      const settings = await getSettings(tx, userId)
       const theses = (await listThesesForUser(tx, userId)).map(toThesis)
       const stockIdsByList = new Map<string, string[]>()
       for (const m of memberships) {

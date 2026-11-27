@@ -1,6 +1,5 @@
 import { Loader2Icon, UploadIcon } from 'lucide-react'
 import { useState, type DragEvent } from 'react'
-import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 type DropZoneProps = {
@@ -10,7 +9,6 @@ type DropZoneProps = {
 
 /** A label around a visually hidden file input: the keyboard and the picker work without drag and drop. */
 export function DropZone({ loading, onFile }: DropZoneProps) {
-  const { t } = useTranslation()
   const [dragging, setDragging] = useState(false)
 
   function onDrop(event: DragEvent<HTMLLabelElement>) {
@@ -38,7 +36,7 @@ export function DropZone({ loading, onFile }: DropZoneProps) {
       <input
         type="file"
         accept=".csv,.xlsx"
-        aria-label={t('imports.dropZone.chooseFile')}
+        aria-label="Choose file"
         aria-describedby="import-limits"
         disabled={loading}
         className="sr-only"
@@ -52,17 +50,17 @@ export function DropZone({ loading, onFile }: DropZoneProps) {
       {loading ? (
         <p className="flex items-center gap-2 font-medium">
           <Loader2Icon className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-          {t('imports.status.checking')}
+          Checking file…
         </p>
       ) : (
         <p className="flex flex-wrap items-center justify-center gap-x-2">
           <UploadIcon className="size-4" aria-hidden="true" />
-          <span>{t('imports.dropZone.drop')}</span>
-          <span className="rounded-md border px-2 py-0.5 text-sm font-medium">{t('imports.dropZone.chooseFile')}</span>
+          <span>Drop a .csv or .xlsx file here, or</span>
+          <span className="rounded-md border px-2 py-0.5 text-sm font-medium">Choose file</span>
         </p>
       )}
       <p id="import-limits" className="text-sm text-muted-foreground">
-        {t('imports.dropZone.limits')}
+        Up to 1 MB and 1,000 rows. Only the first sheet is read.
       </p>
     </label>
   )

@@ -28,7 +28,7 @@ Settings in `config.toml`: site URL `http://localhost:5173`, ES256 signing key f
 confirmation required, `auth.email.require_current_password = true` (a password change needs
 `current_password`; Auth answers `current_password_required` or `current_password_invalid`),
 60 s between emails per address. The confirmation and recovery templates link to
-`{{ .SiteURL }}/auth/confirm?token_hash=...&type=email|recovery&next=...`. Both are bilingual: a `div lang="th"` part, then a `div lang="en"` part, each with its own heading and the same link; the subjects are "Thai / English" pairs.
+`{{ .SiteURL }}/auth/confirm?token_hash=...&type=email|recovery&next=...`.
 
 ## Creating accounts
 
@@ -105,7 +105,7 @@ until then.
 - [ ] Sign-in providers, email: confirm email on; secure password change off; require current password on
 - [ ] Minimum password length 8; anonymous sign-ins off; sign-ups off (see Creating accounts)
 - [ ] JWT expiry 3600 s; refresh token rotation on, reuse interval 10 s
-- [ ] Email templates: paste `templates/confirmation.html` and `templates/recovery.html` (Confirm signup, Reset password), and set the same two subjects as `config.toml` (`ยืนยันบัญชี Investhesis / Confirm your Investhesis account`, `รีเซ็ตรหัสผ่าน Investhesis / Reset your Investhesis password`); both templates are Thai first, then English (i18n FR-013)
+- [ ] Email templates: paste `templates/confirmation.html` and `templates/recovery.html` (Confirm signup, Reset password)
 - [ ] JWT signing keys: an ES256 key is the current key (rotate from the legacy secret), so the JWKS endpoint serves it
 - [ ] Custom SMTP set up (requirements OQ-1); the built-in mailer is for testing only
 - [ ] Email rate limits reviewed after SMTP is on

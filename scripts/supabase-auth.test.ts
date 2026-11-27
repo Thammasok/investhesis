@@ -117,58 +117,6 @@ describe('local Supabase Auth settings', () => {
   })
 })
 
-describe('bilingual auth emails (i18n T-008)', () => {
-  const parts = (html: string) => {
-    const th = /<div lang="th">([\s\S]*?)<\/div>/.exec(html)
-    const en = /<div lang="en">([\s\S]*?)<\/div>/.exec(html)
-    const hrefs = [...html.replace(/&amp;/g, '&').matchAll(/href="([^"]+)"/g)].map((m) => m[1])
-    return { th: th?.[1] ?? '', en: en?.[1] ?? '', thAt: th?.index ?? -1, enAt: en?.index ?? -1, hrefs }
-  }
-
-  it('TC-U-1060 the recovery email carries both languages and one link', async () => {
-    const email = newEmail('bi-rec')
-    const sb = await confirmedUser(email)
-    await sb.auth.signOut()
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'http://localhost:5173/auth/confirm' })
-    expect(error).toBeNull()
-    const [mail] = await mailFor(email, {
-      timeoutMs: 40_000,
-      accept: (m) => /type=recovery/.test(m.html.replace(/&amp;/g, '&')),
-    })
-    expect(mail).toBeTruthy()
-    const p = parts(mail!.html)
-    expect(p.thAt).toBeGreaterThanOrEqual(0)
-    expect(p.thAt).toBeLessThan(p.enAt)
-    expect(p.th).toContain('รีเซ็ตรหัสผ่าน')
-    expect(p.en).toContain('Reset password')
-    expect(p.hrefs).toHaveLength(2)
-    expect(p.hrefs[0]).toBe(p.hrefs[1])
-    expect(p.hrefs[0]).toMatch(/token_hash=[^&]+&type=recovery/)
-    expect(mail!.subject).toContain('/')
-  })
-
-  it('TC-U-1061 the confirmation email carries both languages and one link', async () => {
-    const email = newEmail('bi-conf')
-    await adminCreateUser(email, { confirmed: false })
-    const { error } = await client().auth.resend({ type: 'signup', email })
-    expect(error).toBeNull()
-    const [mail] = await mailFor(email, {
-      timeoutMs: 40_000,
-      accept: (m) => /type=email/.test(m.html.replace(/&amp;/g, '&')),
-    })
-    expect(mail).toBeTruthy()
-    const p = parts(mail!.html)
-    expect(p.thAt).toBeGreaterThanOrEqual(0)
-    expect(p.thAt).toBeLessThan(p.enAt)
-    expect(p.th).toContain('ยืนยัน')
-    expect(p.en).toContain('Confirm')
-    expect(p.hrefs).toHaveLength(2)
-    expect(p.hrefs[0]).toBe(p.hrefs[1])
-    expect(p.hrefs[0]).toMatch(/token_hash=[^&]+&type=email/)
-    expect(mail!.subject).toContain('/')
-  })
-})
-
 const sqlState = (err: string) => /ERROR:\s+([0-9A-Z]{5}):/.exec(err)?.[1]
 
 /** Parsed `[section] key = value` lines of config.toml (enough for the two settings checked here). */
