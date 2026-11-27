@@ -1,4 +1,15 @@
+<div lang="th">
+<h2>รีเซ็ตรหัสผ่าน</h2>
+
+<p>กดลิงก์นี้เพื่อรีเซ็ตรหัสผ่านบัญชี Investhesis ของคุณ</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}">รีเซ็ตรหัสผ่าน</a></p>
+</div>
+
+<hr>
+
+<div lang="en">
 <h2>Reset password</h2>
 
 <p>Follow this link to reset the password for your Investhesis account:</p>
 <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}">Reset your password</a></p>
+</div>
