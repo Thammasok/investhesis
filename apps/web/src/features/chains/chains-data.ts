@@ -1,7 +1,8 @@
 import type { ActionFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
 import { readPortfolio, type Portfolio } from '@/features/stock-filters/portfolio'
-import { countLabel } from '@/features/stocks/format'
+import { i18n } from '@/i18n/i18n'
+import { stocksLabel } from './chains-model'
 import { ApiError, type ApiClient } from '@/lib/api-client'
 
 export type ChainsData = Portfolio
@@ -9,14 +10,12 @@ export type ChainsData = Portfolio
 /** Loader of `/chains`: the three reads of `/concentration`, in parallel. Any failure is the route error page. */
 export const createChainsLoader = (api: ApiClient) => (): Promise<ChainsData> => readPortfolio(api)
 
-export const RENAME_FAILED = "Couldn't rename the chain. Try again."
-
 /** What the rename dialog gets back: success, a merge to confirm, a chain that is gone, or a problem to show. */
 export type ChainsActionResult =
   | { ok: true; name: string; changed: number; merged: boolean }
   | { ok: false; needsMerge: { name: string; count: number } }
   | { ok: false; gone: true }
-  | { ok: false; message: string; errors?: { path: string; message: string }[] }
+  | { ok: false; message: string; errors?: { path: string; message: string; rule?: string; params?: Record<string, unknown> }[] }
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null
 
@@ -31,15 +30,15 @@ export const createChainsAction =
   (api: ApiClient) =>
   async ({ request }: ActionFunctionArgs): Promise<ChainsActionResult> => {
     const body: unknown = await request.json().catch(() => null)
-    if (!isRecord(body) || body.intent !== 'rename-chain') return { ok: false, message: 'Unknown action.' }
+    if (!isRecord(body) || body.intent !== 'rename-chain') return { ok: false, message: i18n.t('chains.action.unknown') }
     const send = { from: body.from, to: body.to, merge: body.merge === true }
     try {
       const answer = await api.post<{ name: string; changed: number; merged: boolean }>('/chains/rename', { body: send })
       const total = typeof body.total === 'number' ? body.total : answer.changed
       toast.success(
         answer.merged
-          ? `Merged into ${answer.name} · ${countLabel(total, 'stock')}`
-          : `Renamed to ${answer.name} · ${countLabel(answer.changed, 'stock')} changed`,
+          ? i18n.t('chains.action.merged', { name: answer.name, stocks: stocksLabel(total) })
+          : i18n.t('chains.action.renamed', { name: answer.name, stocks: stocksLabel(answer.changed) }),
       )
       return { ok: true, name: answer.name, changed: answer.changed, merged: answer.merged }
     } catch (error) {
@@ -50,7 +49,7 @@ export const createChainsAction =
         if (typeof existingName === 'string' && typeof existingCount === 'number')
           return { ok: false, needsMerge: { name: existingName, count: existingCount } }
       }
-      if (error.status === 400 && error.errors.length > 0) return { ok: false, message: RENAME_FAILED, errors: error.errors }
-      return { ok: false, message: RENAME_FAILED }
+      if (error.status === 400 && error.errors.length > 0) return { ok: false, message: i18n.t('chains.action.failed'), errors: error.errors }
+      return { ok: false, message: i18n.t('chains.action.failed') }
     }
   }

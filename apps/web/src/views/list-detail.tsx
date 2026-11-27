@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ImportIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, XIcon } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useLoaderData } from 'react-router'
@@ -19,9 +20,9 @@ import { SEARCH_ID } from '@/features/stock-filters/filter-toolbar-model'
 import { NoMatches } from '@/features/stock-filters/no-matches'
 import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 import { StockTable } from '@/features/stocks/components/stock-table'
-import { countLabel } from '@/features/stocks/format'
 
 export function Component() {
+  const { t } = useTranslation()
   const { list, members, candidates, lists } = useLoaderData() as ListPageData
   const membership = useMembership(list.name)
   const filters = useStockFilters(members)
@@ -44,7 +45,7 @@ export function Component() {
     <Button variant="outline" className="w-full sm:w-auto" asChild>
       <Link to={`/import-export/import?listId=${encodeURIComponent(list.id)}`}>
         <ImportIcon aria-hidden="true" />
-        Import into it
+        {t('lists.page.importInto')}
       </Link>
     </Button>
   )
@@ -62,7 +63,7 @@ export function Component() {
     <section className="space-y-6">
       <PageHeader
         title={list.name}
-        description={countLabel(list.stockCount, 'stock')}
+        description={t('lists.stockCount', { count: list.stockCount, n: list.stockCount.toLocaleString('en-US') })}
         actions={
           <>
             {empty ? null : (
@@ -78,22 +79,22 @@ export function Component() {
               onClick={() => open('rename', renameRef)}
             >
               <PencilIcon aria-hidden="true" />
-              Rename
+              {t('common.rename')}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button ref={moreRef} variant="ghost" size="icon" aria-label="More actions" className="ml-auto sm:ml-0">
+                <Button ref={moreRef} variant="ghost" size="icon" aria-label={t('lists.page.moreActions')} className="ml-auto sm:ml-0">
                   <MoreHorizontalIcon aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem className="sm:hidden" onSelect={() => open('rename', moreRef)}>
                   <PencilIcon aria-hidden="true" />
-                  Rename
+                  {t('common.rename')}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onSelect={() => open('delete', moreRef)}>
                   <Trash2Icon aria-hidden="true" />
-                  Delete
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -102,10 +103,10 @@ export function Component() {
       />
       {empty ? (
         <Card className="items-center gap-3 py-12 text-center">
-          <h2 className="font-heading text-lg font-semibold">This list is empty.</h2>
+          <h2 className="font-heading text-lg font-semibold">{t('lists.page.emptyTitle')}</h2>
           <div className="flex w-full flex-wrap items-center justify-center gap-2 px-6">
             {picker}
-            <span className="text-sm">or</span>
+            <span className="text-sm">{t('lists.page.or')}</span>
             {importLink}
           </div>
         </Card>
@@ -130,13 +131,13 @@ export function Component() {
               sort={filters.sort}
               onSort={filters.toggleSort}
               showLists={false}
-              caption={`Stocks in ${list.name}`}
+              caption={t('lists.page.caption', { name: list.name })}
               renderRowAction={(stock) => (
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Remove ${stock.ticker} from ${list.name}`}
+                  aria-label={t('lists.page.remove', { ticker: stock.ticker, name: list.name })}
                   disabled={membership.busy}
                   onClick={() => membership.remove(stock)}
                 >

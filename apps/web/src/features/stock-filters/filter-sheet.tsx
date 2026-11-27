@@ -1,5 +1,6 @@
 import { ChevronRightIcon, ListFilterIcon } from 'lucide-react'
 import { useId, useState, useSyncExternalStore } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   STOCK_FILTERS,
   type FilterKey,
@@ -23,8 +24,9 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
-import { countLabel } from '@/features/stocks/format'
-import { valueLabel } from './filter-labels'
+import { getLanguage } from '@/i18n/language'
+import { filterLabel, valueLabel } from './filter-labels'
+import { stocksLabel } from './filter-toolbar-model'
 import type { StockFilters } from './use-stock-filters'
 
 const FIND_FROM = 8
@@ -47,12 +49,19 @@ type SectionProps = {
 }
 
 function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }: SectionProps) {
+  const { t } = useTranslation()
+  const lang = getLanguage()
   const base = useId()
+  const title = filterLabel(filter.key, lang)
   const [find, setFind] = useState('')
   const hasFind = options.filter((o) => o.value !== null).length > FIND_FROM
   const needle = find.trim().toLocaleLowerCase('en')
   // Picked options always stay visible; "Not set" is not searched.
-  const matches = (o: FilterOption) => o.value !== null && (o.value as string).toLocaleLowerCase('en').includes(needle)
+  // The find box matches what is shown (the Thai label) and the canonical value, so both spellings find it.
+  const matches = (o: FilterOption) =>
+    o.value !== null &&
+    (valueLabel(filter.key, o.value, lang).toLocaleLowerCase(lang).includes(needle) ||
+      (o.value as string).toLocaleLowerCase('en').includes(needle))
   const visible = options.filter((o) => needle === '' || o.value === null || picked.has(o.value) || matches(o))
   const noMatch = needle !== '' && !options.some(matches)
 
@@ -61,7 +70,7 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
       <CollapsibleTrigger asChild>
         <Button variant="ghost" size="sm" className="w-full justify-between px-0 hover:bg-transparent">
           <span>
-            {filter.label}
+            {title}
             {picked.size > 0 ? <span className="ml-1 tabular-nums">({picked.size})</span> : null}
           </span>
           <ChevronRightIcon
@@ -73,30 +82,34 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
       </CollapsibleTrigger>
       <CollapsibleContent>
         <fieldset className="space-y-0.5 pb-3">
-          <legend className="sr-only">{filter.label}</legend>
+          <legend className="sr-only">{title}</legend>
           {hasFind ? (
             <Input
               type="search"
               className="mb-2 h-8"
-              aria-label={`Find in ${filter.label}`}
-              placeholder="Find"
+              aria-label={t('filters.sheet.find', { filter: title })}
+              placeholder={t('filters.sheet.findPlaceholder')}
               value={find}
               onChange={(event) => setFind(event.target.value)}
             />
           ) : null}
           {visible.map((option, i) => {
             const id = `${base}-${i}`
-            const text = valueLabel(filter.key, option.value)
+            const text = valueLabel(filter.key, option.value, lang)
             return (
               <div key={option.value ?? '__not_set__'} className="flex items-center gap-2 py-1.5">
                 <Checkbox
                   id={id}
-                  aria-label={`${text}, ${countLabel(option.count, 'stock')}`}
+                  aria-label={t('filters.sheet.option', { label: text, stocks: stocksLabel(option.count) })}
                   className="border-muted-foreground"
                   checked={picked.has(option.value)}
                   onCheckedChange={() => onToggle(option.value)}
                 />
-                <Label htmlFor={id} className="flex flex-1 cursor-pointer items-center gap-2 font-normal">
+                <Label
+                  htmlFor={id}
+                  title={option.value !== null && text !== option.value ? option.value : undefined}
+                  className="flex flex-1 cursor-pointer items-center gap-2 font-normal"
+                >
                   <span className={cn(option.value === null && 'italic')}>{text}</span>
                   <span
                     aria-hidden="true"
@@ -108,7 +121,7 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
               </div>
             )
           })}
-          {noMatch ? <p className="py-1 text-sm text-muted-foreground">No match</p> : null}
+          {noMatch ? <p className="py-1 text-sm text-muted-foreground">{t('filters.sheet.noMatch')}</p> : null}
         </fieldset>
       </CollapsibleContent>
     </Collapsible>
@@ -117,6 +130,7 @@ function FilterSection({ filter, options, picked, open, onOpenChange, onToggle }
 
 /** The filter panel: a sheet with one section per filter, picks applied at once (ux-design.md: Filter sheet). */
 export function FilterSheet({ filters, countText }: { filters: StockFilters; countText: string }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const bottom = useBelowSm()
   const active = filters.activeCount
@@ -126,18 +140,18 @@ export function FilterSheet({ filters, countText }: { filters: StockFilters; cou
       <SheetTrigger asChild>
         <Button variant="outline" className="flex-1 sm:flex-none">
           <ListFilterIcon aria-hidden="true" />
-          Filters{' '}
+          {t('filters.sheet.title')}{' '}
           {active > 0 ? (
             <Badge variant="secondary" className="tabular-nums">
               {active}{' '}
-              <span className="sr-only">active</span>
+              <span className="sr-only">{t('filters.sheet.active')}</span>
             </Badge>
           ) : null}
         </Button>
       </SheetTrigger>
       <SheetContent side={bottom ? 'bottom' : 'right'} className={cn('gap-0 p-0', bottom && 'max-h-[85svh]')}>
         <SheetHeader className="border-b pr-12">
-          <SheetTitle>Filters</SheetTitle>
+          <SheetTitle>{t('filters.sheet.title')}</SheetTitle>
           <SheetDescription aria-live="polite" className="tabular-nums">
             {countText}
           </SheetDescription>
@@ -145,10 +159,10 @@ export function FilterSheet({ filters, countText }: { filters: StockFilters; cou
         {open ? <SheetBody filters={filters} /> : null}
         <SheetFooter className="flex-row justify-between border-t">
           <Button variant="ghost" disabled={active === 0} onClick={() => filters.clearFilters()}>
-            Clear all
+            {t('filters.sheet.clearAll')}
           </Button>
           <SheetClose asChild>
-            <Button className="tabular-nums">Show {countLabel(filters.shown.length, 'stock')}</Button>
+            <Button className="tabular-nums">{t('filters.sheet.show', { stocks: stocksLabel(filters.shown.length) })}</Button>
           </SheetClose>
         </SheetFooter>
       </SheetContent>

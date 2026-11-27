@@ -1,3 +1,6 @@
+import { formatRule, MESSAGE_KEYS, type MessageKey } from '@investhesis/domain'
+import { i18n } from '@/i18n/i18n'
+import { getLanguage } from '@/i18n/language'
 import { ApiError, type ApiClient } from '@/lib/api-client'
 import type { Thesis } from './types'
 
@@ -20,20 +23,15 @@ export type ThesisActionResult =
 export const isThesisIntent = (value: string): value is ThesisIntent =>
   value === 'add-thesis' || value === 'edit-thesis' || value === 'delete-thesis' || value === 'restore-thesis'
 
-const FIELD_LABEL: Record<ThesisField, string> = {
-  type: 'Type',
-  date: 'The date',
-  note: 'Thesis',
-  targetPrice: 'Target price',
-  invalidation: 'Invalidation conditions',
-}
-const FIELDS = Object.keys(FIELD_LABEL) as ThesisField[]
+const FIELDS: ThesisField[] = ['type', 'date', 'note', 'targetPrice', 'invalidation']
+const isRule = (value: string): value is MessageKey => (MESSAGE_KEYS as readonly string[]).includes(value)
 
-export const SAVE_FAILED = "Couldn't save the entry. Try again."
-export const DELETE_FAILED = "Couldn't delete the entry."
-export const RESTORE_FAILED = "Couldn't restore the entry."
-export const STOCK_GONE = 'This stock no longer exists.'
-export const ENTRY_GONE = 'This entry or stock no longer exists.'
+/** A field's problem in the current language: its name plus the rule's text; an answer without a rule keeps the API's English. */
+function fieldProblem(field: ThesisField, e: { message: string; rule?: string; params?: Record<string, unknown> }): string {
+  const label = i18n.t(`theses.serverFields.${field}`)
+  if (e.rule === undefined || e.rule === 'invalid' || !isRule(e.rule)) return `${label} ${e.message}`
+  return `${label} ${formatRule(e.rule, e.params, getLanguage())}`
+}
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? '')
 
@@ -43,7 +41,9 @@ const text = (form: FormData, key: string) => String(form.get(key) ?? '')
  */
 export async function changeThesis(api: ApiClient, stockId: string, intent: ThesisIntent, form: FormData): Promise<ThesisActionResult> {
   const base = `/stocks/${encodeURIComponent(stockId)}/theses`
-  const failed = intent === 'delete-thesis' ? DELETE_FAILED : intent === 'restore-thesis' ? RESTORE_FAILED : SAVE_FAILED
+  const failed = i18n.t(
+    intent === 'delete-thesis' ? 'theses.errors.deleteFailed' : intent === 'restore-thesis' ? 'theses.errors.restoreFailed' : 'theses.errors.saveFailed',
+  )
   let body: unknown
   if (intent !== 'delete-thesis') {
     try {
@@ -66,11 +66,11 @@ export async function changeThesis(api: ApiClient, stockId: string, intent: Thes
   } catch (error) {
     if (!(error instanceof ApiError) || error.status === 401) throw error
     // Adding can only miss the stock; the other intents cannot tell the entry from the stock (the API says not_found for both).
-    if (error.status === 404) return { intent, ok: false, gone: true, message: intent === 'add-thesis' ? STOCK_GONE : ENTRY_GONE }
+    if (error.status === 404) return { intent, ok: false, gone: true, message: i18n.t(intent === 'add-thesis' ? 'theses.errors.stockGone' : 'theses.errors.entryGone') }
     if (error.status === 400 && (intent === 'add-thesis' || intent === 'edit-thesis')) {
       const errors = error.errors.flatMap((e) => {
         const field = FIELDS.find((f) => f === e.path)
-        return field ? [{ field, message: `${FIELD_LABEL[field]} ${e.message}` }] : []
+        return field ? [{ field, message: fieldProblem(field, e) }] : []
       })
       if (errors.length > 0) return { intent, ok: false, errors, message: failed }
     }

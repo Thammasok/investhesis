@@ -1,1 +1,59 @@
-export const filters = {} as const
+export const filters = {
+  stockCount_one: '{{n}} stock',
+  stockCount_other: '{{n}} stocks',
+  names: {
+    held: 'Held',
+    exchange: 'Exchange',
+  },
+  held: {
+    yes: 'Held',
+    no: 'Not held',
+  },
+  result: {
+    all: '{{stocks}}{{suffix}}',
+    filtered: '{{shown}} of {{stocks}}{{suffix}}',
+  },
+  toolbar: {
+    searchLabel: 'Search stocks',
+    searchPlaceholder: 'Search ticker, name or theme',
+    clearSearch: 'Clear search',
+    searchBadge: 'Search: {{text}}',
+    removeSearch: 'Remove search: {{text}}',
+    removeFilter: 'Remove filter {{text}}',
+    clearAll: 'Clear all',
+  },
+  sheet: {
+    title: 'Filters',
+    active: 'active',
+    find: 'Find in {{filter}}',
+    findPlaceholder: 'Find',
+    noMatch: 'No match',
+    clearAll: 'Clear all',
+    show: 'Show {{stocks}}',
+    option: '{{label}}, {{stocks}}',
+  },
+  noMatches: {
+    title: 'No stocks match',
+    hint: 'Try a different search or fewer filters.',
+    clearAll: 'Clear all',
+  },
+  scope: {
+    label: 'Scope',
+    all: 'All stocks ({{n}})',
+    held: 'Held stocks ({{n}})',
+    lists: 'Lists',
+    gone: 'That list no longer exists. Showing all stocks.',
+    nameAll: 'all stocks',
+    nameHeld: 'held stocks',
+    nameList: 'list {{name}}',
+  },
+  notes: {
+    emptyValue: "An empty {{label}} value isn't valid, so it was left out.",
+    badValue: '"{{value}}" isn\'t a {{label}} value, so that filter was left out.',
+    searchTwice: 'The search was given more than once, so it was left out.',
+    sortTwice: 'The sort column was given more than once, so the default order is used.',
+    badSort: '"{{value}}" isn\'t a column you can sort by, so the default order is used.',
+    dirTwice: 'The sort direction was given more than once, so ascending is used.',
+    badDir: '"{{value}}" isn\'t a sort direction, so ascending is used.',
+  },
+} as const

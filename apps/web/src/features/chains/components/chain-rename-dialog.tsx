@@ -1,5 +1,6 @@
 import { Loader2Icon, TriangleAlertIcon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -7,9 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { countLabel } from '@/features/stocks/format'
+import { describeIssue } from '@/i18n/describe-issue'
+import { getLanguage } from '@/i18n/language'
 import type { ChainsActionResult } from '../chains-data'
-import { decideRename, RENAME_NAME_ERROR, type RenameTarget } from '../chains-model'
+import { decideRename, stocksLabel, type RenameTarget } from '../chains-model'
 
 export const CHAIN_NAME_MAX = 60
 
@@ -73,6 +75,7 @@ function RenameForm({
   onClose: () => void
   onSaved: (result: RenameSaved) => void
 }) {
+  const { t } = useTranslation()
   const fetcher = useFetcher<ChainsActionResult>()
   const inputRef = useRef<HTMLInputElement>(null)
   const mergeTitleRef = useRef<HTMLHeadingElement>(null)
@@ -111,7 +114,10 @@ function RenameForm({
         setStep({ kind: 'gone' })
       } else {
         const toError = result.errors?.find((e) => e.path === 'to')
-        setProblem({ message: toError?.message ?? result.message, field: toError !== undefined })
+        setProblem({
+          message: toError === undefined ? result.message : toError.rule === undefined ? toError.message : describeIssue(toError, getLanguage()),
+          field: toError !== undefined,
+        })
       }
     }
   }
@@ -138,11 +144,11 @@ function RenameForm({
     if (step.kind === 'merge') return send(step.to, true, chain.count + step.other.count)
     const decision = decideRename(to, chain, all)
     if (decision.kind === 'invalid') {
-      setProblem({ message: RENAME_NAME_ERROR, field: true })
+      setProblem({ message: t('chains.rename.nameError'), field: true })
       return inputRef.current?.focus()
     }
     if (decision.kind === 'unchanged') {
-      toast('No changes to save')
+      toast(t('chains.rename.noChanges'))
       return onClose()
     }
     if (decision.kind === 'merge') {
@@ -164,17 +170,17 @@ function RenameForm({
     return (
       <div className="grid gap-4">
         <DialogHeader>
-          <DialogTitle>Rename chain</DialogTitle>
-          <DialogDescription className="sr-only">This chain was changed elsewhere.</DialogDescription>
+          <DialogTitle>{t('chains.rename.title')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('chains.rename.goneHint')}</DialogDescription>
         </DialogHeader>
         <Alert variant="destructive">
           <TriangleAlertIcon className="text-destructive" aria-hidden="true" />
-          <AlertTitle className="text-foreground">This chain no longer exists.</AlertTitle>
-          <AlertDescription className="text-foreground">It may have been renamed elsewhere.</AlertDescription>
+          <AlertTitle className="text-foreground">{t('chains.rename.goneTitle')}</AlertTitle>
+          <AlertDescription className="text-foreground">{t('chains.rename.goneBody')}</AlertDescription>
         </Alert>
         <DialogFooter>
           <Button type="button" onClick={onClose} autoFocus>
-            Close
+            {t('chains.rename.close')}
           </Button>
         </DialogFooter>
       </div>
@@ -194,20 +200,26 @@ function RenameForm({
       <form onSubmit={onSubmit} noValidate className="grid gap-4">
         <DialogHeader>
           <DialogTitle ref={mergeTitleRef} tabIndex={-1} className="outline-none">
-            {`Merge into "${step.other.title}"?`}
+            {t('chains.rename.mergeTitle', { name: step.other.title })}
           </DialogTitle>
           <DialogDescription>
-            {`"${chain.title}" (${countLabel(chain.count, 'stock')}) and "${step.other.title}" (${countLabel(step.other.count, 'stock')}) will become one chain named "${step.to}". This can't be split again automatically.`}
+            {t('chains.rename.mergeBody', {
+              from: chain.title,
+              fromStocks: stocksLabel(chain.count),
+              other: step.other.title,
+              otherStocks: stocksLabel(step.other.count),
+              to: step.to,
+            })}
           </DialogDescription>
         </DialogHeader>
         {alert}
         <DialogFooter>
           <Button type="button" variant="outline" onClick={back} disabled={pending}>
-            Back
+            {t('chains.rename.back')}
           </Button>
           <Button type="submit" disabled={pending}>
             {spinner}
-            {`Merge ${countLabel(chain.count + step.other.count, 'stock')}`}
+            {t('chains.rename.merge', { stocks: stocksLabel(chain.count + step.other.count) })}
           </Button>
         </DialogFooter>
       </form>
@@ -216,14 +228,14 @@ function RenameForm({
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-4">
       <DialogHeader>
-        <DialogTitle>Rename chain</DialogTitle>
+        <DialogTitle>{t('chains.rename.title')}</DialogTitle>
         <DialogDescription>
-          {`Changes the name on ${countLabel(chain.count, 'stock')}, including any outside this view.`}
+          {t('chains.rename.body', { stocks: stocksLabel(chain.count) })}
         </DialogDescription>
       </DialogHeader>
       {alert}
       <Field data-invalid={fieldError ? true : undefined}>
-        <FieldLabel htmlFor="chain-name">Chain name</FieldLabel>
+        <FieldLabel htmlFor="chain-name">{t('chains.rename.label')}</FieldLabel>
         <Input
           id="chain-name"
           ref={inputRef}
@@ -242,11 +254,11 @@ function RenameForm({
       </Field>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose} disabled={pending}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={pending}>
           {spinner}
-          Rename
+          {t('common.rename')}
         </Button>
       </DialogFooter>
     </form>

@@ -1,4 +1,7 @@
+import { lensValueLabel } from '@investhesis/domain'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
+import { getLanguage } from '@/i18n/language'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { thb } from '@/features/concentration/concentration-model'
@@ -15,6 +18,7 @@ type Props = {
 
 /** One stock of a lane: a single link to its page (ticker, Held, name and market, value). */
 export function ChainStockEntry({ stock, held, value, setPosition = false }: Props) {
+  const { t } = useTranslation()
   return (
     <li className="flex flex-wrap items-center justify-between gap-x-2">
       <Link
@@ -24,16 +28,16 @@ export function ChainStockEntry({ stock, held, value, setPosition = false }: Pro
         <span className="font-medium break-words">{stock.ticker}</span>
         {held ? (
           <Badge variant="secondary" className="ml-2">
-            Held
+            {t('chains.entry.held')}
           </Badge>
         ) : null}
-        <span className="block text-sm text-muted-foreground break-words">{`${stock.name} · ${stock.market}`}</span>
+        <span className="block text-sm text-muted-foreground break-words">{`${stock.name} · ${lensValueLabel('market', stock.market, getLanguage())}`}</span>
         {value !== null ? <span className="block text-sm tabular-nums">{thb(value)}</span> : null}
       </Link>
       {setPosition ? (
         <Button variant="link" size="sm" asChild>
-          <Link to={`/stocks/${stock.id}/edit`} aria-label={`Set position of ${stock.ticker}`}>
-            Set position
+          <Link to={`/stocks/${stock.id}/edit`} aria-label={t('chains.entry.setPositionOf', { ticker: stock.ticker })}>
+            {t('chains.entry.setPosition')}
           </Link>
         </Button>
       ) : null}

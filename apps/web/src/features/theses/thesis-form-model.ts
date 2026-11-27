@@ -1,4 +1,6 @@
-import { MESSAGES, THESIS_TYPES, issueText, parseDecimal, thesisInput, type ThesisInput } from '@investhesis/domain'
+import { THESIS_TYPES, formatRule, issueRule, parseDecimal, thesisInput, type ThesisInput } from '@investhesis/domain'
+import { i18n } from '@/i18n/i18n'
+import { getLanguage } from '@/i18n/language'
 import { decimalForInput } from '@/lib/number-format'
 import type { ThesisField } from './thesis-actions'
 import type { Thesis } from './types'
@@ -30,14 +32,6 @@ export const valuesOf = (entry: Thesis): FormValues => ({
   invalidation: entry.invalidation ?? '',
 })
 
-const LABEL: Record<ThesisField, string> = {
-  type: 'Type',
-  date: 'Date',
-  note: 'Thesis',
-  targetPrice: 'Target price',
-  invalidation: 'Invalidation conditions',
-}
-
 const isField = (key: unknown): key is ThesisField => FIELD_ORDER.includes(key as ThesisField)
 
 export type Checked = { ok: true; input: ThesisInput } | { ok: false; errors: FieldErrors }
@@ -56,14 +50,15 @@ export function checkValues(values: FormValues, today: string): Checked {
   for (const issue of result.error.issues) {
     const key = issue.path[0]
     if (!isField(key) || errors[key]) continue
+    const { rule, params } = issueRule(issue.message)
     errors[key] =
-      key === 'date' && issueText(issue.message) === MESSAGES.thesisDateFuture
-        ? "The date can't be in the future."
-        : `${LABEL[key]} ${issueText(issue.message)}`
+      key === 'date' && rule === 'thesisDateFuture'
+        ? i18n.t('theses.errors.dateFuture')
+        : `${i18n.t(`theses.fields.${key}`)} ${formatRule(rule, params, getLanguage())}`
   }
   // A blank choice reads "is required", not the enum's "must be one of".
-  if (errors.type && values.type === '') errors.type = `${LABEL.type} ${MESSAGES.required}`
-  if (errors.date && values.date === '') errors.date = `${LABEL.date} ${MESSAGES.required}`
+  if (errors.type && values.type === '') errors.type = `${i18n.t('theses.fields.type')} ${formatRule('required', undefined, getLanguage())}`
+  if (errors.date && values.date === '') errors.date = `${i18n.t('theses.fields.date')} ${formatRule('required', undefined, getLanguage())}`
   return { ok: false, errors }
 }
 

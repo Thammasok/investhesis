@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Field, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,17 +21,18 @@ type TargetListProps = {
 
 /** "Add to list": an existing list or "New list…" with a name input below. */
 export function TargetList({ lists, value, onChange, newName, onNewName, nameError }: TargetListProps) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-3">
       <Field>
         <FieldLabel htmlFor="import-target">
-          Add to list
+          {t('imports.target.label')}
           <span aria-hidden="true">*</span>
-          <span className="sr-only">required</span>
+          <span className="sr-only">{t('imports.target.required')}</span>
         </FieldLabel>
         <Select value={value} onValueChange={onChange}>
           <SelectTrigger id="import-target" aria-required="true" className="w-full sm:w-72">
-            <SelectValue placeholder="Choose a list" />
+            <SelectValue placeholder={t('imports.target.placeholder')} />
           </SelectTrigger>
           <SelectContent>
             {lists.map((list) => (
@@ -39,16 +41,16 @@ export function TargetList({ lists, value, onChange, newName, onNewName, nameErr
               </SelectItem>
             ))}
             {lists.length > 0 ? <SelectSeparator /> : null}
-            <SelectItem value={NEW_LIST}>New list…</SelectItem>
+            <SelectItem value={NEW_LIST}>{t('imports.target.newList')}</SelectItem>
           </SelectContent>
         </Select>
       </Field>
       {value === NEW_LIST ? (
         <Field data-invalid={nameError ? true : undefined}>
           <FieldLabel htmlFor="import-new-list">
-            New list name
+            {t('imports.target.newName')}
             <span aria-hidden="true">*</span>
-            <span className="sr-only">required</span>
+            <span className="sr-only">{t('imports.target.required')}</span>
           </FieldLabel>
           <Input
             id="import-new-list"
@@ -68,17 +70,18 @@ export function TargetList({ lists, value, onChange, newName, onNewName, nameErr
 
 /** Skip or update, for all duplicate rows. Only rendered when the file has duplicates. */
 export function DuplicateModeGroup({ value, onChange }: { value: DuplicateMode; onChange: (value: DuplicateMode) => void }) {
+  const { t } = useTranslation()
   return (
     <FieldSet>
       <FieldLegend variant="label" id="import-duplicates-legend">
-        Duplicates
+        {t('imports.duplicates.legend')}
         <span aria-hidden="true">*</span>
       </FieldLegend>
       <RadioGroup aria-labelledby="import-duplicates-legend" value={value} onValueChange={(v) => onChange(v as DuplicateMode)}>
         {(
           [
-            ['skip', 'Skip', 'Keep saved stocks as they are'],
-            ['update', 'Update', "Overwrite with this file's non-empty values"],
+            ['skip', t('imports.duplicates.skip'), t('imports.duplicates.skipHint')],
+            ['update', t('imports.duplicates.update'), t('imports.duplicates.updateHint')],
           ] as const
         ).map(([mode, label, description]) => (
           <div key={mode} className="flex items-start gap-2">

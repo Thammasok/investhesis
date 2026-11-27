@@ -2,6 +2,7 @@ import { redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from 'reac
 import { toast } from 'sonner'
 import type { Stock, ListSummary } from '@/features/stocks/types'
 import { ApiError, type ApiClient } from '@/lib/api-client'
+import { i18n } from '@/i18n/i18n'
 import { checkListName } from './list-name'
 
 /** Loader of `/lists`. */
@@ -50,7 +51,6 @@ export type ListActionResult =
 
 const text = (form: FormData, key: string) => String(form.get(key) ?? '')
 const isStatus = (error: unknown, status: number) => error instanceof ApiError && error.status === status
-const NAME_TAKEN = 'A list with this name already exists.'
 
 /**
  * Create, rename and delete, shared by both pages: `/lists` takes the list from the form's `listId`,
@@ -69,27 +69,27 @@ async function changeList(
     if (intent === 'delete') {
       // Already gone (deleted in another tab) is the outcome the user wanted.
       await api.delete(path).catch((e: unknown) => (isStatus(e, 404) ? undefined : Promise.reject(e)))
-      toast.success(`${listName} deleted`)
+      toast.success(i18n.t('lists.toast.deleted', { name: listName }))
       return afterDelete ? afterDelete() : { intent, ok: true }
     }
     const checked = checkListName(text(form, 'name'))
     if (!checked.ok) return { intent, ok: false, message: checked.message, field: 'name' }
     if (intent === 'create') await api.post('/lists', { body: { name: checked.name } })
     else await api.patch(path, { body: { name: checked.name } })
-    toast.success(intent === 'create' ? 'List created' : 'List renamed')
+    toast.success(i18n.t(intent === 'create' ? 'lists.toast.created' : 'lists.toast.renamed'))
     return { intent, ok: true }
   } catch (error) {
     if (!(error instanceof ApiError)) throw error
-    if (error.status === 409) return { intent, ok: false, message: NAME_TAKEN, field: 'name' }
+    if (error.status === 409) return { intent, ok: false, message: i18n.t('lists.problem.nameTaken'), field: 'name' }
     const named = error.errors.find((e) => e.path === 'name')
     if (error.status === 400 && named) return { intent, ok: false, message: named.message, field: 'name' }
-    if (error.status === 404) return { intent, ok: false, message: 'This list no longer exists. The page was refreshed.' }
+    if (error.status === 404) return { intent, ok: false, message: i18n.t('lists.problem.gone') }
     const message =
       intent === 'create'
-        ? "Couldn't create the list. Try again."
+        ? i18n.t('lists.problem.createFailed')
         : intent === 'rename'
-          ? "Couldn't rename the list. Try again."
-          : `Couldn't delete ${listName}. Try again.`
+          ? i18n.t('lists.problem.renameFailed')
+          : i18n.t('lists.problem.deleteFailed', { name: listName })
     return { intent, ok: false, message }
   }
 }
@@ -146,13 +146,13 @@ export const createListAction =
 function membershipFailure(intent: MembershipIntent, error: ApiError, ticker: string, listName: string): string {
   switch (intent) {
     case 'undo-remove':
-      return `Couldn't undo. Add ${ticker} to the list again.`
+      return i18n.t('lists.problem.undoFailed', { ticker })
     case 'add-stock':
-      if (error.status === 409) return `${ticker} is already in ${listName}. The page was refreshed.`
-      if (error.status === 404) return `${ticker} or ${listName} no longer exists. The page was refreshed.`
-      return `Couldn't add ${ticker} to ${listName}. Try again.`
+      if (error.status === 409) return i18n.t('lists.problem.alreadyIn', { ticker, name: listName })
+      if (error.status === 404) return i18n.t('lists.problem.noLongerExists', { ticker, name: listName })
+      return i18n.t('lists.problem.addFailed', { ticker, name: listName })
     case 'remove-stock':
-      if (error.status === 404) return `${ticker} is already removed from ${listName}. The page was refreshed.`
-      return `Couldn't remove ${ticker} from ${listName}. Try again.`
+      if (error.status === 404) return i18n.t('lists.problem.alreadyRemoved', { ticker, name: listName })
+      return i18n.t('lists.problem.removeFailed', { ticker, name: listName })
   }
 }

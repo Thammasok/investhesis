@@ -14,10 +14,10 @@ import { NoChainsCard, NoStocksCard } from '@/features/chains/components/chains-
 import { AddressNotes } from '@/features/stock-filters/address-notes'
 import { FilterToolbar } from '@/features/stock-filters/filter-toolbar'
 import { ScopeSelect } from '@/features/stock-filters/scope-select'
+import { getLanguage } from '@/i18n/language'
 import { stocksInScope } from '@/features/stock-filters/scope'
 import { useStockFilters } from '@/features/stock-filters/use-stock-filters'
 
-const DESCRIPTION = 'Your stocks along each chain, from upstream to downstream.'
 /** Parameters of this page that the filters leave alone. */
 const KEEP = ['scope'] as const
 
@@ -31,7 +31,9 @@ export function Component() {
   const { t } = useTranslation()
   const { stocks, lists, settings } = useLoaderData() as ChainsData
   const [params] = useSearchParams()
-  const view = useMemo(() => readChainsView(params, lists), [params, lists])
+  const lang = getLanguage()
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  const view = useMemo(() => readChainsView(params, lists), [params, lists, lang])
   const scoped = useMemo(() => stocksInScope(stocks, view.scope), [stocks, view.scope])
   // Search and filters work inside the scope: the options count over it, and the grouping uses what passes.
   const filters = useStockFilters(scoped, { keep: KEEP, sort: false })
@@ -84,13 +86,13 @@ export function Component() {
 
   const header = (
     <PageHeader
-      title={t("nav.valueChains")}
-      description={DESCRIPTION}
+      title={t('nav.valueChains')}
+      description={t('chains.description')}
       actions={
         <Button variant="outline" className="w-full sm:w-auto" asChild>
           <Link to={concentrationHref(view.scope, filters.state, 'valueChain')}>
             <ChartPieIcon aria-hidden="true" />
-            See concentration
+            {t('chains.seeConcentration')}
           </Link>
         </Button>
       }

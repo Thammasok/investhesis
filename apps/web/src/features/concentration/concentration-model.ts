@@ -8,7 +8,16 @@ import {
   type ConcentrationLens,
   type ConcentrationResult,
   type FilterState,
+  type Language,
+  type LensLabelKey,
+  LENS_LABELS_BY_LANGUAGE,
+  NOT_SET_LABELS,
+  lensValueLabel,
 } from '@investhesis/domain'
+import { languageOrder } from '@/i18n/collate'
+import { formatTimestamp } from '@/i18n/format-date'
+import { i18n } from '@/i18n/i18n'
+import { getLanguage } from '@/i18n/language'
 import { filterPairs } from '@/features/stock-filters/filter-address'
 import { readScope, stocksInScope } from '@/features/stock-filters/scope'
 import type { Settings } from '@/features/stock-filters/portfolio'
@@ -19,6 +28,14 @@ export type Measure = 'count' | 'value'
 export type { Settings }
 
 export const DEFAULT_LENS = CONCENTRATION_LENSES[0] as ConcentrationLens
+
+/** The lens's name in a language (glossary); the lens key stays canonical in the address. */
+export const lensName = (lens: Pick<ConcentrationLens, 'key'>, lang: Language = getLanguage()): string =>
+  LENS_LABELS_BY_LANGUAGE[lang][lens.key as LensLabelKey]
+
+/** What a group is called on screen: the Thai label of a canonical value, "Not set" in the language. */
+export const groupText = (lensKey: string, group: Pick<ConcentrationGroup, 'label' | 'notSet'>, lang: Language = getLanguage()): string =>
+  group.notSet ? NOT_SET_LABELS[lang] : lensValueLabel(lensKey, group.label, lang)
 export const DEFAULT_MEASURE: Measure = 'count'
 
 /** What the address asks for, after the fallbacks. `notes` has one entry per correction (nothing is rewritten in the address). */
@@ -46,14 +63,14 @@ export function readView(params: URLSearchParams, lists: readonly ListSummary[])
   if (rawLens !== undefined) {
     const found = rawLens === null ? undefined : CONCENTRATION_LENSES.find((l) => l.key === rawLens)
     if (found) lens = found
-    else notes.push(`That grouping isn't available. Showing ${DEFAULT_LENS.label}.`)
+    else notes.push(i18n.t('concentration.notes.badLens', { lens: lensName(DEFAULT_LENS) }))
   }
 
   let measure = DEFAULT_MEASURE
   const rawMeasure = one('measure')
   if (rawMeasure !== undefined) {
     if (rawMeasure === 'count' || rawMeasure === 'value') measure = rawMeasure
-    else notes.push("That measure isn't available. Showing Count.")
+    else notes.push(i18n.t('concentration.notes.badMeasure'))
   }
   return { scope, list, lens, measure, notes }
 }
@@ -95,8 +112,9 @@ export type Plan = {
 const cents = (group: ConcentrationGroup): bigint => parseDecimal(group.value, 2) ?? 0n
 
 /** Groups the stocks in scope and picks the measure. Pure and synchronous: it reruns on every control change (NFR-001). */
-export function planView(args: { stocks: readonly Stock[]; view: View; settings: Settings; filters?: FilterState }): Plan {
+export function planView(args: { stocks: readonly Stock[]; view: View; settings: Settings; filters?: FilterState; lang?: Language }): Plan {
   const { view, settings } = args
+  const order = languageOrder(args.lang ?? getLanguage())
   const scoped = stocksInScope(args.stocks, view.scope)
   const inScope = args.filters ? applyStockFilters(scoped, args.filters) : scoped
   const result = groupConcentration({
@@ -104,6 +122,7 @@ export function planView(args: { stocks: readonly Stock[]; view: View; settings:
     lens: view.lens,
     usdThbRate: settings.usdThbRate,
     threshold: settings.concentrationThreshold,
+    order,
   })
   const valued = inScope.length - result.leftOut.notHeld.length - result.leftOut.noAmount.length - result.leftOut.needsRate.length
   const value: ValueBlock =
@@ -112,7 +131,8 @@ export function planView(args: { stocks: readonly Stock[]; view: View; settings:
       : { available: false, reason: result.leftOut.needsRate.length > 0 ? 'needs-rate' : 'no-amounts' }
   const measure: Measure = view.measure === 'value' && value.available ? 'value' : 'count'
 
-  const byLabel = (a: ConcentrationGroup, b: ConcentrationGroup) => (a.label < b.label ? -1 : a.label > b.label ? 1 : 0)
+  const byLabel = (a: ConcentrationGroup, b: ConcentrationGroup) =>
+    order.compare(order.label(view.lens.key, a.label), order.label(view.lens.key, b.label))
   const groups = [...result.groups].sort((a, b) => {
     if (a.notSet !== b.notSet) return a.notSet ? 1 : -1
     if (measure === 'value') {
@@ -139,16 +159,21 @@ export function formatRate(text: string): string {
   return f
 }
 
-/** `23 Nov 2026`, in the browser's time zone (G-9). */
+/** `23 Nov 2026` / `23 พ.ย. 2026`, in the browser's time zone (G-9). */
 export function formatSavedDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return formatTimestamp(iso, getLanguage())
 }
 
 /** `Threshold 40% · 1 USD = 36.25 THB, saved 23 Nov 2026` (G-16 for no rate). */
 export function settingsLine(settings: Settings): string {
   const rate =
     settings.usdThbRate === null
-      ? 'No exchange rate saved'
-      : `1 USD = ${formatRate(settings.usdThbRate)} THB${settings.usdThbRateUpdatedAt ? `, saved ${formatSavedDate(settings.usdThbRateUpdatedAt)}` : ''}`
-  return `Threshold ${settings.concentrationThreshold}% · ${rate}`
+      ? i18n.t('concentration.summary.noRate')
+      : settings.usdThbRateUpdatedAt
+        ? i18n.t('concentration.summary.rateSaved', {
+            rate: formatRate(settings.usdThbRate),
+            date: formatSavedDate(settings.usdThbRateUpdatedAt),
+          })
+        : i18n.t('concentration.summary.rate', { rate: formatRate(settings.usdThbRate) })
+  return i18n.t('concentration.summary.threshold', { threshold: settings.concentrationThreshold, rate })
 }

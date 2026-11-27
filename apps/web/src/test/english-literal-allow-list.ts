@@ -1,47 +1,5 @@
 /**
  * Files that still hold English literals in JSX text or in aria-label, placeholder, title and alt.
- * T-006 and T-007 move their areas into the catalogue and delete the entries; the list ends empty.
- * A file listed here that no longer has a literal fails the scan test, so entries cannot linger.
+ * Empty since i18n T-006 and T-007; a file listed here that has no literal fails the scan test.
  */
-export const ENGLISH_LITERAL_ALLOW_LIST: readonly string[] = [
-  'features/chains/components/chain-notes.tsx',
-  'features/chains/components/chain-rename-dialog.tsx',
-  'features/chains/components/chain-section.tsx',
-  'features/chains/components/chain-stock-entry.tsx',
-  'features/chains/components/chains-empty.tsx',
-  'features/chains/components/lane.tsx',
-  'features/concentration/components/controls.tsx',
-  'features/concentration/components/group-table.tsx',
-  'features/concentration/components/notes.tsx',
-  'features/concentration/components/see-concentration.tsx',
-  'features/concentration/components/settings-dialog.tsx',
-  'features/exports/backup-card.tsx',
-  'features/exports/export-menu.tsx',
-  'features/imports/components/drop-zone.tsx',
-  'features/imports/components/preview-table.tsx',
-  'features/imports/components/review-options.tsx',
-  'features/imports/components/step-indicator.tsx',
-  'features/imports/components/summary-panel.tsx',
-  'features/imports/components/template-links.tsx',
-  'features/imports/import-wizard.tsx',
-  'features/lists/components/add-stock-picker.tsx',
-  'features/lists/components/delete-list-dialog.tsx',
-  'features/lists/components/list-name-dialog.tsx',
-  'features/lists/components/list-row-actions.tsx',
-  'features/lists/components/lists-table.tsx',
-  'features/stock-filters/filter-sheet.tsx',
-  'features/stock-filters/filter-toolbar.tsx',
-  'features/stock-filters/no-matches.tsx',
-  'features/stock-filters/scope-select.tsx',
-  'features/theses/components/thesis-delete-dialog.tsx',
-  'features/theses/components/thesis-dialog.tsx',
-  'features/theses/components/thesis-entry-card.tsx',
-  'features/theses/components/thesis-panel.tsx',
-  'features/theses/components/thesis-section.tsx',
-  'views/chains.tsx',
-  'views/concentration.tsx',
-  'views/import-dialog.tsx',
-  'views/import-export.tsx',
-  'views/list-detail.tsx',
-  'views/lists.tsx',
-]
+export const ENGLISH_LITERAL_ALLOW_LIST: readonly string[] = []

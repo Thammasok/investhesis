@@ -13,17 +13,17 @@ export function createImportExportPage(api: ApiClient) {
     const { t } = useTranslation()
     return (
       <section className="space-y-6">
-        <PageHeader title={t("nav.importExport")} description="Import stocks from CSV or Excel, or download all your data." />
+        <PageHeader title={t('nav.importExport')} description={t('imports.pageDescription')} />
         <Card className="max-w-5xl">
           <CardHeader>
-            <CardTitle>Import</CardTitle>
-            <CardDescription>Add many stocks at once from a CSV or Excel file.</CardDescription>
+            <CardTitle>{t('imports.pageCardTitle')}</CardTitle>
+            <CardDescription>{t('imports.pageCardDescription')}</CardDescription>
           </CardHeader>
           <div className="px-4">
             <Button asChild>
               <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
-                Import stocks
+                {t('imports.title')}
               </Link>
             </Button>
           </div>

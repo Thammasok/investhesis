@@ -1,5 +1,6 @@
 import type { ActionFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
+import { i18n } from '@/i18n/i18n'
 import { ApiError, type ApiClient } from '@/lib/api-client'
 import { readPortfolio, type Portfolio } from '@/features/stock-filters/portfolio'
 
@@ -13,7 +14,7 @@ export type SettingsChange = { concentrationThreshold?: number; usdThbRate?: str
 
 export type ConcentrationActionResult =
   | { intent: 'save-settings'; ok: true }
-  | { intent: string; ok: false; message: string; errors?: { path: string; message: string }[] }
+  | { intent: string; ok: false; message: string; errors?: { path: string; message: string; rule?: string; params?: Record<string, unknown> }[] }
 
 /**
  * Action of `/concentration`. The one intent, `save-settings`, is submitted as JSON
@@ -25,16 +26,16 @@ export const createConcentrationAction =
   async ({ request }: ActionFunctionArgs): Promise<ConcentrationActionResult> => {
     const body: unknown = await request.json().catch(() => null)
     const intent = typeof body === 'object' && body !== null && 'intent' in body ? String(body.intent) : ''
-    if (intent !== 'save-settings') return { intent, ok: false, message: 'Unknown action.' }
+    if (intent !== 'save-settings') return { intent, ok: false, message: i18n.t('concentration.action.unknown') }
     const patch = (body as { patch?: SettingsChange }).patch ?? {}
     try {
       await api.patch('/settings', { body: patch })
-      toast.success('Settings saved')
+      toast.success(i18n.t('concentration.action.saved'))
       return { intent, ok: true }
     } catch (error) {
       if (!(error instanceof ApiError)) throw error
       if (error.status === 400 && error.errors.length > 0)
-        return { intent, ok: false, message: "Some values aren't valid.", errors: error.errors }
-      return { intent, ok: false, message: "Couldn't save the settings. Try again." }
+        return { intent, ok: false, message: i18n.t('concentration.action.invalid'), errors: error.errors }
+      return { intent, ok: false, message: i18n.t('concentration.action.failed') }
     }
   }

@@ -1,5 +1,7 @@
 import { SearchIcon, XIcon } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getLanguage } from '@/i18n/language'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group'
@@ -23,6 +25,7 @@ type FilterToolbarProps = {
  * stocks table pages and the concentration page (ux-design.md: Filter toolbar).
  */
 export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: FilterToolbarProps) {
+  const { t } = useTranslation()
   const { state, setQuery, setPicks, clearFilters } = filters
   const searchRef = useRef<HTMLInputElement>(null)
   const lineRef = useRef<HTMLDivElement>(null)
@@ -50,7 +53,7 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
     sent.current.add(value.trim())
     setQuery(value)
   }
-  const badges = activeFilters(state)
+  const badges = activeFilters(state, getLanguage())
   const searchText = state.q.trim()
   const anyActive = searchText !== '' || badges.length > 0
 
@@ -89,8 +92,8 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
             ref={searchRef}
             id={SEARCH_ID}
             type="search"
-            aria-label="Search stocks"
-            placeholder="Search ticker, name or theme"
+            aria-label={t('filters.toolbar.searchLabel')}
+            placeholder={t('filters.toolbar.searchPlaceholder')}
             value={text}
             onChange={(event) => type(event.target.value)}
             onKeyDown={(event) => {
@@ -102,7 +105,7 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
           />
           {text !== '' ? (
             <InputGroupAddon align="inline-end">
-              <InputGroupButton size="icon-xs" aria-label="Clear search" onClick={() => {
+              <InputGroupButton size="icon-xs" aria-label={t('filters.toolbar.clearSearch')} onClick={() => {
                 type('')
                 searchRef.current?.focus()
               }}>
@@ -123,8 +126,8 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
         </p>
         {searchText !== '' ? (
           <ActiveBadge
-            text={`Search: ${searchText}`}
-            removeLabel={`Remove search: ${searchText}`}
+            text={t('filters.toolbar.searchBadge', { text: searchText })}
+            removeLabel={t('filters.toolbar.removeSearch', { text: searchText })}
             onRemove={() => remove(0, () => type(''))}
           />
         ) : null}
@@ -132,13 +135,13 @@ export function FilterToolbar({ filters, countSuffix = '', actions, trailing }: 
           <ActiveBadge
             key={badge.key}
             text={badge.text}
-            removeLabel={`Remove filter ${badge.text}`}
+            removeLabel={t('filters.toolbar.removeFilter', { text: badge.text })}
             onRemove={() => remove(i + (searchText !== '' ? 1 : 0), () => setPicks(badge.key, null))}
           />
         ))}
         {anyActive ? (
           <Button variant="link" size="sm" className="h-auto min-h-6 p-0" onClick={clearAll}>
-            Clear all
+            {t('filters.toolbar.clearAll')}
           </Button>
         ) : null}
         {trailing ? <div className="sm:ml-auto">{trailing}</div> : null}

@@ -1,6 +1,8 @@
 import type { FilterKey, FilterState } from '@investhesis/domain'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
+import { getLanguage } from '@/i18n/language'
 import { nextSort, type SortColumn, type SortState } from '@/features/stocks/sort-stocks'
 import { filterPairs, readFilters } from './filter-address'
 
@@ -21,8 +23,11 @@ const NO_KEEP: readonly string[] = []
  * `deferredState` is what the table renders, so typing stays responsive (NFR-001).
  */
 export function useFilterState({ keep = NO_KEEP, sort: withSort = true }: FilterStateOptions = {}) {
+  useTranslation() // the notes are worded in the current language
+  const lang = getLanguage()
   const [params, setParams] = useSearchParams()
-  const view = useMemo(() => readFilters(params, { sort: withSort }), [params, withSort])
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
+  const view = useMemo(() => readFilters(params, { sort: withSort }), [params, withSort, lang])
   const deferredState = useDeferredValue(view.state)
 
   // Writes that were made but have not reached the address yet, oldest first. React Router does not queue

@@ -1,1 +1,26 @@
-export const exports = {} as const
+export const exports = {
+  menu: {
+    trigger: 'Export',
+    none: 'No stocks to export',
+    downloadCsv: 'Download CSV',
+    copyTable: 'Copy as table',
+    backup: 'Back up all data…',
+    stockCount_one: '{{n}} stock',
+    stockCount_other: '{{n}} stocks',
+    rowCount_one: '{{n}} row',
+    rowCount_other: '{{n}} rows',
+    copied: 'Copied {{rows}}',
+    copyRefused: "Couldn't copy: your browser blocked the clipboard. Use Download CSV instead.",
+  },
+  backup: {
+    title: 'Export',
+    description: 'Download everything: each stock with its lenses and holding, your lists, and your concentration settings.',
+    downloadJson: 'Download JSON',
+    downloadCsv: 'Download CSV',
+    preparing: 'Preparing…',
+    failed: "Couldn't download the backup. Check your connection and try again.",
+    noteFormats: 'JSON is the complete backup. CSV has one row per stock with its lists and holding, and can be imported again here.',
+    notePrivate: 'These files include your shares and costs. Keep them private.',
+    noteSome: 'To export only some stocks, filter the Stocks page and use Export there.',
+  },
+} as const

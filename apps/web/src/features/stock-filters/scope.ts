@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n/i18n'
 import type { ListSummary, Stock } from '@/features/stocks/types'
 
 /** What the address's `scope` param asks for, after the fallback. `notes` has one entry per correction. */
@@ -21,7 +22,7 @@ export function readScope(params: URLSearchParams, lists: readonly ListSummary[]
     else if (found) {
       scope = found.id
       list = found
-    } else notes.push('That list no longer exists. Showing all stocks.')
+    } else notes.push(i18n.t('filters.scope.gone'))
   }
   return { scope, list, notes }
 }
@@ -33,5 +34,9 @@ export function stocksInScope(stocks: readonly Stock[], scope: string): Stock[] 
 }
 
 export function scopeName(view: Pick<ScopeRead, 'scope' | 'list'>): string {
-  return view.scope === 'all' ? 'all stocks' : view.scope === 'held' ? 'held stocks' : `list ${view.list?.name ?? ''}`
+  return view.scope === 'all'
+    ? i18n.t('filters.scope.nameAll')
+    : view.scope === 'held'
+      ? i18n.t('filters.scope.nameHeld')
+      : i18n.t('filters.scope.nameList', { name: view.list?.name ?? '' })
 }

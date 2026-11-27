@@ -1,4 +1,7 @@
-export type RowProblem = { path: string; message: string }
+import type { RuleParams } from '@investhesis/domain'
+
+/** A row problem: `message` is the API's English text; `rule` and `params` let the web say it in any language. */
+export type RowProblem = { path: string; message: string; rule?: string; params?: RuleParams }
 
 export type PreviewStatus = 'new' | 'duplicate' | 'error'
 

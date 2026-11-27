@@ -1,8 +1,11 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import { parseDecimal, SettingsPatch } from '@investhesis/domain'
+import { describeIssue } from '@/i18n/describe-issue'
+import { getLanguage } from '@/i18n/language'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -22,10 +25,6 @@ export type SettingsDialogProps = {
 }
 
 type Errors = { threshold?: string; rate?: string }
-
-const THRESHOLD_ERROR = 'Warning threshold must be a whole number from 1 to 100.'
-const RATE_ERROR = 'Exchange rate must be greater than 0, with up to 12 digits before the point and up to 6 decimal places.'
-const NO_RATE_HELP = 'No rate saved. USD holdings are left out of value weights until you add one.'
 
 const sameRate = (a: string, b: string) => {
   const x = parseDecimal(a, 6)
@@ -75,6 +74,7 @@ function SettingsForm({
   onDone: () => void
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
   const ids = useId()
   const fetcher = useFetcher<ConcentrationActionResult>()
   const sending = useRef(false)
@@ -89,8 +89,10 @@ function SettingsForm({
   const failed = result && !result.ok ? result : null
   const serverErrors: Errors = {}
   for (const e of failed?.errors ?? []) {
-    if (e.path === 'concentrationThreshold') serverErrors.threshold ??= e.message
-    else if (e.path === 'usdThbRate') serverErrors.rate ??= e.message
+    // A server error with a rule is worded in the current language; an older answer keeps its own text.
+    const text = e.rule === undefined ? e.message : describeIssue(e, getLanguage())
+    if (e.path === 'concentrationThreshold') serverErrors.threshold ??= text
+    else if (e.path === 'usdThbRate') serverErrors.rate ??= text
   }
   const errors: Errors = { ...serverErrors, ...clientErrors }
   const alert = failed && !failed.errors?.length ? failed.message : null
@@ -111,14 +113,14 @@ function SettingsForm({
     const typedRate = rate.trim()
     const candidate: Record<string, unknown> = {}
     const next: Errors = {}
-    if (!/^\d+$/.test(typedThreshold)) next.threshold = THRESHOLD_ERROR
+    if (!/^\d+$/.test(typedThreshold)) next.threshold = t('concentration.settings.thresholdError')
     else candidate.concentrationThreshold = parseInt(typedThreshold, 10)
     if (typedRate) candidate.usdThbRate = typedRate
     const parsed = SettingsPatch.safeParse(candidate)
     if (!parsed.success) {
       for (const issue of parsed.error.issues) {
-        if (issue.path[0] === 'concentrationThreshold') next.threshold ??= THRESHOLD_ERROR
-        if (issue.path[0] === 'usdThbRate') next.rate ??= RATE_ERROR
+        if (issue.path[0] === 'concentrationThreshold') next.threshold ??= t('concentration.settings.thresholdError')
+        if (issue.path[0] === 'usdThbRate') next.rate ??= t('concentration.settings.rateError')
       }
     }
     if (next.threshold || next.rate) {
@@ -137,7 +139,7 @@ function SettingsForm({
       patch.usdThbRate = typedRate
     }
     if (Object.keys(patch).length === 0) {
-      toast('No changes to save')
+      toast(t('concentration.settings.noChanges'))
       onDone()
       return
     }
@@ -152,15 +154,17 @@ function SettingsForm({
   const clear = (key: keyof Errors) => setClientErrors(({ [key]: _gone, ...rest }) => rest)
   const rateHelp =
     saved.usdThbRate !== null && rate.trim() !== ''
-      ? `Used to add USD costs to THB values.${saved.usdThbRateUpdatedAt ? ` Saved ${formatSavedDate(saved.usdThbRateUpdatedAt)}.` : ''}`
-      : NO_RATE_HELP
+      ? saved.usdThbRateUpdatedAt
+        ? t('concentration.settings.rateHelpSaved', { date: formatSavedDate(saved.usdThbRateUpdatedAt) })
+        : t('concentration.settings.rateHelp')
+      : t('concentration.settings.noRateHelp')
   const rateErrorId = `${ids}-rate-error`
   const rateHelpId = `${ids}-rate-help`
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
       <DialogHeader>
-        <DialogTitle>Concentration settings</DialogTitle>
+        <DialogTitle>{t('concentration.settings.title')}</DialogTitle>
       </DialogHeader>
       {alert ? (
         <Alert variant="destructive">
@@ -168,7 +172,7 @@ function SettingsForm({
         </Alert>
       ) : null}
       <Field data-invalid={errors.threshold ? true : undefined}>
-        <FieldLabel htmlFor={`${ids}-threshold`}>Warning threshold</FieldLabel>
+        <FieldLabel htmlFor={`${ids}-threshold`}>{t('concentration.settings.threshold')}</FieldLabel>
         <InputGroup className="w-28">
           <InputGroupInput
             id={`${ids}-threshold`}
@@ -190,13 +194,13 @@ function SettingsForm({
             <span aria-hidden="true">%</span>
           </InputGroupAddon>
         </InputGroup>
-        <FieldDescription id={`${ids}-threshold-help`}>Flag any group at this share or more (1–100).</FieldDescription>
+        <FieldDescription id={`${ids}-threshold-help`}>{t('concentration.settings.thresholdHelp')}</FieldDescription>
         {errors.threshold ? <FieldError id={`${ids}-threshold-error`}>{errors.threshold}</FieldError> : null}
       </Field>
       <Field data-invalid={errors.rate ? true : undefined}>
         <div className="flex items-center gap-2">
           <span id={`${ids}-rate-prefix`} className="text-sm">
-            1 USD =
+            {t('concentration.settings.ratePrefix')}
           </span>
           <InputGroup className="w-40">
             <InputGroupInput
@@ -205,7 +209,7 @@ function SettingsForm({
               type="text"
               inputMode="decimal"
               autoComplete="off"
-              aria-label="Exchange rate, THB per 1 USD"
+              aria-label={t('concentration.settings.rateLabel')}
               value={rate}
               disabled={pending}
               onChange={(e) => {
@@ -217,7 +221,7 @@ function SettingsForm({
               aria-describedby={`${rateHelpId}${errors.rate ? ` ${rateErrorId}` : ''}`}
             />
             <InputGroupAddon align="inline-end">
-              <span aria-hidden="true">THB</span>
+              <span aria-hidden="true">{'THB'}</span>
             </InputGroupAddon>
           </InputGroup>
         </div>
@@ -235,17 +239,17 @@ function SettingsForm({
               rateRef.current?.focus()
             }}
           >
-            Clear rate
+            {t('concentration.settings.clearRate')}
           </Button>
         </div>
       </Field>
       <DialogFooter className="gap-2">
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={pending}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          Save
+          {t('concentration.settings.save')}
         </Button>
       </DialogFooter>
     </form>

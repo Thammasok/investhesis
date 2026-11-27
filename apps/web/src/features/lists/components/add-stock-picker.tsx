@@ -1,5 +1,6 @@
 import { ChevronDownIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ const matches = (stock: Stock, query: string) =>
 
 /** Add stock: a popover with a search box over the saved stocks that are not in the list yet. */
 export function AddStockPicker({ candidates, noStocks, onPick, disabled, className }: AddStockPickerProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const shown = candidates.filter((s) => matches(s, query))
@@ -38,25 +40,25 @@ export function AddStockPicker({ candidates, noStocks, onPick, disabled, classNa
       <PopoverTrigger asChild>
         <Button type="button" className={className} disabled={disabled}>
           <PlusIcon aria-hidden="true" />
-          Add stock
+          {t('lists.picker.addStock')}
           <ChevronDownIcon aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start">
         {noStocks ? (
           <p className="p-3 text-sm">
-            You have no saved stocks yet.{' '}
+            {t('lists.picker.noSavedStocks')}{' '}
             <Link to="/stocks/new" className="underline underline-offset-4">
-              Add a stock
+              {t('lists.picker.addAStock')}
             </Link>
           </p>
         ) : candidates.length === 0 ? (
-          <p className="p-3 text-sm">All saved stocks are in this list</p>
+          <p className="p-3 text-sm">{t('lists.picker.allInList')}</p>
         ) : (
           <Command shouldFilter={false}>
-            <CommandInput placeholder="Search ticker or name" value={query} onValueChange={setQuery} />
+            <CommandInput placeholder={t('lists.picker.search')} value={query} onValueChange={setQuery} />
             <CommandList>
-              <CommandEmpty>No stocks match.</CommandEmpty>
+              <CommandEmpty>{t('lists.picker.noMatch')}</CommandEmpty>
               {shown.map((stock) => (
                 <CommandItem
                   key={stock.id}

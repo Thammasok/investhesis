@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useFetcher } from 'react-router'
 import { toast } from 'sonner'
 import type { Stock } from '@/features/stocks/types'
+import { i18n } from '@/i18n/i18n'
 import type { ListActionResult } from './lists-data'
 
 /**
@@ -22,9 +23,9 @@ export function useMembership(listName: string) {
     handled.current = result
     if (!result.ok) toast.error(result.message)
     else if (result.intent === 'remove-stock')
-      toast(`Removed ${result.ticker} from ${listName}`, {
+      toast(i18n.t('lists.toast.removed', { ticker: result.ticker, name: listName }), {
         action: {
-          label: 'Undo',
+          label: i18n.t('common.undo'),
           onClick: () =>
             fetcher.submit(
               { intent: 'undo-remove', stockId: result.stockId, ticker: result.ticker, listName },
@@ -32,7 +33,7 @@ export function useMembership(listName: string) {
             ),
         },
       })
-    else if (result.intent === 'add-stock') toast.success(`Added ${result.ticker} to ${listName}`)
+    else if (result.intent === 'add-stock') toast.success(i18n.t('lists.toast.added', { ticker: result.ticker, name: listName }))
   }, [fetcher, listName])
 
   return {

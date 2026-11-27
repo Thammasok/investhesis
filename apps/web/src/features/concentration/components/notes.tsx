@@ -1,16 +1,11 @@
 import { Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { countLabel } from '@/features/stocks/format'
 import type { Stock } from '@/features/stocks/types'
 import type { Plan } from '../concentration-model'
 
-const MANY: Record<string, string> = {
-  customers: 'customers',
-  revenueTypes: 'revenue types',
-  themes: 'themes',
-  indexMembership: 'index memberships',
-}
+const MANY = ['customers', 'revenueTypes', 'themes', 'indexMembership'] as const
 
 function Tickers({ ids, stocks }: { ids: readonly string[]; stocks: ReadonlyMap<string, Stock> }) {
   const found = ids.map((id) => stocks.get(id)).filter((s): s is Stock => s !== undefined)
@@ -32,36 +27,37 @@ function Tickers({ ids, stocks }: { ids: readonly string[]; stocks: ReadonlyMap<
 
 /** Who is not in the value view (FR-009), with a link to each stock; the not-held count links to /stocks (G-18). */
 export function LeftOutNote({ plan, stocks, onSetRate }: { plan: Plan; stocks: readonly Stock[]; onSetRate: () => void }) {
+  const { t } = useTranslation()
   const { noAmount, needsRate, notHeld } = plan.result.leftOut
   const byId = new Map(stocks.map((s) => [s.id, s]))
   const parts: React.ReactNode[] = []
   if (noAmount.length > 0)
     parts.push(
       <span key="amount">
-        <span>{`${noAmount.length} held ${noAmount.length === 1 ? 'stock' : 'stocks'} without shares or cost`}</span>{' '}
+        <span>{t('concentration.notes.noAmount', { count: noAmount.length, n: noAmount.length })}</span>{' '}
         <Tickers ids={noAmount} stocks={byId} />
       </span>,
     )
   if (needsRate.length > 0)
     parts.push(
       <span key="rate">
-        <span>{`${needsRate.length} USD ${needsRate.length === 1 ? 'holding needs' : 'holdings need'} a rate`}</span>{' '}
+        <span>{t('concentration.notes.needsRate', { count: needsRate.length, n: needsRate.length })}</span>{' '}
         <Tickers ids={needsRate} stocks={byId} />{' '}
         <Button variant="link" size="sm" className="h-auto p-0" onClick={onSetRate}>
-          Set rate
+          {t('concentration.controls.setRate')}
         </Button>
       </span>,
     )
   if (notHeld.length > 0)
     parts.push(
       <Link key="held" to="/stocks" className="underline underline-offset-4 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-        {`${countLabel(notHeld.length, 'stock')} not held`}
+        {t('concentration.notes.notHeld', { stocks: t('concentration.stockCount', { count: notHeld.length, n: notHeld.length.toLocaleString('en-US') }) })}
       </Link>,
     )
   if (parts.length === 0) return null
   return (
     <p className="text-sm">
-      Not in the value:{' '}
+      {t('concentration.notes.notInValue')}{' '}
       {parts.map((part, i) => (
         <Fragment key={i}>
           {i > 0 ? ' · ' : null}
@@ -73,13 +69,12 @@ export function LeftOutNote({ plan, stocks, onSetRate }: { plan: Plan; stocks: r
 }
 
 export function MultiValueNote({ lensKey }: { lensKey: string }) {
-  return (
-    <p className="text-sm text-muted-foreground">
-      {`A stock with several ${MANY[lensKey] ?? lensKey} counts in each of them, so the shares add up to more than 100%.`}
-    </p>
-  )
+  const { t } = useTranslation()
+  const what = (MANY as readonly string[]).includes(lensKey) ? t(`concentration.notes.many.${lensKey as (typeof MANY)[number]}`) : lensKey
+  return <p className="text-sm text-muted-foreground">{t('concentration.notes.multi', { what })}</p>
 }
 
 export function AdviceNote() {
-  return <p className="text-xs text-muted-foreground">These groupings and costs are your own classifications, not advice.</p>
+  const { t } = useTranslation()
+  return <p className="text-xs text-muted-foreground">{t('concentration.advice')}</p>
 }
