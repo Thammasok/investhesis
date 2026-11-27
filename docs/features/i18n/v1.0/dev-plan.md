@@ -314,7 +314,7 @@ unit:
   the web reuses them). template.csv ignores lang. Covers FR-012 (API part).
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: review
+- status: done
 - size: S
 ```
 
@@ -835,7 +835,7 @@ unit:
   check both parts and the link. Covers FR-013.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: S
 ```
 
