@@ -6,6 +6,7 @@ The Orchestrator's index of planned slices. Edit the tables in place; never rege
 
 | Slice | Version | Plan | Status | Gate reached | Updated |
 |---|---|---|---|---|---|
+| Thai and English UI | v1.0 | [dev-plan.md](features/i18n/v1.0/dev-plan.md) | todo | Plan approved (requirements, design, UX) | 2026-11-27 |
 | Value Chains | v1.0 | [dev-plan.md](features/value-chains/v1.0/dev-plan.md) | done | Released as v0.7.0 | 2026-11-26 |
 | Thesis Log | v1.0 | [dev-plan.md](features/thesis-log/v1.0/dev-plan.md) | done | Released as v0.6.0 | 2026-11-25 |
 | Search, Filter and Export | v1.0 | [dev-plan.md](features/search-filter-export/v1.0/dev-plan.md) | done | Released as v0.5.0 | 2026-11-24 |
