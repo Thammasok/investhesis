@@ -75,7 +75,7 @@ read all of them.
   NFR-007.
 - agent: software-engineer-backend
 - depends_on: []
-- status: review
+- status: done
 - size: L
 ```
 
@@ -205,7 +205,7 @@ field label: `สัญลักษณ์หุ้น ต้องมี …`.
   part), FR-008 (API part), NFR-003.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: M
 ```
 
@@ -314,7 +314,7 @@ unit:
   the web reuses them). template.csv ignores lang. Covers FR-012 (API part).
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: S
 ```
 
@@ -398,7 +398,7 @@ unit:
   NFR-003, NFR-006.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: L
 ```
 
@@ -827,7 +827,7 @@ unit:
   check both parts and the link. Covers FR-013.
 - agent: software-engineer-backend
 - depends_on: []
-- status: backlog
+- status: doing
 - size: S
 ```
 
