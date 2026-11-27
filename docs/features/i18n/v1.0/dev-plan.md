@@ -20,7 +20,7 @@ when 5173 is taken). `.claude/rules/test-gate.md` still lists Pacta's commands (
 contracts below, and `TC-A-10xx`, `TC-C-10xx`, `TC-E-10xx` from
 [T-009](#t-009--design-test-cases--thai-and-english-ui). Every test title starts with its id.
 
-**English stays the test language.** `test/setup.ts` puts the store on `en` before each test
+**English stays the test language.** `test/setup.ts` puts the i18next language on `en` before each test
 ([T-004](#t-004--web-i18n-foundation-store-catalogues-formatting-font)), so every existing test
 keeps its English assertions and must pass unchanged in every task. Thai coverage is added, not
 swapped in.
@@ -374,41 +374,48 @@ unit:
 ### T-004 — Web: i18n foundation (store, catalogues, formatting, font)
 
 ```yaml
-- title: Build the i18n store, typed catalogues, t/plurals/Rich, date formatting, detection, Thai font and line heights
+- title: Build the i18next setup, typed catalogues, formatting helpers, detection, Thai font and line heights
 - description: >
   Implement design.md §Web (Store and lookup, Formatting, Font and layout, Testing seams) and
-  ux-design.md §Thai on every screen (Layout). apps/web/src/i18n/: store.ts (getLanguage,
-  subscribe, setLanguage awaiting the lazy Thai chunk once, sets documentElement.lang, writes
-  localStorage 'investhesis.language' in try/catch), detect.ts (FR-003 order),
-  catalogue/en/*.ts per area + index.ts (as const), catalogue/th/*.ts typed `satisfies
-  Catalogue` (each leaf string, or { other } for plurals), t.ts (lookup with English fallback,
-  {name} interpolation, { one, other } via Intl.PluralRules), rich.tsx (<Rich k components>),
-  use-i18n.ts (useT, useLanguage via useSyncExternalStore), format-date.ts (formatDate(ymd, lang)
-  from fixed month tables, formatTimestamp(iso, lang)), collate.ts (collator and the domain
-  `order` object for the current language), describe-issue.ts (field label + formatRule; server
-  errors from rule/params, missing or unknown rule → errors.invalidField). main.tsx awaits
-  init(detect()) before render. RouteHandle.crumb becomes key | (params, data, t) => string;
-  PageHeader, AuthHeading, PagePlaceholder and the account page title go through t. index.css:
-  @fontsource-variable/noto-sans-thai/thai.css, font stack, :root:lang(th) line-height tokens;
-  the four leading-none/leading-tight uses on translatable text become leading-snug.
-  test/setup.ts resets the store to 'en' and clears localStorage; renderApp gains { language };
-  StubApi's default /me gains language null. Add the static English-literal scan test
-  (JSX text and aria-label, placeholder, title, alt) with an allow-list of files still to move,
-  which T-006 and T-007 empty. Covers FR-004 (mechanism), FR-009, FR-010, FR-014, NFR-002,
-  NFR-003, NFR-006.
+  ux-design.md §Thai on every screen (Layout) on i18next + react-i18next (ADR-001; the owner chose
+  the library on 2026-11-27, the in-house layer first built was reverted). Use Context7 for the
+  current i18next and react-i18next APIs and pin the versions. apps/web/src/i18n/: i18n.ts (one
+  instance: English resources bundled, fallbackLng 'en', single namespace, escapeValue false,
+  synchronous init), language.ts (getLanguage; setLanguage awaits the lazy Thai chunk once,
+  registers it with addResourceBundle, calls changeLanguage, sets documentElement.lang, writes
+  localStorage 'investhesis.language' in try/catch), detect.ts (FR-003 order, own code, no
+  detector plugin), i18next.d.ts (CustomTypeOptions: typed keys from the English resources),
+  catalogue/en/*.ts per area + index.ts (as const) with plural keys as key_one/key_other and
+  {{name}} placeholders, catalogue/th/*.ts typed so that a missing or extra key fails typecheck
+  (a Catalogue mapped type derived from the English resources, plural _one optional, Thai needs
+  _other) plus a key-parity unit test, format-date.ts (formatDate(ymd, lang) from fixed month
+  tables, formatTimestamp(iso, lang)), collate.ts (collator and the domain `order` object for
+  the current language), describe-issue.ts (field label + formatRule; server errors from
+  rule/params, missing or unknown rule -> errors.invalidField). Components use useTranslation and
+  Trans (components prop, transKeepBasicHtmlNodesFor={[]}); loaders, actions and toasts use
+  i18n.t. main.tsx awaits init(detect()) before render. RouteHandle.crumb becomes key |
+  (params, data, t) => string; PageHeader, AuthHeading, PagePlaceholder and the account page
+  title go through t. index.css: @fontsource-variable/noto-sans-thai/thai.css, font stack,
+  :root:lang(th) line-height tokens; the four leading-none/leading-tight uses on translatable text
+  become leading-snug. test/setup.ts resets the language to 'en' and clears localStorage;
+  renderApp gains { language }; StubApi's default /me gains language null. Add the static
+  English-literal scan test (JSX text and aria-label, placeholder, title, alt) with an allow-list
+  of files still to move, which T-006 and T-007 empty. Covers FR-004 (mechanism), FR-009,
+  FR-010, FR-014, NFR-002, NFR-003, NFR-006.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: doing
+- status: backlog
 - size: L
 ```
 
 #### Acceptance criteria
 
-- [ ] Removing a key from any Thai catalogue file fails `pnpm typecheck`
-- [ ] The Thai catalogue is its own chunk in `pnpm build` output; the main chunk grows by at most 40 KB gzipped against `main` before the task (NFR-002, measured and reported in the review)
+- [ ] Removing a key from any Thai catalogue file, or using a key the English catalogue lacks in `t()`, fails `pnpm typecheck`
+- [ ] The Thai catalogue is its own chunk in `pnpm build` output; the main chunk (English catalogue plus i18next and react-i18next) grows by at most 40 KB gzipped against `main` before the task (NFR-002, measured and reported in the review with the library's share)
 - [ ] The font is bundled by Vite (no request to a third-party host)
 - [ ] Every existing web test passes unchanged
 - [ ] The static scan passes with the allow-list
+- [ ] i18next is used only under `apps/web/src/i18n/` and through `react-i18next` hooks and `Trans` in components (an oxlint `no-restricted-imports` rule or a scan test)
 - [ ] All TC-U cases below pass
 
 #### Test cases (TDD contract)
@@ -424,25 +431,25 @@ unit:
       input: [[th, [en-US]], [null, [th-TH, en]], [null, [en-GB, th]], [null, [fr, th]], [null, [fr]], [bogus, [th]], [storage throws, [th]]]
       expected: [th, th, en, th, en, th, th]
   - id: TC-U-1026
-    scenario: setLanguage loads Thai once, sets html lang and storage, notifies subscribers
-    given: store on en with one subscriber
+    scenario: setLanguage loads Thai once, sets html lang and storage, and emits languageChanged
+    given: i18next on en with a languageChanged listener
     when: setLanguage('th') twice
-    then: the Thai chunk import runs once; document.documentElement.lang is "th"; localStorage holds "th"; the subscriber was called once (the second call changes nothing)
+    then: the Thai chunk import runs once; document.documentElement.lang is "th"; localStorage holds "th"; the listener was called once (the second call changes nothing)
     test_data:
       input: [th, th]
       expected: { imports: 1, lang: "th", notifications: 1 }
   - id: TC-U-1027
     scenario: t interpolates, pluralises and falls back
-    given: catalogue entries common.stockCount { one "{count} stock", other "{count} stocks" } (th { other "{count} หุ้น" }) and a key missing from th at runtime
+    given: catalogue entries common.stockCount_one "{{count}} stock", common.stockCount_other "{{count}} stocks" (th only _other "{{count}} หุ้น") and a key missing from th at runtime
     when: t('common.stockCount', { count: 1 }) and { count: 2 } in en and th; the missing key in th
     then: "1 stock", "2 stocks", "1 หุ้น", "2 หุ้น"; the missing key returns the English text
     test_data:
       input: counts 1, 2
       expected: ["1 stock", "2 stocks", "1 หุ้น", "2 หุ้น"]
   - id: TC-U-1028
-    scenario: Rich renders tagged parts with components and no HTML parsing
+    scenario: Trans renders tagged parts with components and no HTML parsing
     given: a message "Read the <link>guide</link> <b>now</b>" and a message containing "<img src=x>"
-    when: rendered with components { link, b }
+    when: rendered with Trans and components { link, b } (transKeepBasicHtmlNodesFor empty)
     then: an anchor with text guide and a strong with now; the second renders the literal text "<img src=x>"
     test_data:
       input: ["Read the <link>guide</link> <b>now</b>", "<img src=x>"]
@@ -497,7 +504,8 @@ unit:
       expected: 2 findings
 ```
 
-**Notes** — Do not use `Intl.DateTimeFormat('th')` for dates: its default calendar is Buddhist
+**Notes** — If `Trans` cannot render a stray tag such as `<img src=x>` as literal text, report it as a blocker
+instead of loosening TC-U-1028. Do not use `Intl.DateTimeFormat('th')` for dates: its default calendar is Buddhist
 ([ADR-005](design.md#key-decisions)). Keep `lib/number-format.ts` as it is (FR-009).
 
 ### T-005 — Web: language switch and saved language

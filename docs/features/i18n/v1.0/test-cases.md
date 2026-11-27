@@ -44,7 +44,7 @@ expected value is marked **(proposed)** and listed in section 9.
 
 **Conventions the cases rely on** (from design.md and the code that exists today):
 
-- English is the test default: `test/setup.ts` puts the store on `en` before each test. A "Thai"
+- English is the test default: `test/setup.ts` puts the i18next language on `en` before each test. A "Thai"
   case says so (`renderApp(path, api, { language: 'th' })`, or the switch).
 - "Canonical" means the English spelling stored in the database, sent by the API, written to the
   address and to every exported file.
@@ -117,7 +117,7 @@ every translated page), the Thai font and typography, and the bilingual Supabase
 | T-001 domain | TC-U-1000..1010 | rule encode/decode, English text unchanged, Thai labels for every value, `lensValueLabel` pass-through, ordering with and without `order`, tie order, `SettingsPatch.language`, import rules |
 | T-002 API | TC-U-1011..1019 | `/me` null language, save and read back, invalid language 400, empty patch no row, per-user value, `/me` survives a read failure, `rule`/`params` on stock errors, `invalid` for Zod built-ins, import row rules |
 | T-003 API | TC-U-1020..1024 | English and Thai Instructions sheets, unknown `lang`, CSV ignores `lang`, Thai template round trip |
-| T-004 web foundation | TC-U-1025..1034 | detection, store and Thai chunk, `t` plurals and fallback, `Rich`, `formatDate`, `formatTimestamp`, `describeIssue`, crumbs and titles, English test default, static literal scan |
+| T-004 web foundation | TC-U-1025..1034 | detection, store and Thai chunk, `t` plurals and fallback, `Trans`, `formatDate`, `formatTimestamp`, `describeIssue`, crumbs and titles, English test default, static literal scan |
 | T-005 web switch | TC-U-1035..1042 | switch and save, same choice sends nothing, failed save and Retry, account language before render, null account language, form input kept, auth-page switch, `lang` on items and announcement |
 | T-006 web shell, auth, stocks | TC-U-1043..1050 | Thai table with English `title`, canonical form values, client and server errors in Thai, Thai sort, holding card counts, auth errors, not-found and error pages |
 | T-007 web lists to theses | TC-U-1051..1059 | filter sheet and find box, canonical filter links, concentration labels and tie order, export bytes, template `lang`, import row problems, thesis type and dates, chain lanes, list toasts and Undo |
@@ -1005,7 +1005,7 @@ chunk list for the first load does not include `th-*.js`. **Mock** none.
 
 ### TC-C-1061
 **Component** · **P3** · EP · covers FR-001, NFR-004.
-**Pre** the `Rich` component with messages that contain a link and a user-supplied name
+**Pre** the `Trans` component with messages that contain a link and a user-supplied name
 `<img src=x onerror=alert(1)>` as a parameter. **Input** render in Thai and English. **Expected**
 only the catalogue's tag names (`link`, `b`) become elements; the parameter text is shown as text
 (no `img` element, no `alert`); the link is a real `Link` reachable by Tab with its accessible name;

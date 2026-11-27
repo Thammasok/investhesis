@@ -184,8 +184,8 @@ saving the setting. Filtering and regrouping in Thai stay within the 200 ms of b
 
 ### NFR-002
 
-**Performance** — The language catalogue adds at most 40 KB gzipped to the first page load
-(whole app, both languages or the lazy one included), and the Thai font loads only the Thai and
+**Performance** — The language catalogue and the i18n library runtime add at most 40 KB gzipped to the first page
+load (whole app, both languages or the lazy one included), and the Thai font loads only the Thai and
 Latin subsets used.
 
 ### NFR-003
@@ -221,8 +221,8 @@ concentration, thesis types) approved by the owner, used the same way on every p
 ## Constraints
 
 - Stack as decided: React 19 + Vite SPA, Fastify API, Supabase Postgres via Drizzle with a
-  migration under `supabase/migrations/` for the new setting. The i18n library (or a small
-  in-house layer) is chosen in the design phase.
+  migration under `supabase/migrations/` for the new setting. The i18n library is i18next
+  with react-i18next (design ADR-001).
 - Domain rules stay in `@investhesis/domain` (no I/O, Zod only); its `MESSAGES` and
   `LENS_LABELS` maps were kept in one place for this slice and become keyed messages.
 - The API stays the only database client and keeps its English problem details and OpenAPI

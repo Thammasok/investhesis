@@ -7,7 +7,7 @@ requires: requirements.md
 
 # System Design: Thai and English UI
 
-The design adds a small in-house translation layer (no i18n library), per-language catalogues
+The design adds i18next with react-i18next as the translation layer (ADR-001), per-language resources
 with typed keys, a `language` column on `app.user_settings`, the language in `GET /me`, rule ids
 on validation issues so the web can translate them, a self-hosted Thai font, an instructions
 sheet in the XLSX template, and bilingual auth emails. Stored, imported and exported data does
@@ -20,7 +20,7 @@ not change. It follows the patterns of
 ```mermaid
 flowchart LR
   subgraph Browser
-    S["i18n store<br/>language, t(), formatDate,<br/>collator (useSyncExternalStore)"]
+    S["i18next instance<br/>language, t(), formatDate,<br/>collator (react-i18next)"]
     C["catalogues<br/>en (static) · th (lazy chunk)"]
     UI["pages, dialogs, toasts,<br/>crumbs, loaders/actions"]
     LS[("localStorage<br/>investhesis.language")]
@@ -52,7 +52,7 @@ flowchart LR
 | Component | Responsibility |
 |---|---|
 | `packages/domain/src/i18n/` | `LANGUAGES = ['en','th']`, `Language`, the domain message catalogue (`MESSAGES_EN`, `MESSAGES_TH`: validation rules), lens value labels (`LENS_VALUE_LABELS_EN/TH`), lens names, "Not set", thesis type labels; `issueRule(message)` and `formatRule(rule, params, lang)`. Used by the web, the API (English `message`, XLSX instructions) and tests. |
-| `apps/web/src/i18n/` | `store.ts` (current language, subscribe, `setLanguage`, lazy Thai load), `catalogue/en.ts` (source of truth), `catalogue/th.ts` (typed as `Catalogue`), `t.ts` (lookup, interpolation, plurals via `Intl.PluralRules`), `format-date.ts`, `collate.ts`, `use-i18n.ts` (`useT`, `useLanguage`), `rich.tsx` (`Rich` for messages with links or emphasis), `detect.ts` (FR-003 order), `language-switch.tsx`. |
+| `apps/web/src/i18n/` | `i18n.ts` (the i18next instance: `init`, English resources bundled, `fallbackLng: 'en'`), `language.ts` (`getLanguage`, `setLanguage` which awaits the lazy Thai chunk once, adds it with `addResourceBundle`, then calls `changeLanguage`, sets `html lang` and writes localStorage), `i18next.d.ts` (`CustomTypeOptions`: typed keys from the English resources), `catalogue/en/*.ts` (source of truth, one file per area), `catalogue/th/*.ts` (typed so a missing key fails typecheck), `format-date.ts`, `collate.ts`, `describe-issue.ts`, `detect.ts` (FR-003 order), `language-switch.tsx`. Components use `useTranslation` and `Trans` from react-i18next; loaders and actions use `i18n.t`. |
 | Account menu (`nav-user.tsx`) and `AuthLayout` | Host the `LanguageSwitch` ([FR-001](requirements.md#fr-001)). |
 | `features/auth/current-user.ts` | App loader reads `language` from `GET /me`, applies it before the page renders ([FR-003](requirements.md#fr-003)). |
 | `features/settings/save-language.ts` | `PATCH /settings { language }` with error toast and Retry ([FR-002](requirements.md#fr-002)). |
@@ -167,20 +167,26 @@ Only additive changes; the OpenAPI document is regenerated.
 
 ### Store and lookup
 
-- `i18n/store.ts` is a module singleton (`getLanguage`, `subscribe`, `setLanguage(lang)`),
-  read in components through `useSyncExternalStore` and directly by loaders and actions (which
-  raise toasts and return messages outside React). `setLanguage('th')` awaits the Thai chunk
-  (`import('./catalogue/th.ts')`) once, then notifies; English is in the main chunk as the
-  fallback ([FR-014](requirements.md#fr-014)).
-- Catalogue shape: nested `as const` object in `en.ts`; `th.ts` is `satisfies Catalogue` where
-  `Catalogue` maps every leaf of `en` to `string` (or `{ other: string }` for plural entries), so
-  a missing or extra key fails typecheck. Keys are grouped by feature (`nav`, `stocks`, `lists`,
-  `holdings`, `concentration`, `filters`, `exports`, `imports`, `theses`, `chains`, `auth`,
-  `errors`, `common`). Placeholders are `{name}`; plurals are `{ one, other }` chosen by
-  `Intl.PluralRules(lang)`.
-- `t(key, params)` returns a string; `<Rich k=... components={{ link: (c) => <Link/> }}>` handles
-  messages with `<link>...</link>` / `<b>...</b>` tags (no HTML parsing, tag names only).
-- `useT()` re-renders on a language change. Because every visible string comes from `t`,
+- `i18n/i18n.ts` creates one i18next instance (synchronous init, single `translation`
+  namespace, `keySeparator: '.'`, `interpolation.escapeValue: false` because React and sonner
+  render strings as text, `fallbackLng: 'en'`). Components read it through react-i18next's
+  `useTranslation`; loaders and actions (which raise toasts and return messages outside React) call
+  `i18n.t` directly. `setLanguage('th')` (in `language.ts`) awaits the Thai chunk
+  (`import('./catalogue/th/index.ts')`) once, registers it with `addResourceBundle`, then calls
+  `i18n.changeLanguage`; English is in the main chunk as the fallback ([FR-014](requirements.md#fr-014)).
+- Catalogue shape: nested `as const` objects per area in `catalogue/en/`, assembled in `index.ts`;
+  `i18next.d.ts` declares `CustomTypeOptions.resources` from them, so `t('stocks.nope')` fails
+  typecheck. The Thai files are typed against a `Catalogue` mapped type derived from the English
+  resources, with every leaf a `string` and plural keys folded (English `_one` + `_other`, Thai only
+  `_other`), so a missing or extra Thai key fails typecheck ([NFR-006](requirements.md#nfr-006)); a
+  parity unit test backs it. Keys are grouped by feature (`nav`, `stocks`, `lists`, `holdings`,
+  `concentration`, `filters`, `exports`, `imports`, `theses`, `chains`, `auth`, `errors`, `common`).
+  Placeholders are `{{name}}` (i18next syntax); plurals use i18next's `count` option and `_one` /
+  `_other` keys, resolved with `Intl.PluralRules` (Thai has only `_other`).
+- `t(key, params)` returns a string; `<Trans i18nKey=... components={{ link: <Link/> }}
+  transKeepBasicHtmlNodesFor={[]}>` handles messages with `<link>...</link>` / `<b>...</b>` tags;
+  parameters are text, never markup (no `dangerouslySetInnerHTML`; TC-U-1028 pins it).
+- `useTranslation` re-renders on `languageChanged`. Because every visible string comes from `t`,
   switching re-renders in place: no reload, no navigation, form state kept
   ([FR-001](requirements.md#fr-001)). Route data is not re-fetched.
 - Crumbs: `RouteHandle.crumb` becomes `string key | (params, data, t) => string`; tab titles go
@@ -194,7 +200,7 @@ Only additive changes; the OpenAPI document is regenerated.
 ```mermaid
 sequenceDiagram
   participant M as main.tsx
-  participant St as i18n store
+  participant St as i18n (i18next)
   participant L as app loader
   participant A as API
   M->>St: init(detect(localStorage, navigator.languages))
@@ -251,7 +257,7 @@ sequenceDiagram
 
 ### Testing seams
 
-- `test/setup.ts` sets the store to `en` before each test, so every existing test keeps its
+- `test/setup.ts` sets the i18next language to `en` before each test, so every existing test keeps its
   English assertions. `renderApp(path, api, { language: 'th' })` and a `FakeStorage` cover Thai.
 - `StubApi` default `/me` gains `language: null`.
 
@@ -266,7 +272,7 @@ sequenceDiagram
   `rule`/`params` for each route that validates; XLSX instructions sheet per `lang`; `lang`
   invalid → 400. Coverage thresholds unchanged.
 - **Web unit/component** — catalogue parity (also enforced by typecheck), plural selection,
-  `Rich`, `formatDate` table, `detect()` matrix, switch re-renders in place and keeps typed
+  `Trans` tagged text, `formatDate` table, `detect()` matrix, switch re-renders in place and keeps typed
   form input, save failure toast and Retry, crumbs and tab titles in Thai, Thai labels in table,
   filter sheet, concentration and forms, sort order by Thai label, server error translated from
   `rule`, a static scan for English literals in JSX text and in `aria-label`, `placeholder`,
@@ -282,7 +288,7 @@ sequenceDiagram
 
 | Decision | Options Considered | Chosen | Rationale |
 |---|---|---|---|
-| ADR-001: Translation layer | i18next + react-i18next; Lingui (macro, compile step); in-house typed catalogue | In-house: typed nested catalogue, `Intl.PluralRules`, a tiny `Rich` component | Two languages, no ICU needs beyond plurals; zero runtime deps (NFR-002 budget); `satisfies Catalogue` gives the typecheck failure NFR-006 asks for without a codegen step; loaders and actions need a non-React `t`, which a singleton store gives directly. |
+| ADR-001: Translation layer | i18next + react-i18next; Lingui (macro, compile step); react-intl; in-house typed catalogue | **i18next + react-i18next** (owner decision, 2026-11-27; replaces the in-house layer first drafted) | A maintained, widely known library: plurals through `Intl.PluralRules`, interpolation, `Trans` for tagged text, and `i18n.t` works outside React in loaders and actions. Typed keys come from a `CustomTypeOptions` augmentation; Thai parity (NFR-006) comes from a mapped type plus a parity test, since i18next does not check it. Cost: about 20 KB gzipped of runtime in the 40 KB first-load budget (NFR-002), measured in T-004. |
 | ADR-002: Where validation text is translated | API returns localized text (`Accept-Language`); web maps English text back; rule ids in the issue | Rule ids encoded in the domain issue message, sent by the API as `rule`/`params` next to the English `message` | API stays English and stateless about language (FR-008); additive, non-breaking contract; the same decoder serves client and server checks. |
 | ADR-003: Where the saved language is read | Separate `GET /settings` in the app loader; in `GET /me` | `GET /me` | The app loader already calls `/me` on entry, so no extra request and no flash; `/settings` also returns it for completeness. |
 | ADR-004: Thai catalogue loading | Both in main chunk; Thai lazy | English in main chunk, Thai as a lazy chunk, awaited before first render when needed | Keeps the first load within the 40 KB budget for English users, and no untranslated flash for Thai users. |
