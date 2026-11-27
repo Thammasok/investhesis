@@ -205,7 +205,7 @@ field label: `สัญลักษณ์หุ้น ต้องมี …`.
   part), FR-008 (API part), NFR-003.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: review
+- status: done
 - size: M
 ```
 
@@ -404,7 +404,7 @@ unit:
   FR-010, FR-014, NFR-002, NFR-003, NFR-006.
 - agent: react-vite-developer
 - depends_on: [T-001]
-- status: backlog
+- status: doing
 - size: L
 ```
 
