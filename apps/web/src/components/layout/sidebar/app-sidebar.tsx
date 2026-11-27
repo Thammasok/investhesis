@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react"
+import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 import { TrendingUpIcon } from "lucide-react"
 import {
@@ -17,6 +18,7 @@ import type { SidebarUser } from "./sidebar-user"
 type AppSidebarProps = ComponentProps<typeof Sidebar> & { user: SidebarUser }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const { t } = useTranslation()
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -29,7 +31,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-snug">
                   <span className="truncate font-medium">Investhesis</span>
-                  <span className="truncate text-xs">US &amp; Thai watchlist</span>
+                  <span className="truncate text-xs">{t("nav.tagline")}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -37,7 +39,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <nav aria-label="Main">
+        <nav aria-label={t("shell.mainNav")}>
           <NavMain />
         </nav>
       </SidebarContent>

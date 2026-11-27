@@ -21,7 +21,7 @@ export function NavMain() {
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Portfolio</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("shell.portfolio")}</SidebarGroupLabel>
       <SidebarMenu>
         {navItems.map(({ to, labelKey, icon: Icon }) => {
           const label = t(labelKey)

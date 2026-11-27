@@ -18,14 +18,15 @@ import { countLabel } from '@/features/stocks/format'
 import type { StocksPageData } from '@/features/stocks/stocks-data'
 
 export function Component() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const language = i18n.language === 'th' ? 'th' : 'en'
   const { stocks, lists } = useLoaderData() as StocksPageData
   const filters = useStockFilters(stocks)
   const empty = stocks.length === 0
   // What the table shows, in the order it shows it: the rows the Export menu writes.
   const ordered = useMemo(
-    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction),
-    [filters.shown, filters.sort],
+    () => sortStocks(filters.shown, filters.sort.column, filters.sort.direction, language),
+    [filters.shown, filters.sort, language],
   )
 
   // One tree for both states, with the Outlet (the Add stock dialog) always in the same slot: when the
@@ -37,19 +38,19 @@ export function Component() {
       ) : (
         <PageHeader
           title={t("nav.stocks")}
-          description={countLabel(stocks.length, 'stock')}
+          description={countLabel(stocks.length, 'stock', language)}
           actions={
             <>
               <Button variant="outline" className="w-full sm:w-auto" asChild>
                 <Link to="/import-export/import">
                   <UploadIcon aria-hidden="true" />
-                  Import
+                  {t('stocks.page.import')}
                 </Link>
               </Button>
               <Button className="w-full sm:w-auto" asChild>
                 <Link to="/stocks/new">
                   <PlusIcon aria-hidden="true" />
-                  Add stock
+                  {t('stocks.page.addStock')}
                 </Link>
               </Button>
             </>
@@ -59,19 +60,19 @@ export function Component() {
       {empty ? (
         <Card className="items-center gap-3 py-12 text-center">
           <LineChartIcon className="size-8 text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-heading text-lg font-semibold">No stocks yet</h2>
-          <p className="text-sm text-muted-foreground">Add your first stock, or import a CSV or Excel file.</p>
+          <h2 className="font-heading text-lg font-semibold">{t('stocks.page.emptyTitle')}</h2>
+          <p className="text-sm text-muted-foreground">{t('stocks.page.emptyBody')}</p>
           <div className="flex flex-wrap justify-center gap-2">
             <Button asChild>
               <Link to="/stocks/new">
                 <PlusIcon aria-hidden="true" />
-                Add stock
+                {t('stocks.page.addStock')}
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/import-export/import">
                 <UploadIcon aria-hidden="true" />
-                Import from file
+                {t('stocks.page.importFromFile')}
               </Link>
             </Button>
           </div>

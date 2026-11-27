@@ -1,5 +1,6 @@
 import { replace, type LoaderFunction } from 'react-router'
 import { toast } from 'sonner'
+import { i18n } from '@/i18n/i18n'
 import type { AuthClient } from './auth-client'
 import { safeNext } from './safe-next'
 
@@ -34,7 +35,7 @@ export function createAuthLoaders(authClient: AuthClient) {
     if (!result.ok) return { expired: type }
 
     if (type === 'recovery') return replace('/auth/reset-password')
-    toast.success('Email confirmed. Welcome to Investhesis.')
+    toast.success(i18n.t('auth.confirming.emailConfirmed'))
     return replace(safeNext(params.get('next')))
   }
 

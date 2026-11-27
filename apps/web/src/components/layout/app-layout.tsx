@@ -1,4 +1,5 @@
 import { Suspense } from "react"
+import { useTranslation } from "react-i18next"
 import { Outlet, useNavigation } from "react-router"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
@@ -8,16 +9,15 @@ import { LanguageAnnouncer } from "@/i18n/language-switch"
 import { cn } from "@/lib/utils"
 import { AppBreadcrumb } from "./app-breadcrumb"
 import { AppSidebar } from "./sidebar/app-sidebar"
-import { sidebarUserFromEmail, type SidebarUser } from "./sidebar/sidebar-user"
-
-// Shown only when neither GET /me nor the session gave an email.
-const unknownUser: SidebarUser = { name: "Account", email: "Account" }
+import { sidebarUserFromEmail } from "./sidebar/sidebar-user"
 
 /** Shell of the signed-in area, from shadcn's `sidebar-08` block (inset sidebar). */
 export function AppLayout() {
+  const { t } = useTranslation()
   const navigation = useNavigation()
   const current = useCurrentUser()
-  const user = current ? sidebarUserFromEmail(current.email) : unknownUser
+  // Shown only when neither GET /me nor the session gave an email.
+  const user = current ? sidebarUserFromEmail(current.email) : { name: t("nav.account"), email: t("nav.account") }
 
   return (
     <TooltipProvider>

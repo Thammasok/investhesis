@@ -1,5 +1,6 @@
 import { useRef, useState, type ComponentProps, type FormEvent } from 'react'
 import { CircleAlertIcon, InfoIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ type SignInFormProps = Omit<ComponentProps<'form'>, 'onSubmit'> & {
 }
 
 export function SignInForm({ className, next, reason, ...props }: SignInFormProps) {
+  const { t } = useTranslation()
   const authClient = useAuthClient()
   const navigate = useNavigate()
   const [error, setError] = useState<AuthErrorCode | null>(null)
@@ -77,11 +79,13 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
   return (
     <form className={cn('flex flex-col gap-6', className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup>
-        <AuthHeading title="Sign in to your account" docTitle="Sign in">Enter your email and password</AuthHeading>
+        <AuthHeading title={t('auth.signIn.heading')} docTitle={t('auth.signIn.docTitle')}>
+          {t('auth.signIn.lead')}
+        </AuthHeading>
         {reason === 'session_ended' ? (
           <Alert role="status">
             <InfoIcon aria-hidden="true" />
-            <AlertDescription>Your session has ended. Sign in again.</AlertDescription>
+            <AlertDescription>{t('auth.signIn.sessionEnded')}</AlertDescription>
           </Alert>
         ) : null}
         {error ? (
@@ -90,9 +94,9 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
             <AlertDescription className="text-destructive">
               {error === 'email_not_confirmed' ? (
                 <>
-                  Confirm your email first. We sent a link to {unconfirmedEmail}.{' '}
+                  {t('auth.signIn.unconfirmed', { email: unconfirmedEmail })}{' '}
                   <Button type="button" variant="link" className="h-auto p-0" onClick={() => void resend()}>
-                    Resend
+                    {t('auth.signIn.resend')}
                   </Button>
                 </>
               ) : (
@@ -102,7 +106,7 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
           </Alert>
         ) : null}
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">{t('auth.email')}</FieldLabel>
           <Input
             id="email"
             name="email"
@@ -111,7 +115,7 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
             inputMode="email"
             autoCapitalize="none"
             spellCheck={false}
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
             required
             className="bg-background"
             onChange={(event) => setTypedEmail(event.target.value)}
@@ -119,13 +123,13 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
         </Field>
         <Field>
           <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password">{t('auth.passwordLabel')}</FieldLabel>
             <Link
               to={withNext('/auth/forgot-password', next)}
               state={typedEmail ? { email: typedEmail } : undefined}
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
-              Forgot password?
+              {t('auth.signIn.forgot')}
             </Link>
           </div>
           <PasswordInput
@@ -139,7 +143,7 @@ export function SignInForm({ className, next, reason, ...props }: SignInFormProp
         <Field>
           <Button type="submit" disabled={submitting} aria-busy={submitting}>
             {submitting ? <Spinner /> : null}
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting ? t('auth.signIn.submitting') : t('auth.signIn.submit')}
           </Button>
         </Field>
       </FieldGroup>

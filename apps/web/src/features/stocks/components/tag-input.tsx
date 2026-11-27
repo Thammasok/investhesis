@@ -1,5 +1,6 @@
 import { XIcon } from 'lucide-react'
 import { useState, type KeyboardEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -25,6 +26,7 @@ type TagInputProps = {
  * while an IME composes is left alone.
  */
 export function TagInput({ id, label, value, onChange, invalid, describedBy, dataField }: TagInputProps) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const full = value.length >= THEMES_MAX
 
@@ -46,7 +48,7 @@ export function TagInput({ id, label, value, onChange, invalid, describedBy, dat
   }
 
   const hintId = `${id}-hint`
-  const hint = full ? `${THEMES_MAX} themes max` : null
+  const hint = full ? t('stocks.tags.themesMax', { max: THEMES_MAX }) : null
   const describedIds = [describedBy, hint ? hintId : undefined].filter(Boolean).join(' ') || undefined
 
   return (
@@ -67,7 +69,7 @@ export function TagInput({ id, label, value, onChange, invalid, describedBy, dat
                     type="button"
                     variant="ghost"
                     size="icon-xs"
-                    aria-label={`Remove theme ${tag}`}
+                    aria-label={t('stocks.tags.removeTheme', { tag })}
                     onClick={() => onChange(value.filter((t) => t !== tag))}
                   >
                     <XIcon aria-hidden="true" />
@@ -80,14 +82,14 @@ export function TagInput({ id, label, value, onChange, invalid, describedBy, dat
         <input
           id={id}
           data-field={dataField}
-          aria-label="Add theme"
+          aria-label={t('stocks.tags.addTheme')}
           aria-invalid={invalid ? true : undefined}
           aria-describedby={describedIds}
           autoComplete="off"
           maxLength={THEME_MAX_LENGTH}
           disabled={full}
           value={draft}
-          placeholder={value.length === 0 ? 'Type and press Enter' : undefined}
+          placeholder={value.length === 0 ? t('stocks.tags.placeholder') : undefined}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={onKeyDown}
           onBlur={commit}

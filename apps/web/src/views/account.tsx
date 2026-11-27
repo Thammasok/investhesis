@@ -20,7 +20,7 @@ export function Component() {
         <h1 ref={headingRef} tabIndex={-1} className="font-heading text-2xl font-semibold outline-none">
           {title}
         </h1>
-        {user ? <p className="text-sm text-muted-foreground">Signed in as {user.email}</p> : null}
+        {user ? <p className="text-sm text-muted-foreground">{t('shell.signedInAs', { email: user.email })}</p> : null}
       </div>
       <ChangePasswordForm />
     </section>

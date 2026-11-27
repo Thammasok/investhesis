@@ -1,7 +1,8 @@
 import { Loader2Icon } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useFetcher } from 'react-router'
-import { HoldingInput, issueText } from '@investhesis/domain'
+import { HoldingInput } from '@investhesis/domain'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -11,6 +12,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { decimalForInput } from '@/lib/number-format'
 import { describeProblem } from '../stock-form-model'
+import { useLanguage } from '../use-language'
 import type { HoldingActionResult } from '../stocks-data'
 import type { Holding, Stock } from '../types'
 
@@ -47,6 +49,8 @@ function HoldingForm({
   onDone: HoldingDialogProps['onDone']
   onCancel: () => void
 }) {
+  const { t } = useTranslation()
+  const lang = useLanguage()
   const fetcher = useFetcher<HoldingActionResult>()
   const sending = useRef(false)
   const handled = useRef<unknown>(null)
@@ -92,7 +96,7 @@ function HoldingForm({
       const next: Errors = {}
       for (const issue of parsed.error.issues) {
         const key = issue.path[0]
-        if ((key === 'shares' || key === 'averageCost') && !next[key]) next[key] = describeProblem(FIELD_LABEL[key], issueText(issue.message))
+        if ((key === 'shares' || key === 'averageCost') && !next[key]) next[key] = describeProblem(FIELD_LABEL[key], { message: issue.message }, lang)
       }
       setClientErrors(next)
       ;(next.shares ? sharesRef : costRef).current?.focus()
@@ -107,7 +111,7 @@ function HoldingForm({
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
       <DialogHeader>
-        <DialogTitle>Holding · {stock.ticker}</DialogTitle>
+        <DialogTitle>{t('holdings.dialogTitle', { ticker: stock.ticker })}</DialogTitle>
       </DialogHeader>
       {alert ? (
         <Alert variant="destructive">
@@ -115,7 +119,7 @@ function HoldingForm({
         </Alert>
       ) : null}
       <Field data-invalid={errors.shares ? true : undefined}>
-        <FieldLabel htmlFor="holding-shares">Shares (optional)</FieldLabel>
+        <FieldLabel htmlFor="holding-shares">{t('holdings.sharesOptional')}</FieldLabel>
         <Input
           id="holding-shares"
           ref={sharesRef}
@@ -136,7 +140,7 @@ function HoldingForm({
         {errors.shares ? <FieldError id="holding-shares-error">{errors.shares}</FieldError> : null}
       </Field>
       <Field data-invalid={errors.averageCost ? true : undefined}>
-        <FieldLabel htmlFor="holding-average-cost">Average cost per share (optional)</FieldLabel>
+        <FieldLabel htmlFor="holding-average-cost">{t('holdings.averageCostOptional')}</FieldLabel>
         <InputGroup>
           <InputGroupAddon>
             <span aria-hidden="true">{currency === 'THB' ? '฿' : '$'}</span>
@@ -162,7 +166,7 @@ function HoldingForm({
       </Field>
       <FieldSet>
         <FieldLegend variant="label" id="holding-currency-legend">
-          Cost currency
+          {t('holdings.costCurrency')}
         </FieldLegend>
         <RadioGroup
           value={currency}
@@ -190,15 +194,15 @@ function HoldingForm({
             disabled={pending}
             onClick={() => send({ intent: 'clear-holding' })}
           >
-            Stop holding
+            {t('holdings.stopHolding')}
           </Button>
         ) : null}
         <Button type="button" variant="outline" disabled={pending} onClick={onCancel}>
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button type="submit" disabled={pending}>
           {pending ? <Loader2Icon className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
-          Save
+          {t('common.save')}
         </Button>
       </DialogFooter>
     </form>

@@ -13,7 +13,7 @@ vi.mock('sonner', () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), err
 beforeEach(() => vi.clearAllMocks())
 
 async function openMenu() {
-  await userEvent.click(await screen.findByRole('button', { name: 'Account menu' }))
+  await userEvent.click(await screen.findByRole('button', { name: /^(Account menu|เมนูบัญชี)$/ }))
 }
 
 describe('language switch in the account menu', () => {

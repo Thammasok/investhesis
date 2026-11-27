@@ -6,7 +6,7 @@ import { renderApp } from '@/test/render-app'
 describe('crumbs and tab titles follow the language', () => {
   it('TC-U-1032: /stocks in Thai', async () => {
     renderApp('/stocks', emptyApi(), { language: 'th' })
-    const nav = await screen.findByRole('navigation', { name: 'breadcrumb' })
+    const nav = await screen.findByRole('navigation', { name: 'เส้นทางหน้า' })
     expect(nav).toHaveTextContent('หุ้น')
     expect(await screen.findByRole('heading', { level: 1, name: 'หุ้น' })).toBeInTheDocument()
     expect(document.title).toBe('หุ้น · Investhesis')

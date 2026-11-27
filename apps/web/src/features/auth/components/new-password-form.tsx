@@ -1,7 +1,9 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { CircleAlertIcon } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { i18n } from '@/i18n/i18n'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -16,6 +18,7 @@ import { Spinner } from './spinner'
 
 /** Set a new password while holding a recovery session. There is no way back to sign-in: leaving keeps the session. */
 export function NewPasswordForm({ email }: { email: string }) {
+  const { t } = useTranslation()
   const authClient = useAuthClient()
   const navigate = useNavigate()
   const [errors, setErrors] = useState<PasswordErrors>({})
@@ -48,7 +51,7 @@ export function NewPasswordForm({ email }: { email: string }) {
     setSubmitting(false)
 
     if (result.ok) {
-      toast.success("Password updated. You're signed in.")
+      toast.success(i18n.t('auth.reset.updated'))
       void navigate('/stocks', { replace: true })
       return
     }
@@ -69,8 +72,8 @@ export function NewPasswordForm({ email }: { email: string }) {
   return (
     <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
       <FieldGroup>
-        <AuthHeading title="Choose a new password" docTitle="New password">
-          For {email}
+        <AuthHeading title={t('auth.reset.heading')} docTitle={t('auth.reset.docTitle')}>
+          {t('auth.reset.forEmail', { email })}
         </AuthHeading>
         {formError ? (
           <Alert variant="destructive">
@@ -79,7 +82,7 @@ export function NewPasswordForm({ email }: { email: string }) {
           </Alert>
         ) : null}
         <Field data-invalid={errors.password ? true : undefined}>
-          <FieldLabel htmlFor="password">New password</FieldLabel>
+          <FieldLabel htmlFor="password">{t('auth.newPassword')}</FieldLabel>
           <PasswordInput
             id="password"
             name="password"
@@ -88,11 +91,11 @@ export function NewPasswordForm({ email }: { email: string }) {
             aria-invalid={errors.password ? true : undefined}
             aria-describedby={errors.password ? 'password-error password-hint' : 'password-hint'}
           />
-          <FieldDescription id="password-hint">At least 8 characters.</FieldDescription>
+          <FieldDescription id="password-hint">{t('auth.reset.hint')}</FieldDescription>
           {errors.password ? <FieldError id="password-error">{errors.password}</FieldError> : null}
         </Field>
         <Field data-invalid={errors.confirm ? true : undefined}>
-          <FieldLabel htmlFor="confirm">Confirm new password</FieldLabel>
+          <FieldLabel htmlFor="confirm">{t('auth.confirmNewPassword')}</FieldLabel>
           <PasswordInput
             id="confirm"
             name="confirm"
@@ -106,7 +109,7 @@ export function NewPasswordForm({ email }: { email: string }) {
         <Field>
           <Button type="submit" disabled={submitting} aria-busy={submitting}>
             {submitting ? <Spinner /> : null}
-            {submitting ? 'Saving…' : 'Save password'}
+            {submitting ? t('auth.reset.submitting') : t('auth.reset.submit')}
           </Button>
         </Field>
       </FieldGroup>

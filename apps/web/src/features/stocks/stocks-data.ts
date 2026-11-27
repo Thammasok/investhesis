@@ -1,8 +1,10 @@
 import { redirect, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router'
 import { toast } from 'sonner'
+import { i18n } from '@/i18n/i18n'
 import { ApiError, type ApiClient } from '@/lib/api-client'
 import { changeThesis, isThesisIntent, type ThesisActionResult } from '@/features/theses/thesis-actions'
 import type { Thesis } from '@/features/theses/types'
+import { describeProblem, type FieldProblemLike } from './stock-form-model'
 import type { ListSummary, Stock } from './types'
 
 export type StocksPageData = { stocks: Stock[]; lists: ListSummary[] }
@@ -83,7 +85,7 @@ export const createStockDetailAction =
           const ticker = text(form, 'ticker')
           // Already gone (deleted in another tab) is the outcome the user wanted.
           await api.delete(`/stocks/${stockId}`).catch((e: unknown) => (isStatus(e, 404) ? undefined : Promise.reject(e)))
-          toast.success(`${ticker} deleted`)
+          toast.success(i18n.t('stocks.actions.deleted', { ticker }))
           return redirect('/stocks')
         }
         case 'add-to-list':
@@ -128,31 +130,32 @@ async function changeHolding(
     return { intent, ok: true, ticker, undo }
   } catch (error) {
     if (!(error instanceof ApiError) || error.status === 401) throw error
-    if (error.status === 404) return { intent, ok: false, undo, message: 'This stock no longer exists.' }
+    if (error.status === 404) return { intent, ok: false, undo, message: i18n.t('holdings.stockGone') }
     if (error.status === 400) {
       const problem = error.errors.find((e) => e.path === 'holding.shares' || e.path === 'holding.averageCost')
       if (problem) {
         const field = problem.path === 'holding.shares' ? 'shares' : 'averageCost'
-        return { intent, ok: false, undo, field, message: `${field === 'shares' ? 'Shares' : 'Average cost'} ${problem.message}` }
+        const label = field === 'shares' ? 'holdingShares' : 'holdingAverageCost'
+        return { intent, ok: false, undo, field, message: describeProblem(label, problem as FieldProblemLike) }
       }
     }
-    return { intent, ok: false, undo, message: "Couldn't save the holding. Try again." }
+    return { intent, ok: false, undo, message: i18n.t('holdings.saveFailed') }
   }
 }
 
 function failureMessage(intent: Intent, error: ApiError, listName: string, ticker: string): string {
   switch (intent) {
     case 'delete':
-      return `Couldn't delete ${ticker}. Try again.`
+      return i18n.t('stocks.actions.deleteFailed', { ticker })
     case 'undo-remove':
-      return "Couldn't undo. Add the stock to the list again."
+      return i18n.t('stocks.actions.undoFailed')
     case 'add-to-list':
-      if (error.status === 409) return `Already in ${listName}. The page was refreshed.`
-      if (error.status === 404) return `${listName} no longer exists.`
-      return `Couldn't add to ${listName}. Try again.`
+      if (error.status === 409) return i18n.t('stocks.actions.alreadyIn', { name: listName })
+      if (error.status === 404) return i18n.t('stocks.actions.listGone', { name: listName })
+      return i18n.t('stocks.actions.addFailed', { name: listName })
     case 'remove-from-list':
-      if (error.status === 404) return `Already removed from ${listName}. The page was refreshed.`
-      return `Couldn't remove from ${listName}. Try again.`
+      if (error.status === 404) return i18n.t('stocks.actions.alreadyRemoved', { name: listName })
+      return i18n.t('stocks.actions.removeFailed', { name: listName })
   }
 }
 
@@ -187,7 +190,7 @@ export const createStockCreateAction =
   async ({ request }: ActionFunctionArgs): Promise<StockFormResult | Response> => {
     try {
       const stock = await api.post<Stock>('/stocks', { body: await request.json() })
-      toast.success(`${stock.ticker} added`)
+      toast.success(i18n.t('stocks.actions.added', { ticker: stock.ticker }))
       return redirect(`/stocks/${encodeURIComponent(stock.id)}`)
     } catch (error) {
       if (!(error instanceof ApiError) || error.status === 401) throw error
@@ -201,7 +204,7 @@ export const createStockUpdateAction =
   async ({ request, params }: ActionFunctionArgs): Promise<StockFormResult | Response> => {
     try {
       const stock = await api.patch<Stock>(`/stocks/${encodeURIComponent(params.id ?? '')}`, { body: await request.json() })
-      toast.success(`${stock.ticker} updated`)
+      toast.success(i18n.t('stocks.actions.updated', { ticker: stock.ticker }))
       return redirect(`/stocks/${encodeURIComponent(stock.id)}`)
     } catch (error) {
       if (!(error instanceof ApiError) || error.status === 401) throw error

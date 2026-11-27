@@ -1,17 +1,28 @@
+import { i18n } from '@/i18n/i18n'
 import type { AuthErrorCode } from './auth-client'
 
-/** User-facing copy per code (design.md, Error mapping). */
-export const authErrorMessages: Record<AuthErrorCode, string> = {
-  invalid_credentials: 'Email or password is incorrect.',
-  email_not_confirmed: 'Confirm your email first.',
-  weak_password: 'Use 8 to 72 characters for your password.',
-  same_password: "Choose a password you haven't used here.",
-  wrong_current_password: 'Current password is incorrect.',
-  link_invalid: 'This link has expired or was already used.',
-  rate_limited: 'Too many attempts. Try again in a few minutes.',
-  unavailable: "Can't reach the sign-in service. Try again.",
-  unknown: 'Something went wrong. Try again.',
-}
+const CODES = [
+  'invalid_credentials',
+  'email_not_confirmed',
+  'weak_password',
+  'same_password',
+  'wrong_current_password',
+  'link_invalid',
+  'rate_limited',
+  'unavailable',
+  'unknown',
+] as const satisfies readonly AuthErrorCode[]
+
+/**
+ * User-facing copy per code (design.md, Error mapping), read from the catalogue in the language of the
+ * moment: each entry is a getter, so the text follows a language switch.
+ */
+export const authErrorMessages = Object.defineProperties(
+  {} as Record<AuthErrorCode, string>,
+  Object.fromEntries(
+    CODES.map((code) => [code, { enumerable: true, get: () => i18n.t(`auth.errors.${code}`) }]),
+  ),
+)
 
 export function authErrorMessage(code: AuthErrorCode): string {
   return authErrorMessages[code]

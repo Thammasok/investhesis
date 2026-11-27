@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { ChevronsUpDownIcon, LogOutIcon, UserIcon } from "lucide-react"
 import { Link, useNavigate } from "react-router"
 import { useAuthClient } from "@/features/auth/auth-client-context"
@@ -48,6 +49,7 @@ function UserSummary({ user }: { user: SidebarUser }) {
  * entry with the sign-in page, so Back can't return to the app.
  */
 export function NavUser({ user }: { user: SidebarUser }) {
+  const { t } = useTranslation()
   const { isMobile } = useSidebar()
   const authClient = useAuthClient()
   const api = useApiClient()
@@ -65,7 +67,7 @@ export function NavUser({ user }: { user: SidebarUser }) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              aria-label="Account menu"
+              aria-label={t("shell.accountMenu")}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <UserSummary user={user} />
@@ -88,7 +90,7 @@ export function NavUser({ user }: { user: SidebarUser }) {
               <DropdownMenuItem asChild>
                 <Link to="/account">
                   <UserIcon />
-                  Account
+                  {t("nav.account")}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -97,7 +99,7 @@ export function NavUser({ user }: { user: SidebarUser }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => void signOut()}>
               <LogOutIcon />
-              Sign out
+              {t("shell.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
