@@ -8,15 +8,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { useLanguage, useT } from "@/i18n"
 import { crumbOf } from "@/routers/route-handle"
 
 /** Builds the trail from the `crumb` of each matched route (see `routers/route-handle.ts`). */
 export function AppBreadcrumb() {
-  const lang = useLanguage()
-  const t = useT()
   const crumbs = useMatches().flatMap((match) => {
-    const label = crumbOf(match.handle, match.params, match.loaderData, lang, t)
+    const label = crumbOf(match.handle, match.params, match.loaderData)
     return label ? [{ id: match.id, label, to: match.pathname }] : []
   })
 

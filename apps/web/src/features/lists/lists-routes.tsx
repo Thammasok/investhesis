@@ -9,7 +9,7 @@ export function listsRoutes(api: ApiClient): RouteObject {
   const data = () => import('./lists-data')
   return {
     path: 'lists',
-    handle: { crumb: 'nav.lists' } satisfies RouteHandle,
+    handle: { crumb: 'Lists' } satisfies RouteHandle,
     children: [
       {
         index: true,

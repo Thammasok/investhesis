@@ -1,4 +1,3 @@
-import { useT } from '@/i18n'
 import { ChartPieIcon } from 'lucide-react'
 import { chainKey, groupChains } from '@investhesis/domain'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -28,7 +27,6 @@ const renameButtonOf = (key: string) =>
   Array.from(document.querySelectorAll<HTMLElement>('[data-chain-rename]')).find((b) => b.dataset.chainRename === key)
 
 export function Component() {
-  const t = useT()
   const { stocks, lists, settings } = useLoaderData() as ChainsData
   const [params] = useSearchParams()
   const view = useMemo(() => readChainsView(params, lists), [params, lists])
@@ -84,7 +82,7 @@ export function Component() {
 
   const header = (
     <PageHeader
-      title={t('nav.chains')}
+      title="Value chains"
       description={DESCRIPTION}
       actions={
         <Button variant="outline" className="w-full sm:w-auto" asChild>

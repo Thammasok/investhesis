@@ -13,7 +13,7 @@ export function stocksRoutes(api: ApiClient): RouteObject {
   const data = () => import('./stocks-data')
   return {
     path: 'stocks',
-    handle: { crumb: 'nav.stocks' } satisfies RouteHandle,
+    handle: { crumb: 'Stocks' } satisfies RouteHandle,
     children: [
       {
         // Pathless layout: the Stocks page, with Add stock as a dialog in its outlet. Search, filters
@@ -27,7 +27,7 @@ export function stocksRoutes(api: ApiClient): RouteObject {
           { index: true },
           {
             path: 'new',
-            handle: { crumb: 'nav.newStock' } satisfies RouteHandle,
+            handle: { crumb: 'New stock' } satisfies RouteHandle,
             lazy: async () => {
               const [{ createStockNewLoader, createStockCreateAction }, view] = await Promise.all([data(), import('@/views/stock-new')])
               return { Component: view.Component, loader: createStockNewLoader(api), action: createStockCreateAction(api) }
@@ -60,7 +60,7 @@ export function stocksRoutes(api: ApiClient): RouteObject {
           },
           {
             path: 'edit',
-            handle: { crumb: 'nav.edit' } satisfies RouteHandle,
+            handle: { crumb: 'Edit' } satisfies RouteHandle,
             lazy: async () => {
               const [{ createStockUpdateAction }, view] = await Promise.all([data(), import('@/views/stock-edit')])
               return { Component: view.Component, action: createStockUpdateAction(api) }

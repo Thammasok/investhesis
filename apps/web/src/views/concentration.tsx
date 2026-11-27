@@ -1,4 +1,3 @@
-import { useT } from '@/i18n'
 import { ChartPieIcon, PlusIcon, SlidersHorizontalIcon, UploadIcon } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Link, useLoaderData, useSearchParams } from 'react-router'
@@ -24,7 +23,6 @@ const DESCRIPTION = 'How your stocks are spread across each lens.'
 const KEEP = ['scope', 'lens', 'measure'] as const
 
 export function Component() {
-  const t = useT()
   const { stocks, lists, settings } = useLoaderData() as ConcentrationData
   const [params] = useSearchParams()
   const [settingsFocus, setSettingsFocus] = useState<'threshold' | 'rate' | null>(null)
@@ -59,7 +57,7 @@ export function Component() {
   if (stocks.length === 0) {
     return (
       <section className="space-y-6">
-        <PageHeader title={t('nav.concentration')} description={DESCRIPTION} />
+        <PageHeader title="Concentration" description={DESCRIPTION} />
         <Card className="items-center gap-3 py-12 text-center">
           <ChartPieIcon className="size-8 text-muted-foreground" aria-hidden="true" />
           <h2 className="font-heading text-lg font-semibold">Nothing to group yet</h2>
@@ -90,7 +88,7 @@ export function Component() {
   return (
     <section className="space-y-6">
       <PageHeader
-        title={t('nav.concentration')}
+        title="Concentration"
         description={DESCRIPTION}
         actions={
           <Button
