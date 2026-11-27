@@ -16,7 +16,14 @@ async function seedLong() {
   return seed
 }
 
-const small = (page: Page, w: number, h: number) => page.setViewportSize({ width: w, height: h })
+// setViewportSize can resolve before the page has applied the new width, so a measurement taken
+// right after it may straddle the reflow (TC-E-921 read lane 3 after lanes 1 and 2 had moved).
+// Wait until the page itself reports the width, then until a frame has been painted at it.
+const small = async (page: Page, w: number, h: number) => {
+  await page.setViewportSize({ width: w, height: h })
+  await page.waitForFunction((width) => window.innerWidth === width, w)
+  await page.evaluate(() => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))))
+}
 
 async function boxes(page: Page, title: string) {
   const card = chainCard(page, title)
