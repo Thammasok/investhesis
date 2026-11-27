@@ -205,7 +205,7 @@ field label: `สัญลักษณ์หุ้น ต้องมี …`.
   part), FR-008 (API part), NFR-003.
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: doing
+- status: review
 - size: M
 ```
 
@@ -314,7 +314,7 @@ unit:
   the web reuses them). template.csv ignores lang. Covers FR-012 (API part).
 - agent: software-engineer-backend
 - depends_on: [T-001]
-- status: doing
+- status: review
 - size: S
 ```
 
@@ -835,7 +835,7 @@ unit:
   check both parts and the link. Covers FR-013.
 - agent: software-engineer-backend
 - depends_on: []
-- status: doing
+- status: review
 - size: S
 ```
 
