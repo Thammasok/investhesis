@@ -122,7 +122,7 @@ test.describe('concentration page', () => {
     // Assert: back to the no-rate numbers
     await expect(share(page, 'Energy')).toHaveText('57.7%')
     await expect(page.getByText('Threshold 40% · No exchange rate saved')).toBeVisible()
-    expect(await api.settings()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null })
+    expect(await api.settings()).toEqual({ concentrationThreshold: 40, usdThbRate: null, usdThbRateUpdatedAt: null, language: null })
   })
 
   test('TC-E-408: the threshold and rate persist across a reload and a second device', async ({ page, browser }) => {
