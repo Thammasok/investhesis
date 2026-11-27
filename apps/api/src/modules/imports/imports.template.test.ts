@@ -47,7 +47,7 @@ describe('GET /imports/template.xlsx instructions', () => {
     ])
     expect(instructionRow(ws, 'gics_sector')?.[3]).toBe(LENS_VALUES.gicsSector.join('; '))
     // one row per column, every enumerated value present, free text says so
-    for (const c of TEMPLATE_COLUMNS) expect(instructionRow(ws, c.header), c.header).toBeDefined()
+    for (const c of TEMPLATE_COLUMNS) expect(instructionRow(ws, c.header)).toBeDefined()
     const all = (ws?.getSheetValues() ?? []).flat().join('\n')
     for (const values of Object.values(LENS_VALUES)) for (const v of values) expect(all).toContain(v)
     expect(instructionRow(ws, 'themes')?.[3]).toBe('Free text')
