@@ -627,7 +627,7 @@ unit:
   Covers FR-004, FR-005, FR-007, FR-008, FR-009 for these areas.
 - agent: react-vite-developer
 - depends_on: [T-004]
-- status: backlog
+- status: review
 - size: L
 ```
 
@@ -730,7 +730,7 @@ unit:
   must then be empty. Covers FR-004 to FR-009, FR-011, FR-012 (web part).
 - agent: react-vite-developer
 - depends_on: [T-004]
-- status: backlog
+- status: review
 - size: L
 ```
 

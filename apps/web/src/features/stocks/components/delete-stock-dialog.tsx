@@ -87,7 +87,9 @@ export function DeleteStockDialog({ stock, thesisCount, open, onOpenChange, retu
 
 /** The thesis log goes with the stock: say so with the count when it is known, generically when it is not. */
 function thesisSentence(count: number | null, t: ReturnType<typeof useTranslation>['t']): string {
-  if (count === null) return t('stocks.delete.thesesUnknown')
+  // The plural key set makes the typed overload too deep for tsc; the keys are checked by the Thai parity test.
+  const text = t as unknown as (key: string, options?: object) => string
+  if (count === null) return text('stocks.delete.thesesUnknown')
   if (count === 0) return ''
-  return t('stocks.delete.thesesKnown', { count })
+  return text('stocks.delete.thesesKnown', { count })
 }
