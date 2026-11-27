@@ -1,4 +1,5 @@
 import { Fragment } from "react"
+import { useTranslation } from "react-i18next"
 import { Link, useMatches } from "react-router"
 import {
   Breadcrumb,
@@ -12,8 +13,9 @@ import { crumbOf } from "@/routers/route-handle"
 
 /** Builds the trail from the `crumb` of each matched route (see `routers/route-handle.ts`). */
 export function AppBreadcrumb() {
+  const { t } = useTranslation()
   const crumbs = useMatches().flatMap((match) => {
-    const label = crumbOf(match.handle, match.params, match.loaderData)
+    const label = crumbOf(match.handle, match.params, match.loaderData, t)
     return label ? [{ id: match.id, label, to: match.pathname }] : []
   })
 

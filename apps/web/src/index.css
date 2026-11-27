@@ -3,6 +3,21 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
+/*
+ * Thai glyphs only: @fontsource-variable/noto-sans-thai 5.3.0 has no thai.css entry (its wght.css
+ * also pulls the Latin subsets), so the thai subset is declared here. Vite bundles the file, so there
+ * is no request to a font host (NFR-003). Geist comes first in --font-sans, so Latin text keeps Geist
+ * and the browser reaches for Noto only for Thai code points (unicode-range).
+ */
+@font-face {
+  font-family: 'Noto Sans Thai Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/noto-sans-thai/files/noto-sans-thai-thai-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -38,7 +53,7 @@
   --sidebar-accent-foreground: oklch(0.4200 0.1491 162.4796);
   --sidebar-border: oklch(0.9674 0.0013 286.3752);
   --sidebar-ring: oklch(0.4200 0.1491 162.4796);
-  --font-sans: Geist, ui-sans-serif, sans-serif, system-ui;
+  --font-sans: Geist, 'Noto Sans Thai Variable', ui-sans-serif, sans-serif, system-ui;
   --font-serif: Noto Serif, ui-serif, serif;
   --font-mono: Fira Code, ui-monospace, monospace;
   --radius: 0.5rem;
@@ -93,7 +108,7 @@
   --sidebar-accent-foreground: oklch(0.6959 0.1491 162.4796);
   --sidebar-border: oklch(0.2739 0.0055 286.0326);
   --sidebar-ring: oklch(0.6959 0.1491 162.4796);
-  --font-sans: Geist, ui-sans-serif, sans-serif, system-ui;
+  --font-sans: Geist, 'Noto Sans Thai Variable', ui-sans-serif, sans-serif, system-ui;
   --font-serif: Noto Serif, ui-serif, serif;
   --font-mono: Fira Code, ui-monospace, monospace;
   --radius: 0.5rem;
@@ -171,6 +186,15 @@
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
   --tracking-wider: calc(var(--tracking-normal) + 0.05em);
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+}
+
+/* Thai tone marks and vowels sit above and below the line: give each text size more room (ux-design.md, Thai on every screen). */
+:root:lang(th) {
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.571;
+  --text-base--line-height: 1.625;
+  --text-lg--line-height: 1.667;
+  --text-2xl--line-height: 1.5;
 }
 
 @layer base {
